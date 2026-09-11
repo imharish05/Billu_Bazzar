@@ -50,7 +50,7 @@ const ReturnsPage = () => {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="bg-red-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">Mandatory</span>
+                  {/* <span className="bg-red-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">Mandatory</span> */}
                   <h3 className="font-playfair text-lg font-bold text-brand-text">Compulsory Unboxing Video Requirement</h3>
                 </div>
                 <p className="text-xs md:text-sm text-neutral-600 leading-relaxed">

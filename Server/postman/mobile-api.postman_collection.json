@@ -5749,10 +5749,197 @@
       ]
     },
     {
+      "name": "07 Guest access rejected",
+      "item": [
+        {
+          "name": "MOB-195 Guest cannot read /products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/mob-api/products",
+            "description": "Guest cannot read /products. Expected HTTP 401. ",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected HTTP 401', () => pm.expect(pm.response.code).to.eql(401));",
+                  "pm.test('JSON response', () => pm.response.to.be.json);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MOB-196 Guest cannot read /categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/mob-api/categories",
+            "description": "Guest cannot read /categories. Expected HTTP 401. ",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected HTTP 401', () => pm.expect(pm.response.code).to.eql(401));",
+                  "pm.test('JSON response', () => pm.response.to.be.json);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MOB-197 Guest cannot read /banners",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/mob-api/banners",
+            "description": "Guest cannot read /banners. Expected HTTP 401. ",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected HTTP 401', () => pm.expect(pm.response.code).to.eql(401));",
+                  "pm.test('JSON response', () => pm.response.to.be.json);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MOB-198 Guest cannot read /marketing-messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/mob-api/marketing-messages",
+            "description": "Guest cannot read /marketing-messages. Expected HTTP 401. ",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected HTTP 401', () => pm.expect(pm.response.code).to.eql(401));",
+                  "pm.test('JSON response', () => pm.response.to.be.json);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MOB-199 Guest cannot read /search/trending",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/mob-api/search/trending",
+            "description": "Guest cannot read /search/trending. Expected HTTP 401. ",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected HTTP 401', () => pm.expect(pm.response.code).to.eql(401));",
+                  "pm.test('JSON response', () => pm.response.to.be.json);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MOB-200 Guest cannot read account",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/mob-api/auth/me",
+            "description": "Guest cannot read account. Expected HTTP 401. ",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected HTTP 401', () => pm.expect(pm.response.code).to.eql(401));",
+                  "pm.test('JSON response', () => pm.response.to.be.json);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "MOB-201 Guest cannot checkout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/mob-api/orders",
+            "description": "Guest cannot checkout. Expected HTTP 401. ",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expected HTTP 401', () => pm.expect(pm.response.code).to.eql(401));",
+                  "pm.test('JSON response', () => pm.response.to.be.json);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
       "name": "90 Integration prerequisites - disabled by default",
       "item": [
         {
-          "name": "MOB-195 Place online order",
+          "name": "MOB-202 Place online order",
           "request": {
             "method": "POST",
             "header": [
@@ -5800,7 +5987,7 @@
           ]
         },
         {
-          "name": "MOB-196 Initiate sandbox payment",
+          "name": "MOB-203 Initiate sandbox payment",
           "request": {
             "method": "POST",
             "header": [
@@ -5846,7 +6033,7 @@
           ]
         },
         {
-          "name": "MOB-197 Verify successful sandbox payment",
+          "name": "MOB-204 Verify successful sandbox payment",
           "request": {
             "method": "POST",
             "header": [
@@ -5895,7 +6082,7 @@
           ]
         },
         {
-          "name": "MOB-198 Get owned order",
+          "name": "MOB-205 Get owned order",
           "request": {
             "method": "GET",
             "header": [],
@@ -5927,7 +6114,7 @@
           ]
         },
         {
-          "name": "MOB-199 Track owned order",
+          "name": "MOB-206 Track owned order",
           "request": {
             "method": "GET",
             "header": [],
@@ -5959,7 +6146,7 @@
           ]
         },
         {
-          "name": "MOB-200 Customer B cannot pay customer A order",
+          "name": "MOB-207 Customer B cannot pay customer A order",
           "request": {
             "method": "POST",
             "header": [
@@ -6015,7 +6202,7 @@
           ]
         },
         {
-          "name": "MOB-201 Cancel QA order",
+          "name": "MOB-208 Cancel QA order",
           "request": {
             "method": "POST",
             "header": [
@@ -6061,7 +6248,7 @@
           ]
         },
         {
-          "name": "MOB-202 Request recovery OTP",
+          "name": "MOB-209 Request recovery OTP",
           "request": {
             "method": "POST",
             "header": [
@@ -6109,7 +6296,7 @@
           ]
         },
         {
-          "name": "MOB-203 Verify recovery OTP",
+          "name": "MOB-210 Verify recovery OTP",
           "request": {
             "method": "POST",
             "header": [
@@ -6159,7 +6346,7 @@
           ]
         },
         {
-          "name": "MOB-204 Set new password with reset token",
+          "name": "MOB-211 Set new password with reset token",
           "request": {
             "method": "POST",
             "header": [
@@ -6208,7 +6395,7 @@
           ]
         },
         {
-          "name": "MOB-205 Send checkout OTP",
+          "name": "MOB-212 Send checkout OTP",
           "request": {
             "method": "POST",
             "header": [
@@ -6253,7 +6440,7 @@
           ]
         },
         {
-          "name": "MOB-206 Verify valid checkout OTP",
+          "name": "MOB-213 Verify valid checkout OTP",
           "request": {
             "method": "POST",
             "header": [
@@ -6299,7 +6486,7 @@
           ]
         },
         {
-          "name": "MOB-207 Submit contact enquiry",
+          "name": "MOB-214 Submit contact enquiry",
           "request": {
             "method": "POST",
             "header": [
@@ -6344,7 +6531,7 @@
           ]
         },
         {
-          "name": "MOB-208 Review delivered QA purchase",
+          "name": "MOB-215 Review delivered QA purchase",
           "request": {
             "method": "POST",
             "header": [
@@ -6392,7 +6579,7 @@
           ]
         },
         {
-          "name": "MOB-209 Update owned review",
+          "name": "MOB-216 Update owned review",
           "request": {
             "method": "PUT",
             "header": [
@@ -6438,7 +6625,7 @@
           ]
         },
         {
-          "name": "MOB-210 Delete owned review",
+          "name": "MOB-217 Delete owned review",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -6470,7 +6657,7 @@
           ]
         },
         {
-          "name": "MOB-211 Return delivered QA item with video",
+          "name": "MOB-218 Return delivered QA item with video",
           "request": {
             "method": "POST",
             "header": [],
@@ -6544,7 +6731,7 @@
       "name": "99 Clear QA carts",
       "item": [
         {
-          "name": "MOB-212 Clear customer A QA cart",
+          "name": "MOB-219 Clear customer A QA cart",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -6566,7 +6753,7 @@
           ]
         },
         {
-          "name": "MOB-213 Clear customer B QA cart",
+          "name": "MOB-220 Clear customer B QA cart",
           "request": {
             "method": "DELETE",
             "header": [],
@@ -6598,7 +6785,7 @@
           ]
         },
         {
-          "name": "MOB-214 Confirm QA cart is empty",
+          "name": "MOB-221 Confirm QA cart is empty",
           "request": {
             "method": "GET",
             "header": [],

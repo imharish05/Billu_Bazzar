@@ -1,0 +1,1660 @@
+{
+  "note": "Synthetic per-operation examples, not database seed data. Replace IDs, credentials, OTPs and payment references with values from your test environment. Review/return examples require an owned delivered order. Monetary strings reflect database DECIMAL serialization; values vary with runtime configuration.",
+  "operations": {
+    "POST /mob-api/auth/register": {
+      "status": 201,
+      "response": {
+        "success": true,
+        "message": "Customer registered successfully",
+        "token": "REPLACE_WITH_LOGIN_ACCESS_TOKEN"
+      },
+      "request": {
+        "name": "Demo Customer",
+        "email": "mobile.demo@example.com",
+        "phone": "+919876543210",
+        "password": "DemoPassword123!"
+      }
+    },
+    "POST /mob-api/auth/login": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Login successful",
+        "token": "REPLACE_WITH_LOGIN_ACCESS_TOKEN"
+      },
+      "request": {
+        "email": "mobile.demo@example.com",
+        "password": "DemoPassword123!"
+      }
+    },
+    "POST /mob-api/auth/forgot-password": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "A 6-digit verification code has been sent to your email"
+      },
+      "request": {
+        "email": "mobile.demo@example.com"
+      }
+    },
+    "POST /mob-api/auth/verify-otp": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "OTP verified successfully",
+        "resetToken": "REPLACE_WITH_VERIFIED_RESET_TOKEN"
+      },
+      "request": {
+        "email": "mobile.demo@example.com",
+        "otp": "123456"
+      }
+    },
+    "POST /mob-api/auth/new-password": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Password has been updated successfully. You can now login."
+      },
+      "request": {
+        "resetToken": "REPLACE_WITH_VERIFIED_RESET_TOKEN",
+        "newPassword": "NewDemoPassword123!"
+      }
+    },
+    "GET /mob-api/auth/getme": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "customer": {
+          "id": 7,
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "loyaltyPoints": 0,
+          "preferredCurrency": "INR",
+          "createdAt": "2026-09-11T09:00:00.000Z"
+        },
+        "cartCount": 1
+      }
+    },
+    "GET /mob-api/auth/profile": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "customer": {
+          "id": 7,
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "loyaltyPoints": 0,
+          "preferredCurrency": "INR",
+          "isActive": true,
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      }
+    },
+    "PUT /mob-api/auth/profile": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "customer": {
+          "id": 7,
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "loyaltyPoints": 0,
+          "preferredCurrency": "INR",
+          "isActive": true,
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      },
+      "request": {
+        "name": "Demo Customer",
+        "phone": "+919876543210",
+        "address": {
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "address": "10 Demo Street",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "pincode": "600001",
+          "country": "India"
+        },
+        "whatsappOptIn": false
+      }
+    },
+    "PUT /mob-api/auth/change-password": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Password updated successfully"
+      },
+      "request": {
+        "currentPassword": "DemoPassword123!",
+        "newPassword": "NewDemoPassword123!"
+      }
+    },
+    "GET /mob-api/products": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "products": [
+          {
+            "id": 224,
+            "name": "Demo Cotton Shirt",
+            "slug": "demo-cotton-shirt",
+            "price": "999.00",
+            "comparePrice": "1299.00",
+            "currency": "INR",
+            "stock": 25,
+            "images": [
+              "https://example.com/uploads/demo-shirt.jpg"
+            ],
+            "gstRate": "0%",
+            "isActive": true,
+            "rating": "0.00",
+            "reviewCount": 0
+          }
+        ],
+        "total": 1,
+        "page": 1,
+        "totalPages": 1
+      }
+    },
+    "GET /mob-api/products/featured": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "products": [
+          {
+            "id": 224,
+            "name": "Demo Cotton Shirt",
+            "slug": "demo-cotton-shirt",
+            "price": "999.00",
+            "comparePrice": "1299.00",
+            "currency": "INR",
+            "stock": 25,
+            "images": [
+              "https://example.com/uploads/demo-shirt.jpg"
+            ],
+            "gstRate": "0%",
+            "isActive": true,
+            "rating": "0.00",
+            "reviewCount": 0,
+            "isFeatured": true,
+            "category": {
+              "name": "Clothing",
+              "slug": "clothing"
+            }
+          }
+        ]
+      }
+    },
+    "GET /mob-api/products/search": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "products": [
+          {
+            "id": 224,
+            "name": "Demo Cotton Shirt",
+            "slug": "demo-cotton-shirt",
+            "price": "999.00",
+            "images": [
+              "https://example.com/uploads/demo-shirt.jpg"
+            ],
+            "discountPercent": 0
+          }
+        ]
+      }
+    },
+    "GET /mob-api/products/price-range": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "minPrice": 999,
+        "maxPrice": 999
+      }
+    },
+    "GET /mob-api/products/{slug}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "product": {
+          "id": 224,
+          "name": "Demo Cotton Shirt",
+          "slug": "demo-cotton-shirt",
+          "price": "999.00",
+          "comparePrice": "1299.00",
+          "currency": "INR",
+          "stock": 25,
+          "images": [
+            "https://example.com/uploads/demo-shirt.jpg"
+          ],
+          "gstRate": "0%",
+          "isActive": true,
+          "rating": "0.00",
+          "reviewCount": 0,
+          "category": {
+            "id": 12,
+            "name": "Clothing",
+            "slug": "clothing",
+            "isActive": true
+          },
+          "variants": []
+        }
+      }
+    },
+    "GET /mob-api/variants/product/{productId}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "variants": [
+          {
+            "id": 10,
+            "productId": 224,
+            "sku": "DEMO-SHIRT-M",
+            "price": "999.00",
+            "stock": 25,
+            "attributes": {
+              "Size": "M",
+              "Color": "Blue"
+            }
+          }
+        ]
+      }
+    },
+    "GET /mob-api/categories": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "categories": [
+          {
+            "id": 12,
+            "name": "Clothing",
+            "slug": "clothing",
+            "isActive": true
+          }
+        ]
+      }
+    },
+    "GET /mob-api/subcategories": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "subCategories": [
+          {
+            "id": 30,
+            "categoryId": 12,
+            "name": "Shirts",
+            "slug": "shirts",
+            "isActive": true
+          }
+        ]
+      }
+    },
+    "GET /mob-api/subsubcategories": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "subSubCategories": [
+          {
+            "id": 108,
+            "subCategoryId": 30,
+            "name": "Cotton Shirts",
+            "slug": "cotton-shirts",
+            "isActive": true
+          }
+        ]
+      }
+    },
+    "GET /mob-api/categories/tree": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "categories": [
+          {
+            "id": 12,
+            "name": "Clothing",
+            "slug": "clothing",
+            "isActive": true,
+            "subcategories": [
+              {
+                "id": 30,
+                "categoryId": 12,
+                "name": "Shirts",
+                "slug": "shirts",
+                "isActive": true,
+                "subsubcategories": [
+                  {
+                    "id": 108,
+                    "subCategoryId": 30,
+                    "name": "Cotton Shirts",
+                    "slug": "cotton-shirts",
+                    "isActive": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "GET /mob-api/cart": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "cart": {
+          "id": 1,
+          "customerId": 7,
+          "sessionId": null,
+          "items": [
+            {
+              "id": 1,
+              "cartId": 1,
+              "productId": 224,
+              "variantId": null,
+              "quantity": 1,
+              "priceAtAdd": "999.00",
+              "selectedVariant": {},
+              "product": {
+                "id": 224,
+                "name": "Demo Cotton Shirt",
+                "price": "999.00",
+                "images": [
+                  "https://example.com/uploads/demo-shirt.jpg"
+                ],
+                "stock": 25,
+                "slug": "demo-cotton-shirt",
+                "gstRate": "0%"
+              },
+              "variant": null,
+              "gstRate": "0%",
+              "stockStatus": "VALID",
+              "availableStock": 25
+            }
+          ],
+          "subtotal": 999
+        },
+        "cartAdjusted": false,
+        "adjustments": []
+      }
+    },
+    "POST /mob-api/cart/add": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Added to cart",
+        "sessionId": null
+      },
+      "request": {
+        "productId": 224,
+        "quantity": 1
+      }
+    },
+    "POST /mob-api/cart/sync": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "cart": {
+          "id": 1,
+          "customerId": 7,
+          "sessionId": null,
+          "items": [
+            {
+              "id": 1,
+              "cartId": 1,
+              "productId": 224,
+              "variantId": null,
+              "quantity": 1,
+              "priceAtAdd": "999.00",
+              "selectedVariant": {},
+              "product": {
+                "id": 224,
+                "name": "Demo Cotton Shirt",
+                "price": "999.00",
+                "images": [
+                  "https://example.com/uploads/demo-shirt.jpg"
+                ],
+                "stock": 25,
+                "slug": "demo-cotton-shirt",
+                "gstRate": "0%"
+              },
+              "variant": null,
+              "gstRate": "0%",
+              "stockStatus": "VALID",
+              "availableStock": 25
+            }
+          ],
+          "subtotal": 999
+        },
+        "adjustments": []
+      },
+      "request": {
+        "items": [
+          {
+            "productId": 224,
+            "quantity": 1
+          }
+        ]
+      }
+    },
+    "PUT /mob-api/cart/item/{itemId}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Cart updated successfully"
+      },
+      "request": {
+        "quantity": 2
+      }
+    },
+    "DELETE /mob-api/cart/item/{itemId}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Removed from cart"
+      }
+    },
+    "DELETE /mob-api/cart/clear": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Cart cleared"
+      }
+    },
+    "GET /mob-api/orders/my": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "orders": [
+          {
+            "id": 57,
+            "orderNumber": "BBDEMO0001",
+            "customerId": 7,
+            "status": "PENDING_PAYMENT",
+            "paymentStatus": "UNPAID",
+            "paymentMethod": "Razorpay Secure Online",
+            "subtotal": "999.00",
+            "discountAmount": "0.00",
+            "shippingAmount": "40.00",
+            "taxAmount": "0.00",
+            "totalAmount": "1039.00",
+            "currency": "INR",
+            "shippingAddress": {
+              "name": "Demo Customer",
+              "email": "mobile.demo@example.com",
+              "phone": "+919876543210",
+              "address": "10 Demo Street",
+              "city": "Chennai",
+              "state": "Tamil Nadu",
+              "pincode": "600001",
+              "country": "India"
+            },
+            "billingAddress": {
+              "name": "Demo Customer",
+              "email": "mobile.demo@example.com",
+              "phone": "+919876543210",
+              "address": "10 Demo Street",
+              "city": "Chennai",
+              "state": "Tamil Nadu",
+              "pincode": "600001",
+              "country": "India"
+            },
+            "createdAt": "2026-09-11T09:00:00.000Z",
+            "updatedAt": "2026-09-11T09:00:00.000Z",
+            "items": [
+              {
+                "id": 1,
+                "orderId": 57,
+                "productId": 224,
+                "productName": "Demo Cotton Shirt",
+                "quantity": 1,
+                "unitPrice": "999.00",
+                "totalPrice": "999.00"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "GET /mob-api/orders/my/{id}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "order": {
+          "id": 57,
+          "orderNumber": "BBDEMO0001",
+          "customerId": 7,
+          "status": "PENDING_PAYMENT",
+          "paymentStatus": "UNPAID",
+          "paymentMethod": "Razorpay Secure Online",
+          "subtotal": "999.00",
+          "discountAmount": "0.00",
+          "shippingAmount": "40.00",
+          "taxAmount": "0.00",
+          "totalAmount": "1039.00",
+          "currency": "INR",
+          "shippingAddress": {
+            "name": "Demo Customer",
+            "email": "mobile.demo@example.com",
+            "phone": "+919876543210",
+            "address": "10 Demo Street",
+            "city": "Chennai",
+            "state": "Tamil Nadu",
+            "pincode": "600001",
+            "country": "India"
+          },
+          "billingAddress": {
+            "name": "Demo Customer",
+            "email": "mobile.demo@example.com",
+            "phone": "+919876543210",
+            "address": "10 Demo Street",
+            "city": "Chennai",
+            "state": "Tamil Nadu",
+            "pincode": "600001",
+            "country": "India"
+          },
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z",
+          "items": [
+            {
+              "id": 1,
+              "orderId": 57,
+              "productId": 224,
+              "productName": "Demo Cotton Shirt",
+              "quantity": 1,
+              "unitPrice": "999.00",
+              "totalPrice": "999.00"
+            }
+          ]
+        }
+      }
+    },
+    "POST /mob-api/orders": {
+      "status": 201,
+      "response": {
+        "success": true,
+        "order": {
+          "id": 57,
+          "orderNumber": "BBDEMO0001",
+          "customerId": 7,
+          "status": "PENDING_PAYMENT",
+          "paymentStatus": "UNPAID",
+          "paymentMethod": "Razorpay Secure Online",
+          "subtotal": "999.00",
+          "discountAmount": "0.00",
+          "shippingAmount": "40.00",
+          "taxAmount": "0.00",
+          "totalAmount": "1039.00",
+          "currency": "INR",
+          "shippingAddress": {
+            "name": "Demo Customer",
+            "email": "mobile.demo@example.com",
+            "phone": "+919876543210",
+            "address": "10 Demo Street",
+            "city": "Chennai",
+            "state": "Tamil Nadu",
+            "pincode": "600001",
+            "country": "India"
+          },
+          "billingAddress": {
+            "name": "Demo Customer",
+            "email": "mobile.demo@example.com",
+            "phone": "+919876543210",
+            "address": "10 Demo Street",
+            "city": "Chennai",
+            "state": "Tamil Nadu",
+            "pincode": "600001",
+            "country": "India"
+          },
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z",
+          "items": [
+            {
+              "id": 1,
+              "orderId": 57,
+              "productId": 224,
+              "productName": "Demo Cotton Shirt",
+              "quantity": 1,
+              "unitPrice": "999.00",
+              "totalPrice": "999.00"
+            }
+          ]
+        }
+      },
+      "request": {
+        "shippingAddress": {
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "address": "10 Demo Street",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "pincode": "600001",
+          "country": "India"
+        },
+        "billingAddress": {
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "address": "10 Demo Street",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "pincode": "600001",
+          "country": "India"
+        },
+        "paymentMethod": "Razorpay Secure Online",
+        "geoCountry": "IN",
+        "requestedCurrency": "INR"
+      }
+    },
+    "POST /mob-api/orders/my/{id}/cancel": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Order cancelled successfully",
+        "order": {
+          "id": 57,
+          "orderNumber": "BBDEMO0001",
+          "customerId": 7,
+          "status": "CANCELLED",
+          "paymentStatus": "UNPAID",
+          "paymentMethod": "Razorpay Secure Online",
+          "subtotal": "999.00",
+          "discountAmount": "0.00",
+          "shippingAmount": "40.00",
+          "taxAmount": "0.00",
+          "totalAmount": "1039.00",
+          "currency": "INR",
+          "shippingAddress": {
+            "name": "Demo Customer",
+            "email": "mobile.demo@example.com",
+            "phone": "+919876543210",
+            "address": "10 Demo Street",
+            "city": "Chennai",
+            "state": "Tamil Nadu",
+            "pincode": "600001",
+            "country": "India"
+          },
+          "billingAddress": {
+            "name": "Demo Customer",
+            "email": "mobile.demo@example.com",
+            "phone": "+919876543210",
+            "address": "10 Demo Street",
+            "city": "Chennai",
+            "state": "Tamil Nadu",
+            "pincode": "600001",
+            "country": "India"
+          },
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z",
+          "items": [
+            {
+              "id": 1,
+              "orderId": 57,
+              "productId": 224,
+              "productName": "Demo Cotton Shirt",
+              "quantity": 1,
+              "unitPrice": "999.00",
+              "totalPrice": "999.00"
+            }
+          ]
+        }
+      },
+      "request": {
+        "reason": "Ordered the wrong size"
+      }
+    },
+    "GET /mob-api/orders/track/{identifier}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "order": {
+          "id": 57,
+          "orderNumber": "BBDEMO0001",
+          "customerId": 7,
+          "status": "PENDING_PAYMENT",
+          "paymentStatus": "UNPAID",
+          "paymentMethod": "Razorpay Secure Online",
+          "subtotal": "999.00",
+          "discountAmount": "0.00",
+          "shippingAmount": "40.00",
+          "taxAmount": "0.00",
+          "totalAmount": "1039.00",
+          "currency": "INR",
+          "shippingAddress": {
+            "name": "Demo Customer",
+            "email": "mobile.demo@example.com",
+            "phone": "+919876543210",
+            "address": "10 Demo Street",
+            "city": "Chennai",
+            "state": "Tamil Nadu",
+            "pincode": "600001",
+            "country": "India"
+          },
+          "billingAddress": {
+            "name": "Demo Customer",
+            "email": "mobile.demo@example.com",
+            "phone": "+919876543210",
+            "address": "10 Demo Street",
+            "city": "Chennai",
+            "state": "Tamil Nadu",
+            "pincode": "600001",
+            "country": "India"
+          },
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z",
+          "items": [
+            {
+              "id": 1,
+              "orderId": 57,
+              "productId": 224,
+              "productName": "Demo Cotton Shirt",
+              "quantity": 1,
+              "unitPrice": "999.00",
+              "totalPrice": "999.00"
+            }
+          ]
+        }
+      }
+    },
+    "GET /mob-api/payments/geo-detect": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "countryCode": "IN",
+        "countryName": "India",
+        "currency": "INR",
+        "gateway": "razorpay",
+        "isAllowed": true
+      }
+    },
+    "POST /mob-api/payments/initiate": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "gateway": "razorpay",
+        "key": "rzp_test_REPLACE_WITH_GATEWAY_KEY",
+        "amount": 103900,
+        "currency": "INR",
+        "name": "Billu Bazzar",
+        "description": "Payment for Order BBDEMO0001",
+        "order_id": "order_REPLACE_WITH_GATEWAY_ORDER_ID"
+      },
+      "request": {
+        "orderId": 57
+      }
+    },
+    "POST /mob-api/payments/verify": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "status": "PAID"
+      },
+      "request": {
+        "orderId": 57,
+        "razorpayPaymentId": "pay_REPLACE_WITH_GATEWAY_PAYMENT_ID",
+        "razorpayOrderId": "order_REPLACE_WITH_GATEWAY_ORDER_ID",
+        "razorpaySignature": "REPLACE_WITH_GATEWAY_SIGNATURE"
+      }
+    },
+    "GET /mob-api/myaccount/wishlist": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "wishlist": [
+          {
+            "id": 1,
+            "customerId": 7,
+            "productId": 224,
+            "product": {
+              "id": 224,
+              "name": "Demo Cotton Shirt",
+              "slug": "demo-cotton-shirt",
+              "price": "999.00",
+              "comparePrice": "1299.00",
+              "currency": "INR",
+              "stock": 25,
+              "images": [
+                "https://example.com/uploads/demo-shirt.jpg"
+              ],
+              "gstRate": "0%",
+              "isActive": true,
+              "rating": "0.00",
+              "reviewCount": 0
+            }
+          }
+        ]
+      }
+    },
+    "POST /mob-api/myaccount/wishlist": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "action": "added"
+      },
+      "request": {
+        "productId": 224
+      }
+    },
+    "GET /mob-api/myaccount/loyalty": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "ledger": [],
+        "balance": 0
+      }
+    },
+    "GET /mob-api/myaccount/tickets": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "tickets": [
+          {
+            "id": 1,
+            "customerId": 7,
+            "subject": "Delivery question",
+            "description": "Please confirm the estimated delivery date.",
+            "category": "GENERAL",
+            "status": "OPEN",
+            "createdAt": "2026-09-11T09:00:00.000Z",
+            "updatedAt": "2026-09-11T09:00:00.000Z"
+          }
+        ]
+      }
+    },
+    "POST /mob-api/myaccount/tickets": {
+      "status": 201,
+      "response": {
+        "success": true,
+        "ticket": {
+          "id": 1,
+          "customerId": 7,
+          "subject": "Delivery question",
+          "description": "Please confirm the estimated delivery date.",
+          "category": "GENERAL",
+          "status": "OPEN",
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      },
+      "request": {
+        "subject": "Delivery question",
+        "description": "Please confirm the estimated delivery date.",
+        "category": "GENERAL"
+      }
+    },
+    "GET /mob-api/coupons": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "coupons": [
+          {
+            "id": 1,
+            "code": "DEMO10",
+            "type": "PERCENT",
+            "value": "10.00",
+            "minOrderValue": "500.00",
+            "maxDiscount": "200.00",
+            "isActive": true,
+            "validFrom": "2026-09-11T09:00:00.000Z",
+            "validUntil": "2026-12-31T23:59:59.000Z"
+          }
+        ]
+      }
+    },
+    "POST /mob-api/coupons/validate": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "valid": true,
+        "coupon": {
+          "id": 1,
+          "code": "DEMO10",
+          "type": "PERCENT",
+          "value": "10.00",
+          "minOrderValue": "500.00",
+          "maxDiscount": "200.00",
+          "isActive": true,
+          "validFrom": "2026-09-11T09:00:00.000Z",
+          "validUntil": "2026-12-31T23:59:59.000Z"
+        },
+        "discountAmount": 100,
+        "freeShipping": false
+      },
+      "request": {
+        "code": "DEMO10",
+        "subtotal": 1000
+      }
+    },
+    "GET /mob-api/delivery-zones/check/{pincode}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "deliverable": true,
+        "pincode": "600001",
+        "zoneName": "Chennai",
+        "city": "Chennai",
+        "state": "Tamil Nadu",
+        "deliveryCharge": 40,
+        "minOrderAmountForFreeDelivery": 1500
+      }
+    },
+    "GET /mob-api/stock-status": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "productId": 224,
+        "variantId": null,
+        "stock": 25,
+        "cartQty": 1,
+        "availableStock": 24,
+        "stockStatus": "IN_STOCK",
+        "stockLabel": "In Stock",
+        "canAddToCart": true,
+        "canBuyNow": true
+      }
+    },
+    "POST /mob-api/stock-alerts": {
+      "status": 201,
+      "response": {
+        "success": true,
+        "message": "Restock alert set! We will email mobile.demo@example.com as soon as \"Demo Cotton Shirt\" is back in stock.",
+        "alert": {
+          "id": 1,
+          "productId": 224,
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210"
+        }
+      },
+      "request": {
+        "productId": 224,
+        "email": "mobile.demo@example.com",
+        "phone": "+919876543210"
+      }
+    },
+    "GET /mob-api/settings/{key}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "key": "otp_threshold",
+        "data": {
+          "inrThreshold": 20000,
+          "aedThreshold": 800,
+          "requireCodOtp": true
+        }
+      }
+    },
+    "POST /mob-api/settings/newsletter-subscribe": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Thank you!",
+        "pointsAwarded": 0
+      },
+      "request": {
+        "email": "mobile.demo@example.com"
+      }
+    },
+    "GET /mob-api/banners": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "banners": [
+          {
+            "id": 1,
+            "title": "New collection",
+            "image": "https://example.com/uploads/demo-banner.jpg",
+            "type": "HERO",
+            "ctaText": "Shop now",
+            "ctaLink": "/products",
+            "position": 0,
+            "isActive": true
+          }
+        ]
+      }
+    },
+    "GET /mob-api/marketing-messages": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "messages": [
+          {
+            "id": 1,
+            "message": "Explore our new collection",
+            "position": 0,
+            "isActive": true
+          }
+        ]
+      }
+    },
+    "GET /mob-api/search/autocomplete": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "suggestions": [
+          "cotton shirt"
+        ],
+        "products": [
+          {
+            "id": 224,
+            "name": "Demo Cotton Shirt",
+            "price": "999.00",
+            "comparePrice": "1299.00",
+            "image": "https://example.com/uploads/demo-shirt.jpg",
+            "slug": "demo-cotton-shirt",
+            "discountPercent": 0
+          }
+        ]
+      }
+    },
+    "GET /mob-api/search/trending": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "trending": [
+          "cotton shirt",
+          "saree"
+        ]
+      }
+    },
+    "POST /mob-api/search/track": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Search tracked successfully"
+      },
+      "request": {
+        "q": "cotton shirt"
+      }
+    },
+    "GET /mob-api/currency/rate": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "base": "AED",
+        "target": "INR",
+        "rate": 23.5,
+        "note": "Rate is cached and refreshed every 6 hours from open.er-api.com"
+      }
+    },
+    "GET /mob-api/gift-service": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "giftService": {
+          "id": "gift_wrap_1",
+          "label": "Gift wrapping",
+          "amount": 99,
+          "description": "Gift box and ribbon",
+          "isActive": true,
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      }
+    },
+    "POST /mob-api/contact-enquiries": {
+      "status": 201,
+      "response": {
+        "success": true,
+        "message": "Thank you! Your message has been sent successfully.",
+        "data": {
+          "id": 1,
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "subject": "Delivery question",
+          "message": "Do you deliver to Chennai?",
+          "status": "PENDING",
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      },
+      "request": {
+        "name": "Demo Customer",
+        "email": "mobile.demo@example.com",
+        "phone": "+919876543210",
+        "subject": "Delivery question",
+        "message": "Do you deliver to Chennai?"
+      }
+    },
+    "POST /mob-api/personal-shopper": {
+      "status": 201,
+      "response": {
+        "success": true,
+        "message": "Styling request sent — our stylist will reach out within 24h",
+        "data": {
+          "id": 1,
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "occasion": "Wedding",
+          "budget": "5000",
+          "style": "Traditional",
+          "notes": "Please suggest an outfit.",
+          "status": "PENDING",
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      },
+      "request": {
+        "name": "Demo Customer",
+        "email": "mobile.demo@example.com",
+        "phone": "+919876543210",
+        "occasion": "Wedding",
+        "budget": "5000",
+        "style": "Traditional",
+        "notes": "Please suggest an outfit."
+      }
+    },
+    "GET /mob-api/affiliates": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "affiliates": [
+          {
+            "id": 1,
+            "name": "Demo Stylist",
+            "handle": "@demo",
+            "avatar": "https://example.com/demo-avatar.jpg",
+            "productsCurated": 10,
+            "followers": "1K",
+            "referralCode": "DEMOREF",
+            "isActive": true
+          }
+        ]
+      }
+    },
+    "GET /mob-api/affiliates/track": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Click tracked successfully",
+        "currentClicks": 1
+      }
+    },
+    "POST /mob-api/checkout/send-otp": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Verification OTP sent to mobile.demo@example.com"
+      },
+      "request": {
+        "email": "mobile.demo@example.com",
+        "name": "Demo Customer"
+      }
+    },
+    "POST /mob-api/checkout/verify-otp": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Security verification successful"
+      },
+      "request": {
+        "email": "mobile.demo@example.com",
+        "otp": "123456"
+      }
+    },
+    "GET /mob-api/reviews/product/{productId}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "productId": 224,
+        "averageRating": 0,
+        "totalCount": 0,
+        "ratingBreakdown": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 0
+        },
+        "reviews": [],
+        "userCanReview": true,
+        "userReview": null,
+        "eligibleOrderId": 57
+      }
+    },
+    "GET /mob-api/reviews/my-delivered-items": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "items": [
+          {
+            "orderId": 57,
+            "orderNumber": "BBDEMO0001",
+            "deliveredAt": "2026-09-11T09:00:00.000Z",
+            "productId": 224,
+            "productName": "Demo Cotton Shirt",
+            "productSlug": "demo-cotton-shirt",
+            "productImage": "https://example.com/uploads/demo-shirt.jpg",
+            "existingReview": null
+          }
+        ]
+      }
+    },
+    "POST /mob-api/reviews": {
+      "status": 201,
+      "response": {
+        "success": true,
+        "message": "Review submitted successfully!",
+        "review": {
+          "id": 1,
+          "productId": 224,
+          "customerId": 7,
+          "orderId": 57,
+          "rating": 5,
+          "title": "Good quality",
+          "body": "The fabric matches the description.",
+          "isVerifiedPurchase": true,
+          "isApproved": false,
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        },
+        "productStats": {
+          "rating": 0,
+          "reviewCount": 0
+        },
+        "bonusPointsEarned": 0
+      },
+      "request": {
+        "productId": 224,
+        "orderId": 57,
+        "rating": 5,
+        "title": "Good quality",
+        "body": "The fabric matches the description."
+      }
+    },
+    "PUT /mob-api/reviews/{id}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Review updated successfully!",
+        "review": {
+          "id": 1,
+          "productId": 224,
+          "customerId": 7,
+          "orderId": 57,
+          "rating": 5,
+          "title": "Good quality",
+          "body": "The fabric matches the description.",
+          "isVerifiedPurchase": true,
+          "isApproved": false,
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        },
+        "productStats": {
+          "rating": 0,
+          "reviewCount": 0
+        }
+      },
+      "request": {
+        "rating": 5,
+        "title": "Good quality",
+        "body": "The fabric matches the description."
+      }
+    },
+    "DELETE /mob-api/reviews/{id}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Review deleted successfully.",
+        "productStats": {
+          "rating": 0,
+          "reviewCount": 0
+        }
+      }
+    },
+    "GET /mob-api/returns/my": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "returns": [
+          {
+            "id": 1,
+            "returnNumber": "RET-DEMO0001",
+            "orderId": 57,
+            "orderItemId": 1,
+            "customerId": 7,
+            "productId": 224,
+            "productName": "Demo Cotton Shirt",
+            "quantity": 1,
+            "refundAmount": "999.00",
+            "currency": "INR",
+            "reason": "Damaged item",
+            "reasonDetails": "Seam damaged on arrival.",
+            "unboxingVideoUrl": "https://example.com/evidence/demo-unboxing.mp4",
+            "images": [],
+            "status": "REQUESTED",
+            "createdAt": "2026-09-11T09:00:00.000Z",
+            "updatedAt": "2026-09-11T09:00:00.000Z"
+          }
+        ]
+      }
+    },
+    "GET /mob-api/returns/my/{id}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "returnRequest": {
+          "id": 1,
+          "returnNumber": "RET-DEMO0001",
+          "orderId": 57,
+          "orderItemId": 1,
+          "customerId": 7,
+          "productId": 224,
+          "productName": "Demo Cotton Shirt",
+          "quantity": 1,
+          "refundAmount": "999.00",
+          "currency": "INR",
+          "reason": "Damaged item",
+          "reasonDetails": "Seam damaged on arrival.",
+          "unboxingVideoUrl": "https://example.com/evidence/demo-unboxing.mp4",
+          "images": [],
+          "status": "REQUESTED",
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      }
+    },
+    "POST /mob-api/returns/request": {
+      "status": 201,
+      "response": {
+        "success": true,
+        "message": "Return request submitted successfully with unboxing video proof.",
+        "returnRequest": {
+          "id": 1,
+          "returnNumber": "RET-DEMO0001",
+          "orderId": 57,
+          "orderItemId": 1,
+          "customerId": 7,
+          "productId": 224,
+          "productName": "Demo Cotton Shirt",
+          "quantity": 1,
+          "refundAmount": "999.00",
+          "currency": "INR",
+          "reason": "Damaged item",
+          "reasonDetails": "Seam damaged on arrival.",
+          "unboxingVideoUrl": "https://example.com/evidence/demo-unboxing.mp4",
+          "images": [],
+          "status": "REQUESTED",
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      },
+      "request": {
+        "orderId": 57,
+        "orderItemId": 1,
+        "quantity": 1,
+        "reason": "Damaged item",
+        "reasonDetails": "Seam damaged on arrival.",
+        "unboxingVideoUrl": "https://example.com/evidence/demo-unboxing.mp4"
+      }
+    },
+    "GET /mob-api/auth/me": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "customer": {
+          "id": 7,
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "loyaltyPoints": 0,
+          "preferredCurrency": "INR",
+          "createdAt": "2026-09-11T09:00:00.000Z"
+        },
+        "cartCount": 1
+      }
+    },
+    "POST /mob-api/auth/reset-password": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Password has been updated successfully. You can now login."
+      },
+      "request": {
+        "resetToken": "REPLACE_WITH_VERIFIED_RESET_TOKEN",
+        "newPassword": "NewDemoPassword123!"
+      }
+    },
+    "GET /mob-api/site-settings/{key}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "key": "otp_threshold",
+        "data": {
+          "inrThreshold": 20000,
+          "aedThreshold": 800,
+          "requireCodOtp": true
+        }
+      }
+    },
+    "GET /mob-api/offers": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "coupons": [
+          {
+            "id": 1,
+            "code": "DEMO10",
+            "type": "PERCENT",
+            "value": "10.00",
+            "minOrderValue": "500.00",
+            "maxDiscount": "200.00",
+            "isActive": true,
+            "validFrom": "2026-09-11T09:00:00.000Z",
+            "validUntil": "2026-12-31T23:59:59.000Z"
+          }
+        ]
+      }
+    },
+    "POST /mob-api/offers/validate": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "valid": true,
+        "coupon": {
+          "id": 1,
+          "code": "DEMO10",
+          "type": "PERCENT",
+          "value": "10.00",
+          "minOrderValue": "500.00",
+          "maxDiscount": "200.00",
+          "isActive": true,
+          "validFrom": "2026-09-11T09:00:00.000Z",
+          "validUntil": "2026-12-31T23:59:59.000Z"
+        },
+        "discountAmount": 100,
+        "freeShipping": false
+      },
+      "request": {
+        "code": "DEMO10",
+        "subtotal": 1000
+      }
+    },
+    "GET /mob-api/delivery-zones/check": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "deliverable": true,
+        "pincode": "600001",
+        "zoneName": "Chennai",
+        "city": "Chennai",
+        "state": "Tamil Nadu",
+        "deliveryCharge": 40,
+        "minOrderAmountForFreeDelivery": 1500
+      }
+    },
+    "POST /mob-api/auth/send-checkout-otp": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Verification OTP sent to mobile.demo@example.com"
+      },
+      "request": {
+        "email": "mobile.demo@example.com",
+        "name": "Demo Customer"
+      }
+    },
+    "POST /mob-api/auth/verify-checkout-otp": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Security verification successful"
+      },
+      "request": {
+        "email": "mobile.demo@example.com",
+        "otp": "123456"
+      }
+    },
+    "GET /mob-api/myaccount/profile": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "customer": {
+          "id": 7,
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "loyaltyPoints": 0,
+          "preferredCurrency": "INR",
+          "isActive": true,
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      }
+    },
+    "PUT /mob-api/myaccount/profile": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "customer": {
+          "id": 7,
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "loyaltyPoints": 0,
+          "preferredCurrency": "INR",
+          "isActive": true,
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      },
+      "request": {
+        "name": "Demo Customer",
+        "phone": "+919876543210",
+        "address": {
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "address": "10 Demo Street",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "pincode": "600001",
+          "country": "India"
+        },
+        "whatsappOptIn": false
+      }
+    },
+    "PUT /mob-api/myaccount/change-password": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Password updated successfully"
+      },
+      "request": {
+        "currentPassword": "DemoPassword123!",
+        "newPassword": "NewDemoPassword123!"
+      }
+    },
+    "GET /mob-api/customers/wishlist": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "wishlist": [
+          {
+            "id": 1,
+            "customerId": 7,
+            "productId": 224,
+            "product": {
+              "id": 224,
+              "name": "Demo Cotton Shirt",
+              "slug": "demo-cotton-shirt",
+              "price": "999.00",
+              "comparePrice": "1299.00",
+              "currency": "INR",
+              "stock": 25,
+              "images": [
+                "https://example.com/uploads/demo-shirt.jpg"
+              ],
+              "gstRate": "0%",
+              "isActive": true,
+              "rating": "0.00",
+              "reviewCount": 0
+            }
+          }
+        ]
+      }
+    },
+    "POST /mob-api/customers/wishlist": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "action": "added"
+      },
+      "request": {
+        "productId": 224
+      }
+    },
+    "GET /mob-api/customers/loyalty": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "ledger": [],
+        "balance": 0
+      }
+    },
+    "GET /mob-api/customers/tickets": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "tickets": [
+          {
+            "id": 1,
+            "customerId": 7,
+            "subject": "Delivery question",
+            "description": "Please confirm the estimated delivery date.",
+            "category": "GENERAL",
+            "status": "OPEN",
+            "createdAt": "2026-09-11T09:00:00.000Z",
+            "updatedAt": "2026-09-11T09:00:00.000Z"
+          }
+        ]
+      }
+    },
+    "POST /mob-api/customers/tickets": {
+      "status": 201,
+      "response": {
+        "success": true,
+        "ticket": {
+          "id": 1,
+          "customerId": 7,
+          "subject": "Delivery question",
+          "description": "Please confirm the estimated delivery date.",
+          "category": "GENERAL",
+          "status": "OPEN",
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      },
+      "request": {
+        "subject": "Delivery question",
+        "description": "Please confirm the estimated delivery date.",
+        "category": "GENERAL"
+      }
+    }
+  }
+}

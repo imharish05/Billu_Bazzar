@@ -1,19 +1,21 @@
 # Mobile API Postman test report
 
+> Historical results: this run predates the all-feature authentication policy. Guest browsing now returns 401. The regenerated collection has 221 scenarios and has not been rerun live; scenario IDs below refer to the historical collection. Current mocked mobile tests pass all 9 groups.
+
 Executed with Newman 6.2.2 against http://127.0.0.1:5000. This is an HTTP integration run against the running backend and its MySQL database, not the earlier mocked unit tests. Postman desktop was not used.
 
-**196 passed, 0 failed, 0 connection errors, 18 not run; 214 scenarios total.** A passing negative test proves rejection, not successful completion of the corresponding business flow.
+**172 passed, 0 failed, 1 connection errors, 18 not run; 191 scenarios total.** A passing negative test proves rejection, not successful completion of the corresponding business flow.
 
 ## Actual test data
 
 | Variable | Actual value |
 |---|---|
 | baseUrl | http://127.0.0.1:5000 |
-| qaEmail | mobile.qa.1789032791666@example.com |
-| qaEmailB | mobile.qa.b.1789032791666@example.com |
-| qaPhone | +919032791666 |
-| qaPhoneB | +918032791666 |
-| customerId | 17 |
+| qaEmail | mobile.qa.1789036744395@example.com |
+| qaEmailB | mobile.qa.b.1789036744395@example.com |
+| qaPhone | +919036744395 |
+| qaPhoneB | +918036744395 |
+| customerId | 19 |
 | productId | 224 |
 | productSlug | sample |
 | productName | sample |
@@ -21,7 +23,7 @@ Executed with Newman 6.2.2 against http://127.0.0.1:5000. This is an HTTP integr
 | productStock | 469 |
 | variantId | 31 |
 | categoryId | 12 |
-| cartItemId | 113 |
+| cartItemId | 116 |
 | pincode | 600001 |
 
 Passwords and tokens are omitted from this report. They are stored only in ignored local environment/result files. Product and cart IDs were captured from API responses. Pincode 600001 was independently confirmed as an active Chennai delivery zone.
@@ -32,21 +34,51 @@ No failed executed scenarios.
 
 ## Request errors
 
-No request errors.
+- **MOB-106: Reject GET /affiliates/track?ref=QA_MISSING** — ESOCKETTIMEDOUT; no HTTP response within the runner timeout.
 
 ## Performance checks
 
-- MOB-027: Read /affiliates took 53.6 seconds.
-- MOB-106: Reject GET /affiliates/track?ref=QA_MISSING took 48.0 seconds.
+- MOB-027: Read /affiliates took 40.5 seconds.
 
 The latest run allows 60 seconds per request. Earlier affiliate requests timed out at 30 seconds. Eventual functional success does not resolve this latency. Direct reads of Affiliates also stalled, while SELECT 1 and an indexed ID lookup responded. The local MySQL log contains InnoDB consistency warnings, but a causal link to this latency has not been established. No database repair or restart was performed.
 
 ## Additional live email checks
 
-- Checkout OTP email delivery: PASS. HTTP 200 from Newman; user confirmed email receipt. Fresh delivery was also successful. Covers main-collection scenario MOB-205 separately.
+- Checkout OTP email delivery: PASS. HTTP 200 from Newman; user confirmed email receipt. Fresh delivery was also successful. Historical supplementary check; scenario IDs may change when regenerated.
 - First checkout OTP verification: FAIL. HTTP 400 incorrect/expired. The backend uses an in-memory store; a development restart occurred between delivery and verification. Password unchanged.
-- Fresh checkout OTP verification: PASS. Executed through Newman with the fresh user-provided code; HTTP 200, Security verification successful. Covers main-collection scenario MOB-206 separately.
+- Fresh checkout OTP verification: PASS. Executed through Newman with the fresh user-provided code; HTTP 200, Security verification successful. Historical supplementary check; scenario IDs may change when regenerated.
 - Used checkout OTP replay: PASS. Reusing the same code returned HTTP 400. The code was not saved in this report.
+
+## Dedicated fixture integration run
+
+Newman HTTP + real MySQL; seeded delivered order; email sink; video URL validation only; no gateway verification. Executed 2026-09-10T11:08:34.833Z. These are separate scenarios, not replacements for skipped main-collection requests.
+
+- PASS: Valid dedicated coupon (HTTP 200).
+- PASS: Coupon minimum rejected (HTTP 400).
+- PASS: Place online buy-now QA order (HTTP 201).
+- PASS: Other customer cannot read order (HTTP 404).
+- PASS: Other customer cannot initiate payment (HTTP 404).
+- PASS: Other customer cannot cancel order (HTTP 404).
+- PASS: Cancel own pending order (HTTP 200).
+- PASS: Read owned delivered fixture (HTTP 200).
+- PASS: Track owned delivered fixture (HTTP 200).
+- PASS: Delivered review eligibility (HTTP 200).
+- PASS: Cannot review unpurchased product (HTTP 403).
+- PASS: Create delivered-product review (HTTP 201).
+- PASS: Other customer cannot update review (HTTP 403).
+- PASS: Update owned review (HTTP 200).
+- PASS: Delete owned review (HTTP 200).
+- PASS: Return delivered fixture with video URL (HTTP 201).
+- PASS: Read owned return (HTTP 200).
+- PASS: Other customer cannot read return (HTTP 404).
+- PASS: Duplicate return rejected (HTTP 400).
+- PASS: Recovery email captured by local sink (HTTP 200).
+- PASS: Verify recovery OTP from sink (HTTP 200).
+- PASS: Reset dedicated QA password (HTTP 200).
+- PASS: Login using reset password (HTTP 200).
+- PASS: Old password rejected after reset (HTTP 401).
+
+The run creates labelled QA customers, products, a coupon, a seeded delivered order, and a pending order through the API. Catalog/coupon fixtures are deactivated afterward; QA records remain for inspection. Notifications are captured locally. A video URL was supplied; multipart video upload and physical delivery were not tested. Successful gateway payment verification remains pending.
 
 ## Fixes found during live testing
 
@@ -55,28 +87,31 @@ The latest run allows 60 seconds per request. Earlier affiliate requests timed o
 - Wishlist variant JSON was returned as a serialized string by this database. The comparison now normalizes serialized JSON before matching, so the second toggle removes the item. The final run verifies the added -> removed transition.
 - Test fixtures now use India-format phone numbers accepted by account/profile validation, and the stock-alert JSON payload was corrected.
 
-Auth implementation and token behavior were not changed. The eight existing mocked boundary-test groups also passed after the fixes.
+Auth implementation and token behavior were not changed. All nine mocked boundary-test groups passed, including guest access and private-route protection.
+
+- Guest discovery now allows browsing before login; private commerce still requires an active customer.
+- Review creation now rejects products absent from the delivered order, including single-item orders. The missing ProductVariant import and product-hook Op import were corrected.
 
 ## Pending integration scenarios
 
-- MOB-040: Validate real active offer. Required fixture was not captured: couponCode, couponSubtotal. 
-- MOB-195: Place online order. Integration prerequisites; runManual=false. Requires isolated test inventory and an approved order lifecycle.
-- MOB-196: Initiate sandbox payment. Integration prerequisites; runManual=false. Requires configured sandbox gateway.
-- MOB-197: Verify successful sandbox payment. Integration prerequisites; runManual=false. 
-- MOB-198: Get owned order. Integration prerequisites; runManual=false. 
-- MOB-199: Track owned order. Integration prerequisites; runManual=false. 
-- MOB-200: Customer B cannot pay customer A order. Integration prerequisites; runManual=false. 
-- MOB-201: Cancel QA order. Integration prerequisites; runManual=false. May send a cancellation email; order must be cancellable.
-- MOB-202: Request recovery OTP. Integration prerequisites; runManual=false. Requires a test mailbox/SMTP sink; replace qaEmail with that account.
-- MOB-203: Verify recovery OTP. Integration prerequisites; runManual=false. 
-- MOB-204: Set new password with reset token. Integration prerequisites; runManual=false. 
-- MOB-205: Send checkout OTP. Integration prerequisites; runManual=false. Requires test mailbox/SMTP sink.
-- MOB-206: Verify valid checkout OTP. Integration prerequisites; runManual=false. 
-- MOB-207: Submit contact enquiry. Integration prerequisites; runManual=false. Sends an admin notification; requires approved sandbox email delivery.
-- MOB-208: Review delivered QA purchase. Integration prerequisites; runManual=false. 
-- MOB-209: Update owned review. Integration prerequisites; runManual=false. 
-- MOB-210: Delete owned review. Integration prerequisites; runManual=false. 
-- MOB-211: Return delivered QA item with video. Integration prerequisites; runManual=false. Requires a delivered QA order within the return window, real unboxing video, and sandbox notification delivery.
+- MOB-040: Validate real active offer. Required fixture was not captured: couponCode, couponSubtotal.
+- MOB-172: Place online order. Integration prerequisites; runManual=false. Requires isolated test inventory and an approved order lifecycle.
+- MOB-173: Initiate sandbox payment. Integration prerequisites; runManual=false. Requires configured sandbox gateway.
+- MOB-174: Verify successful sandbox payment. Integration prerequisites; runManual=false.
+- MOB-175: Get owned order. Integration prerequisites; runManual=false.
+- MOB-176: Track owned order. Integration prerequisites; runManual=false.
+- MOB-177: Customer B cannot pay customer A order. Integration prerequisites; runManual=false.
+- MOB-178: Cancel QA order. Integration prerequisites; runManual=false. May send a cancellation email; order must be cancellable.
+- MOB-179: Request recovery OTP. Integration prerequisites; runManual=false. Requires a test mailbox/SMTP sink; replace qaEmail with that account.
+- MOB-180: Verify recovery OTP. Integration prerequisites; runManual=false.
+- MOB-181: Set new password with reset token. Integration prerequisites; runManual=false.
+- MOB-182: Send checkout OTP. Integration prerequisites; runManual=false. Requires test mailbox/SMTP sink.
+- MOB-183: Verify valid checkout OTP. Integration prerequisites; runManual=false.
+- MOB-184: Submit contact enquiry. Integration prerequisites; runManual=false. Sends an admin notification; requires approved sandbox email delivery.
+- MOB-185: Review delivered QA purchase. Integration prerequisites; runManual=false.
+- MOB-186: Update owned review. Integration prerequisites; runManual=false.
+- MOB-187: Delete owned review. Integration prerequisites; runManual=false.
+- MOB-188: Return delivered QA item with video. Integration prerequisites; runManual=false. Requires a delivered QA order within the return window, real unboxing video, and sandbox notification delivery.
 
 The main collection keeps email/payment cases disabled by default; separately executed mailbox checks are listed above. Successful gateway verification needs sandbox credentials and a completed gateway transaction. Reviews/returns need a delivered order owned by the QA customer, with eligible items and return evidence. No skipped main-collection case is counted as passed.
 
@@ -199,7 +234,7 @@ Earlier exploratory runs created additional clearly labeled QA accounts/service 
 | MOB-103 | Reject POST /personal-shopper | POST /mob-api/personal-shopper | 400 | 400 | PASS |
 | MOB-104 | Reject POST /stock-alerts | POST /mob-api/stock-alerts | 400 | 400 | PASS |
 | MOB-105 | Reject GET /affiliates/track | GET /mob-api/affiliates/track | 400 | 400 | PASS |
-| MOB-106 | Reject GET /affiliates/track?ref=QA_MISSING | GET /mob-api/affiliates/track?ref=QA_MISSING | 404 | 404 | PASS |
+| MOB-106 | Reject GET /affiliates/track?ref=QA_MISSING | GET /mob-api/affiliates/track?ref=QA_MISSING | 404 | — | ERROR |
 | MOB-107 | Reject POST /checkout/verify-otp | POST /mob-api/checkout/verify-otp | 400 | 400 | PASS |
 | MOB-108 | Reject POST /auth/verify-checkout-otp | POST /mob-api/auth/verify-checkout-otp | 400 | 400 | PASS |
 | MOB-109 | Reject POST /auth/forgot-password | POST /mob-api/auth/forgot-password | 400 | 400 | PASS |
@@ -213,98 +248,75 @@ Earlier exploratory runs created additional clearly labeled QA accounts/service 
 | MOB-117 | Admin operation unavailable /cart/admin/abandoned | GET /mob-api/cart/admin/abandoned | 404 | 404 | PASS |
 | MOB-118 | Admin operation unavailable /admin-users | GET /mob-api/admin-users | 404 | 404 | PASS |
 | MOB-119 | No token GET /mob-api/auth/getme | GET /mob-api/auth/getme | 401 | 401 | PASS |
-| MOB-120 | No token GET /mob-api/site-settings/{key} | GET /mob-api/site-settings/1 | 401 | 401 | PASS |
-| MOB-121 | No token POST /mob-api/settings/newsletter-subscribe | POST /mob-api/settings/newsletter-subscribe | 401 | 401 | PASS |
-| MOB-122 | No token GET /mob-api/settings/{key} | GET /mob-api/settings/1 | 401 | 401 | PASS |
-| MOB-123 | No token GET /mob-api/products | GET /mob-api/products | 401 | 401 | PASS |
-| MOB-124 | No token GET /mob-api/products/featured | GET /mob-api/products/featured | 401 | 401 | PASS |
-| MOB-125 | No token GET /mob-api/products/search | GET /mob-api/products/search | 401 | 401 | PASS |
-| MOB-126 | No token GET /mob-api/products/price-range | GET /mob-api/products/price-range | 401 | 401 | PASS |
-| MOB-127 | No token GET /mob-api/products/{slug} | GET /mob-api/products/1 | 401 | 401 | PASS |
-| MOB-128 | No token GET /mob-api/variants/product/{productId} | GET /mob-api/variants/product/1 | 401 | 401 | PASS |
-| MOB-129 | No token GET /mob-api/categories/tree | GET /mob-api/categories/tree | 401 | 401 | PASS |
-| MOB-130 | No token GET /mob-api/categories | GET /mob-api/categories | 401 | 401 | PASS |
-| MOB-131 | No token GET /mob-api/subcategories | GET /mob-api/subcategories | 401 | 401 | PASS |
-| MOB-132 | No token GET /mob-api/subsubcategories | GET /mob-api/subsubcategories | 401 | 401 | PASS |
-| MOB-133 | No token GET /mob-api/banners | GET /mob-api/banners | 401 | 401 | PASS |
-| MOB-134 | No token GET /mob-api/marketing-messages | GET /mob-api/marketing-messages | 401 | 401 | PASS |
-| MOB-135 | No token GET /mob-api/search/autocomplete | GET /mob-api/search/autocomplete | 401 | 401 | PASS |
-| MOB-136 | No token GET /mob-api/search/trending | GET /mob-api/search/trending | 401 | 401 | PASS |
-| MOB-137 | No token POST /mob-api/search/track | POST /mob-api/search/track | 401 | 401 | PASS |
-| MOB-138 | No token GET /mob-api/cart | GET /mob-api/cart | 401 | 401 | PASS |
-| MOB-139 | No token POST /mob-api/cart/add | POST /mob-api/cart/add | 401 | 401 | PASS |
-| MOB-140 | No token POST /mob-api/cart/sync | POST /mob-api/cart/sync | 401 | 401 | PASS |
-| MOB-141 | No token PUT /mob-api/cart/item/{itemId} | PUT /mob-api/cart/item/1 | 401 | 401 | PASS |
-| MOB-142 | No token DELETE /mob-api/cart/item/{itemId} | DELETE /mob-api/cart/item/1 | 401 | 401 | PASS |
-| MOB-143 | No token DELETE /mob-api/cart/clear | DELETE /mob-api/cart/clear | 401 | 401 | PASS |
-| MOB-144 | No token GET /mob-api/orders/my | GET /mob-api/orders/my | 401 | 401 | PASS |
-| MOB-145 | No token GET /mob-api/orders/my/{id} | GET /mob-api/orders/my/1 | 401 | 401 | PASS |
-| MOB-146 | No token POST /mob-api/orders/my/{id}/cancel | POST /mob-api/orders/my/1/cancel | 401 | 401 | PASS |
-| MOB-147 | No token POST /mob-api/orders | POST /mob-api/orders | 401 | 401 | PASS |
-| MOB-148 | No token GET /mob-api/orders/track/{identifier} | GET /mob-api/orders/track/1 | 401 | 401 | PASS |
-| MOB-149 | No token GET /mob-api/payments/geo-detect | GET /mob-api/payments/geo-detect | 401 | 401 | PASS |
-| MOB-150 | No token POST /mob-api/payments/initiate | POST /mob-api/payments/initiate | 401 | 401 | PASS |
-| MOB-151 | No token POST /mob-api/payments/verify | POST /mob-api/payments/verify | 401 | 401 | PASS |
-| MOB-152 | No token GET /mob-api/customers/wishlist | GET /mob-api/customers/wishlist | 401 | 401 | PASS |
-| MOB-153 | No token POST /mob-api/customers/wishlist | POST /mob-api/customers/wishlist | 401 | 401 | PASS |
-| MOB-154 | No token GET /mob-api/customers/loyalty | GET /mob-api/customers/loyalty | 401 | 401 | PASS |
-| MOB-155 | No token GET /mob-api/customers/tickets | GET /mob-api/customers/tickets | 401 | 401 | PASS |
-| MOB-156 | No token POST /mob-api/customers/tickets | POST /mob-api/customers/tickets | 401 | 401 | PASS |
-| MOB-157 | No token GET /mob-api/auth/profile | GET /mob-api/auth/profile | 401 | 401 | PASS |
-| MOB-158 | No token PUT /mob-api/auth/profile | PUT /mob-api/auth/profile | 401 | 401 | PASS |
-| MOB-159 | No token PUT /mob-api/auth/change-password | PUT /mob-api/auth/change-password | 401 | 401 | PASS |
-| MOB-160 | No token GET /mob-api/myaccount/wishlist | GET /mob-api/myaccount/wishlist | 401 | 401 | PASS |
-| MOB-161 | No token POST /mob-api/myaccount/wishlist | POST /mob-api/myaccount/wishlist | 401 | 401 | PASS |
-| MOB-162 | No token GET /mob-api/myaccount/loyalty | GET /mob-api/myaccount/loyalty | 401 | 401 | PASS |
-| MOB-163 | No token GET /mob-api/myaccount/tickets | GET /mob-api/myaccount/tickets | 401 | 401 | PASS |
-| MOB-164 | No token POST /mob-api/myaccount/tickets | POST /mob-api/myaccount/tickets | 401 | 401 | PASS |
-| MOB-165 | No token GET /mob-api/myaccount/profile | GET /mob-api/myaccount/profile | 401 | 401 | PASS |
-| MOB-166 | No token PUT /mob-api/myaccount/profile | PUT /mob-api/myaccount/profile | 401 | 401 | PASS |
-| MOB-167 | No token PUT /mob-api/myaccount/change-password | PUT /mob-api/myaccount/change-password | 401 | 401 | PASS |
-| MOB-168 | No token GET /mob-api/coupons | GET /mob-api/coupons | 401 | 401 | PASS |
-| MOB-169 | No token POST /mob-api/coupons/validate | POST /mob-api/coupons/validate | 401 | 401 | PASS |
-| MOB-170 | No token GET /mob-api/offers | GET /mob-api/offers | 401 | 401 | PASS |
-| MOB-171 | No token POST /mob-api/offers/validate | POST /mob-api/offers/validate | 401 | 401 | PASS |
-| MOB-172 | No token GET /mob-api/reviews/product/{productId} | GET /mob-api/reviews/product/1 | 401 | 401 | PASS |
-| MOB-173 | No token GET /mob-api/reviews/my-delivered-items | GET /mob-api/reviews/my-delivered-items | 401 | 401 | PASS |
-| MOB-174 | No token POST /mob-api/reviews | POST /mob-api/reviews | 401 | 401 | PASS |
-| MOB-175 | No token PUT /mob-api/reviews/{id} | PUT /mob-api/reviews/1 | 401 | 401 | PASS |
-| MOB-176 | No token DELETE /mob-api/reviews/{id} | DELETE /mob-api/reviews/1 | 401 | 401 | PASS |
-| MOB-177 | No token GET /mob-api/returns/my | GET /mob-api/returns/my | 401 | 401 | PASS |
-| MOB-178 | No token GET /mob-api/returns/my/{id} | GET /mob-api/returns/my/1 | 401 | 401 | PASS |
-| MOB-179 | No token POST /mob-api/returns/request | POST /mob-api/returns/request | 401 | 401 | PASS |
-| MOB-180 | No token GET /mob-api/delivery-zones/check/{pincode} | GET /mob-api/delivery-zones/check/1 | 401 | 401 | PASS |
-| MOB-181 | No token GET /mob-api/delivery-zones/check | GET /mob-api/delivery-zones/check | 401 | 401 | PASS |
-| MOB-182 | No token GET /mob-api/stock-status | GET /mob-api/stock-status | 401 | 401 | PASS |
-| MOB-183 | No token POST /mob-api/stock-alerts | POST /mob-api/stock-alerts | 401 | 401 | PASS |
-| MOB-184 | No token GET /mob-api/currency/rate | GET /mob-api/currency/rate | 401 | 401 | PASS |
-| MOB-185 | No token GET /mob-api/gift-service | GET /mob-api/gift-service | 401 | 401 | PASS |
-| MOB-186 | No token POST /mob-api/contact-enquiries | POST /mob-api/contact-enquiries | 401 | 401 | PASS |
-| MOB-187 | No token POST /mob-api/personal-shopper | POST /mob-api/personal-shopper | 401 | 401 | PASS |
-| MOB-188 | No token GET /mob-api/affiliates | GET /mob-api/affiliates | 401 | 401 | PASS |
-| MOB-189 | No token GET /mob-api/affiliates/track | GET /mob-api/affiliates/track | 401 | 401 | PASS |
-| MOB-190 | No token POST /mob-api/checkout/send-otp | POST /mob-api/checkout/send-otp | 401 | 401 | PASS |
-| MOB-191 | No token POST /mob-api/checkout/verify-otp | POST /mob-api/checkout/verify-otp | 401 | 401 | PASS |
-| MOB-192 | No token POST /mob-api/auth/send-checkout-otp | POST /mob-api/auth/send-checkout-otp | 401 | 401 | PASS |
-| MOB-193 | No token POST /mob-api/auth/verify-checkout-otp | POST /mob-api/auth/verify-checkout-otp | 401 | 401 | PASS |
-| MOB-194 | No token GET /mob-api/auth/me | GET /mob-api/auth/me | 401 | 401 | PASS |
-| MOB-195 | Place online order | POST /mob-api/orders | 201 | — | NOT RUN |
-| MOB-196 | Initiate sandbox payment | POST /mob-api/payments/initiate | 200 | — | NOT RUN |
-| MOB-197 | Verify successful sandbox payment | POST /mob-api/payments/verify | 200 | — | NOT RUN |
-| MOB-198 | Get owned order | GET /mob-api/orders/my/{{orderId}} | 200 | — | NOT RUN |
-| MOB-199 | Track owned order | GET /mob-api/orders/track/{{orderId}} | 200 | — | NOT RUN |
-| MOB-200 | Customer B cannot pay customer A order | POST /mob-api/payments/initiate | 404 | — | NOT RUN |
-| MOB-201 | Cancel QA order | POST /mob-api/orders/my/{{orderId}}/cancel | 200 | — | NOT RUN |
-| MOB-202 | Request recovery OTP | POST /mob-api/auth/forgot-password | 200 | — | NOT RUN |
-| MOB-203 | Verify recovery OTP | POST /mob-api/auth/verify-otp | 200 | — | NOT RUN |
-| MOB-204 | Set new password with reset token | POST /mob-api/auth/new-password | 200 | — | NOT RUN |
-| MOB-205 | Send checkout OTP | POST /mob-api/checkout/send-otp | 200 | — | NOT RUN |
-| MOB-206 | Verify valid checkout OTP | POST /mob-api/checkout/verify-otp | 200 | — | NOT RUN |
-| MOB-207 | Submit contact enquiry | POST /mob-api/contact-enquiries | 201 | — | NOT RUN |
-| MOB-208 | Review delivered QA purchase | POST /mob-api/reviews | 201 | — | NOT RUN |
-| MOB-209 | Update owned review | PUT /mob-api/reviews/{{reviewId}} | 200 | — | NOT RUN |
-| MOB-210 | Delete owned review | DELETE /mob-api/reviews/{{reviewId}} | 200 | — | NOT RUN |
-| MOB-211 | Return delivered QA item with video | POST /mob-api/returns/request | 201 | — | NOT RUN |
-| MOB-212 | Clear customer A QA cart | DELETE /mob-api/cart/clear | 200 | 200 | PASS |
-| MOB-213 | Clear customer B QA cart | DELETE /mob-api/cart/clear | 200 | 200 | PASS |
-| MOB-214 | Confirm QA cart is empty | GET /mob-api/cart | 200 | 200 | PASS |
+| MOB-120 | No token POST /mob-api/settings/newsletter-subscribe | POST /mob-api/settings/newsletter-subscribe | 401 | 401 | PASS |
+| MOB-121 | No token GET /mob-api/cart | GET /mob-api/cart | 401 | 401 | PASS |
+| MOB-122 | No token POST /mob-api/cart/add | POST /mob-api/cart/add | 401 | 401 | PASS |
+| MOB-123 | No token POST /mob-api/cart/sync | POST /mob-api/cart/sync | 401 | 401 | PASS |
+| MOB-124 | No token PUT /mob-api/cart/item/{itemId} | PUT /mob-api/cart/item/1 | 401 | 401 | PASS |
+| MOB-125 | No token DELETE /mob-api/cart/item/{itemId} | DELETE /mob-api/cart/item/1 | 401 | 401 | PASS |
+| MOB-126 | No token DELETE /mob-api/cart/clear | DELETE /mob-api/cart/clear | 401 | 401 | PASS |
+| MOB-127 | No token GET /mob-api/orders/my | GET /mob-api/orders/my | 401 | 401 | PASS |
+| MOB-128 | No token GET /mob-api/orders/my/{id} | GET /mob-api/orders/my/1 | 401 | 401 | PASS |
+| MOB-129 | No token POST /mob-api/orders/my/{id}/cancel | POST /mob-api/orders/my/1/cancel | 401 | 401 | PASS |
+| MOB-130 | No token POST /mob-api/orders | POST /mob-api/orders | 401 | 401 | PASS |
+| MOB-131 | No token GET /mob-api/orders/track/{identifier} | GET /mob-api/orders/track/1 | 401 | 401 | PASS |
+| MOB-132 | No token POST /mob-api/payments/initiate | POST /mob-api/payments/initiate | 401 | 401 | PASS |
+| MOB-133 | No token POST /mob-api/payments/verify | POST /mob-api/payments/verify | 401 | 401 | PASS |
+| MOB-134 | No token GET /mob-api/customers/wishlist | GET /mob-api/customers/wishlist | 401 | 401 | PASS |
+| MOB-135 | No token POST /mob-api/customers/wishlist | POST /mob-api/customers/wishlist | 401 | 401 | PASS |
+| MOB-136 | No token GET /mob-api/customers/loyalty | GET /mob-api/customers/loyalty | 401 | 401 | PASS |
+| MOB-137 | No token GET /mob-api/customers/tickets | GET /mob-api/customers/tickets | 401 | 401 | PASS |
+| MOB-138 | No token POST /mob-api/customers/tickets | POST /mob-api/customers/tickets | 401 | 401 | PASS |
+| MOB-139 | No token GET /mob-api/auth/profile | GET /mob-api/auth/profile | 401 | 401 | PASS |
+| MOB-140 | No token PUT /mob-api/auth/profile | PUT /mob-api/auth/profile | 401 | 401 | PASS |
+| MOB-141 | No token PUT /mob-api/auth/change-password | PUT /mob-api/auth/change-password | 401 | 401 | PASS |
+| MOB-142 | No token GET /mob-api/myaccount/wishlist | GET /mob-api/myaccount/wishlist | 401 | 401 | PASS |
+| MOB-143 | No token POST /mob-api/myaccount/wishlist | POST /mob-api/myaccount/wishlist | 401 | 401 | PASS |
+| MOB-144 | No token GET /mob-api/myaccount/loyalty | GET /mob-api/myaccount/loyalty | 401 | 401 | PASS |
+| MOB-145 | No token GET /mob-api/myaccount/tickets | GET /mob-api/myaccount/tickets | 401 | 401 | PASS |
+| MOB-146 | No token POST /mob-api/myaccount/tickets | POST /mob-api/myaccount/tickets | 401 | 401 | PASS |
+| MOB-147 | No token GET /mob-api/myaccount/profile | GET /mob-api/myaccount/profile | 401 | 401 | PASS |
+| MOB-148 | No token PUT /mob-api/myaccount/profile | PUT /mob-api/myaccount/profile | 401 | 401 | PASS |
+| MOB-149 | No token PUT /mob-api/myaccount/change-password | PUT /mob-api/myaccount/change-password | 401 | 401 | PASS |
+| MOB-150 | No token GET /mob-api/reviews/my-delivered-items | GET /mob-api/reviews/my-delivered-items | 401 | 401 | PASS |
+| MOB-151 | No token POST /mob-api/reviews | POST /mob-api/reviews | 401 | 401 | PASS |
+| MOB-152 | No token PUT /mob-api/reviews/{id} | PUT /mob-api/reviews/1 | 401 | 401 | PASS |
+| MOB-153 | No token DELETE /mob-api/reviews/{id} | DELETE /mob-api/reviews/1 | 401 | 401 | PASS |
+| MOB-154 | No token GET /mob-api/returns/my | GET /mob-api/returns/my | 401 | 401 | PASS |
+| MOB-155 | No token GET /mob-api/returns/my/{id} | GET /mob-api/returns/my/1 | 401 | 401 | PASS |
+| MOB-156 | No token POST /mob-api/returns/request | POST /mob-api/returns/request | 401 | 401 | PASS |
+| MOB-157 | No token POST /mob-api/stock-alerts | POST /mob-api/stock-alerts | 401 | 401 | PASS |
+| MOB-158 | No token POST /mob-api/contact-enquiries | POST /mob-api/contact-enquiries | 401 | 401 | PASS |
+| MOB-159 | No token POST /mob-api/personal-shopper | POST /mob-api/personal-shopper | 401 | 401 | PASS |
+| MOB-160 | No token POST /mob-api/checkout/send-otp | POST /mob-api/checkout/send-otp | 401 | 401 | PASS |
+| MOB-161 | No token POST /mob-api/checkout/verify-otp | POST /mob-api/checkout/verify-otp | 401 | 401 | PASS |
+| MOB-162 | No token POST /mob-api/auth/send-checkout-otp | POST /mob-api/auth/send-checkout-otp | 401 | 401 | PASS |
+| MOB-163 | No token POST /mob-api/auth/verify-checkout-otp | POST /mob-api/auth/verify-checkout-otp | 401 | 401 | PASS |
+| MOB-164 | No token GET /mob-api/auth/me | GET /mob-api/auth/me | 401 | 401 | PASS |
+| MOB-165 | Guest reads /products | GET /mob-api/products | 200 | 200 | PASS |
+| MOB-166 | Guest reads /categories | GET /mob-api/categories | 200 | 200 | PASS |
+| MOB-167 | Guest reads /banners | GET /mob-api/banners | 200 | 200 | PASS |
+| MOB-168 | Guest reads /marketing-messages | GET /mob-api/marketing-messages | 200 | 200 | PASS |
+| MOB-169 | Guest reads /search/trending | GET /mob-api/search/trending | 200 | 200 | PASS |
+| MOB-170 | Guest cannot read account | GET /mob-api/auth/me | 401 | 401 | PASS |
+| MOB-171 | Guest cannot checkout | POST /mob-api/orders | 401 | 401 | PASS |
+| MOB-172 | Place online order | POST /mob-api/orders | 201 | — | NOT RUN |
+| MOB-173 | Initiate sandbox payment | POST /mob-api/payments/initiate | 200 | — | NOT RUN |
+| MOB-174 | Verify successful sandbox payment | POST /mob-api/payments/verify | 200 | — | NOT RUN |
+| MOB-175 | Get owned order | GET /mob-api/orders/my/{{orderId}} | 200 | — | NOT RUN |
+| MOB-176 | Track owned order | GET /mob-api/orders/track/{{orderId}} | 200 | — | NOT RUN |
+| MOB-177 | Customer B cannot pay customer A order | POST /mob-api/payments/initiate | 404 | — | NOT RUN |
+| MOB-178 | Cancel QA order | POST /mob-api/orders/my/{{orderId}}/cancel | 200 | — | NOT RUN |
+| MOB-179 | Request recovery OTP | POST /mob-api/auth/forgot-password | 200 | — | NOT RUN |
+| MOB-180 | Verify recovery OTP | POST /mob-api/auth/verify-otp | 200 | — | NOT RUN |
+| MOB-181 | Set new password with reset token | POST /mob-api/auth/new-password | 200 | — | NOT RUN |
+| MOB-182 | Send checkout OTP | POST /mob-api/checkout/send-otp | 200 | — | NOT RUN |
+| MOB-183 | Verify valid checkout OTP | POST /mob-api/checkout/verify-otp | 200 | — | NOT RUN |
+| MOB-184 | Submit contact enquiry | POST /mob-api/contact-enquiries | 201 | — | NOT RUN |
+| MOB-185 | Review delivered QA purchase | POST /mob-api/reviews | 201 | — | NOT RUN |
+| MOB-186 | Update owned review | PUT /mob-api/reviews/{{reviewId}} | 200 | — | NOT RUN |
+| MOB-187 | Delete owned review | DELETE /mob-api/reviews/{{reviewId}} | 200 | — | NOT RUN |
+| MOB-188 | Return delivered QA item with video | POST /mob-api/returns/request | 201 | — | NOT RUN |
+| MOB-189 | Clear customer A QA cart | DELETE /mob-api/cart/clear | 200 | 200 | PASS |
+| MOB-190 | Clear customer B QA cart | DELETE /mob-api/cart/clear | 200 | 200 | PASS |
+| MOB-191 | Confirm QA cart is empty | GET /mob-api/cart | 200 | 200 | PASS |

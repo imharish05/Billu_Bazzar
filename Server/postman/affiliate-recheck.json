@@ -1,0 +1,15 @@
+{
+  "at": "2026-09-10T11:18:51.657Z",
+  "rows": [
+    {
+      "path": "/mob-api/affiliates",
+      "error": "TimeoutError",
+      "durationMs": 10023
+    },
+    {
+      "path": "/mob-api/affiliates/track?ref=QA_MISSING",
+      "status": 404,
+      "durationMs": 431
+    }
+  ]
+}

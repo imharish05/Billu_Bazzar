@@ -1,0 +1,17 @@
+{
+  "startedAt": "2026-09-10T11:38:38.924Z",
+  "mode": "Actual Razorpay test-mode gateway; notification sink; no real charge",
+  "checks": [
+    {
+      "name": "Actual sandbox initiation through mobile API",
+      "status": "PASS",
+      "httpStatus": 200
+    }
+  ],
+  "fixtures": {
+    "customerId": 28,
+    "productId": 233,
+    "categoryId": 18,
+    "orderId": 65
+  }
+}

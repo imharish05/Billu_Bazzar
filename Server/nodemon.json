@@ -1,0 +1,3 @@
+{
+  "ignore": ["postman/**", "swagger-output.json", "swagger-mob-output.json"]
+}

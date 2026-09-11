@@ -120,9 +120,16 @@ for(const [method,route] of [['POST','/products'],['GET','/orders'],['POST','/ca
 const protection=folder('06 Missing-token checks - every protected operation');
 const publicPaths=new Set(['/mob-api/auth/register','/mob-api/auth/login','/mob-api/auth/forgot-password','/mob-api/auth/verify-otp','/mob-api/auth/new-password','/mob-api/auth/reset-password']);
 for(const [route,methods] of Object.entries(spec.paths))for(const method of Object.keys(methods)){
-  if(publicPaths.has(route))continue;
+  if(publicPaths.has(route) || methods[method].security?.some(requirement => Object.keys(requirement).length === 0))continue;
   request(protection,`No token ${method.toUpperCase()} ${route}`,method.toUpperCase(),route.replace(/\{[^}]+\}/g,'1'),401,['post','put','patch'].includes(method)?{}:null,{noauth:true});
 }
+
+const guests=folder('07 Guest access rejected');
+for(const route of ['/products','/categories','/banners','/marketing-messages','/search/trending']) {
+  request(guests,'Guest cannot read '+route,'GET','/mob-api'+route,401,null,{noauth:true});
+}
+request(guests,'Guest cannot read account','GET','/mob-api/auth/me',401,null,{noauth:true});
+request(guests,'Guest cannot checkout','POST','/mob-api/orders',401,{}, {noauth:true});
 
 const manual=folder('90 Integration prerequisites - disabled by default');
 const address={name:'Mobile API QA',email:'{{qaEmail}}',phone:'{{qaPhone}}',address:'QA test address',city:'Chennai',state:'Tamil Nadu',pincode:'{{pincode}}',country:'India'};

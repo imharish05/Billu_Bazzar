@@ -1,0 +1,261 @@
+{
+  "executedAt": "2026-09-10T11:41:29.314Z",
+  "mode": "Newman HTTP + real MySQL; seeded delivered order; email sink; video URL and generated MP4 multipart upload; no gateway verification",
+  "fixtures": {
+    "customerId": 29,
+    "customerBId": 30,
+    "categoryId": 19,
+    "productId": 234,
+    "otherProductId": 235,
+    "couponId": 13,
+    "deliveredOrderId": 66,
+    "orderItemId": 66,
+    "placedOrderId": 67
+  },
+  "notifications": [
+    "sendOrderStatusNotification",
+    "sendReturnStatusNotification",
+    "sendReturnStatusNotification",
+    "sendContactEnquiryAdminNotification",
+    "sendFraudOtpEmail",
+    "sendOtpEmail"
+  ],
+  "rows": [
+    {
+      "name": "Valid dedicated coupon",
+      "method": "POST",
+      "route": "/offers/validate",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Coupon minimum rejected",
+      "method": "POST",
+      "route": "/offers/validate",
+      "expected": 400,
+      "actual": 400,
+      "status": "PASS"
+    },
+    {
+      "name": "Place online buy-now QA order",
+      "method": "POST",
+      "route": "/orders",
+      "expected": 201,
+      "actual": 201,
+      "status": "PASS"
+    },
+    {
+      "name": "Other customer cannot read order",
+      "method": "GET",
+      "route": "/orders/my/67",
+      "expected": 404,
+      "actual": 404,
+      "status": "PASS"
+    },
+    {
+      "name": "Other customer cannot initiate payment",
+      "method": "POST",
+      "route": "/payments/initiate",
+      "expected": 404,
+      "actual": 404,
+      "status": "PASS"
+    },
+    {
+      "name": "Other customer cannot cancel order",
+      "method": "POST",
+      "route": "/orders/my/67/cancel",
+      "expected": 404,
+      "actual": 404,
+      "status": "PASS"
+    },
+    {
+      "name": "Cancel own pending order",
+      "method": "POST",
+      "route": "/orders/my/67/cancel",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Read owned delivered fixture",
+      "method": "GET",
+      "route": "/orders/my/66",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Track owned delivered fixture",
+      "method": "GET",
+      "route": "/orders/track/66",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Delivered review eligibility",
+      "method": "GET",
+      "route": "/reviews/my-delivered-items",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Cannot review unpurchased product",
+      "method": "POST",
+      "route": "/reviews",
+      "expected": 403,
+      "actual": 403,
+      "status": "PASS"
+    },
+    {
+      "name": "Create delivered-product review",
+      "method": "POST",
+      "route": "/reviews",
+      "expected": 201,
+      "actual": 201,
+      "status": "PASS"
+    },
+    {
+      "name": "Other customer cannot update review",
+      "method": "PUT",
+      "route": "/reviews/8",
+      "expected": 403,
+      "actual": 403,
+      "status": "PASS"
+    },
+    {
+      "name": "Update owned review",
+      "method": "PUT",
+      "route": "/reviews/8",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Delete owned review",
+      "method": "DELETE",
+      "route": "/reviews/8",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Return delivered fixture with video URL",
+      "method": "POST",
+      "route": "/returns/request",
+      "expected": 201,
+      "actual": 201,
+      "status": "PASS"
+    },
+    {
+      "name": "Read owned return",
+      "method": "GET",
+      "route": "/returns/my/15",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Other customer cannot read return",
+      "method": "GET",
+      "route": "/returns/my/15",
+      "expected": 404,
+      "actual": 404,
+      "status": "PASS"
+    },
+    {
+      "name": "Duplicate return rejected",
+      "method": "POST",
+      "route": "/returns/request",
+      "expected": 400,
+      "actual": 400,
+      "status": "PASS"
+    },
+    {
+      "name": "Multipart return video upload",
+      "method": "POST",
+      "route": "/returns/request",
+      "expected": 201,
+      "actual": 201,
+      "status": "PASS"
+    },
+    {
+      "name": "Stored video bytes equal uploaded MP4",
+      "status": "PASS"
+    },
+    {
+      "name": "Contact enquiry with notification sink",
+      "method": "POST",
+      "route": "/contact-enquiries",
+      "expected": 201,
+      "actual": 201,
+      "status": "PASS"
+    },
+    {
+      "name": "Checkout OTP delivery to sink",
+      "method": "POST",
+      "route": "/checkout/send-otp",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Checkout OTP verification",
+      "method": "POST",
+      "route": "/checkout/verify-otp",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Checkout OTP replay rejected",
+      "method": "POST",
+      "route": "/checkout/verify-otp",
+      "expected": 400,
+      "actual": 400,
+      "status": "PASS"
+    },
+    {
+      "name": "Recovery email captured by local sink",
+      "method": "POST",
+      "route": "/auth/forgot-password",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Verify recovery OTP from sink",
+      "method": "POST",
+      "route": "/auth/verify-otp",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Reset dedicated QA password",
+      "method": "POST",
+      "route": "/auth/reset-password",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Login using reset password",
+      "method": "POST",
+      "route": "/auth/login",
+      "expected": 200,
+      "actual": 200,
+      "status": "PASS"
+    },
+    {
+      "name": "Old password rejected after reset",
+      "method": "POST",
+      "route": "/auth/login",
+      "expected": 401,
+      "actual": 401,
+      "status": "PASS"
+    }
+  ]
+}

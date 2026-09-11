@@ -1,6 +1,6 @@
 'use strict';
 const { Op } = require('sequelize');
-const { Review, Product, Customer, Order, OrderItem, SiteSetting, LoyaltyLedger } = require('../models');
+const { Review, Product, ProductVariant, Customer, Order, OrderItem, SiteSetting, LoyaltyLedger } = require('../models');
 const { toAbsoluteUrl } = require('../utils/imageUrl');
 
 /**
@@ -296,13 +296,6 @@ const createReview = async (req, res) => {
             }
             break;
           }
-        }
-      }
-
-      if (!matchesItem && targetOrder.items && targetOrder.items.length === 1) {
-        matchesItem = true;
-        if (!targetOrder.items[0].productId) {
-          await targetOrder.items[0].update({ productId: numericProductId });
         }
       }
 

@@ -41,7 +41,7 @@ API base: /mob-api (also /api/mob).
 Swagger: /mob-api/docs/ or /mob-api-docs/.
 OpenAPI JSON: /mob-api/openapi.json.
 
-Start the existing Server with npm start. Log in through /mob-api/auth/login and send Authorization: Bearer <token> for feature APIs. All feature routes require an active customer. Registration, login, and password recovery remain public and rate-limited. Documentation is public.
+Start the existing Server with npm start. All mobile feature endpoints, including products, categories, banners, offers, search, reviews, delivery checks and settings, require an active customer token. Log in through /mob-api/auth/login and send Authorization: Bearer <token> on every subsequent feature request. Only POST registration, login, and password recovery endpoints are public and rate-limited. Profile and checkout aliases under /auth still require authentication. Missing, invalid, expired, admin, or password-reset tokens are rejected with HTTP 401. Both API base paths enforce the same policy. Swagger UI and OpenAPI documentation remain public for developer access.
 
 Auth's original authController.js, authRoutes.js, authValidation.js, and JWT signing behavior are retained, including the original 10-year mobile token lifetime. Auth/authAliases.js adds client URL aliases /auth/me and /auth/reset-password without editing those original files. Recovery uses the original OTP -> resetToken -> new-password flow. Mobile clients use that long-lived token; web refresh-token endpoints are not duplicated.
 
@@ -65,3 +65,21 @@ Feature controllers call the existing backend commerce controllers to share busi
 ## Checks
 
 From Server, run npm run test:mob and npm run swagger:mob (use npm.cmd on PowerShell if needed). Tests stub database and gateway dependencies; live MySQL, email, upload, and payment integration still require environment testing.
+
+## Mobile developer handover
+
+Ready for development integration after deploying/restarting the updated server. Share the reachable HTTPS server URL, `/mob-api/docs/`, `swagger-mob-output.json`, and the Postman collection plus its shared placeholder environment in `Server/postman`. Set Postman's `baseUrl` to the server origin (without `/mob-api`). A physical phone cannot reach the developer machine through `127.0.0.1`; use a reachable test server address.
+
+Register or log in, store the returned `token` securely, and attach `Authorization: Bearer <token>` to all feature requests. Handle HTTP 401 by returning to login. Do not send a recovery `resetToken` as an access token. Share documentation and placeholder configuration; keep Server/.env and local QA credential files private.
+
+Verification for this change: all 9 mocked mobile test groups passed, with missing-token checks for every feature route on both mounts; OpenAPI was regenerated. Production acceptance remains pending a fresh live collection run, successful gateway payment verification, multipart return video upload, and a recheck of historical affiliate latency/timeouts. Earlier live results are preserved in `Server/postman/REPORT.md` and are not results for this change.
+
+## Swagger examples and dummy data
+
+Every documented operation now includes a success response example, including HTTP 201 creation responses. JSON requests have editable dummy payloads; common path/query parameters have sample values. Return form fields include example values while video fields remain file inputs.
+
+Open `/mob-api/docs/`, expand an endpoint, and view **Responses > Example Value**. Use **Try it out** to edit its request, then Authorize with a real customer login token for protected routes.
+
+`dummy-data.json` contains the same per-operation request/response fixtures and primary success status for mobile mocks. `npm run swagger:mob` regenerates it alongside `swagger-mob-output.json`. Fixtures show representative controller response structures; database-backed objects can contain additional fields. Values are synthetic and are not inserted into the database. Each operation illustrates its own scenario (for example, a pending order versus an eligible delivered purchase).
+
+For live tests, register with an email/phone you control, use returned product/order/cart IDs, and replace OTP, reset-token and gateway placeholders with actual test-session values. Return requests require an owned delivered order/item and real video evidence; the example.com video URL is only a placeholder. Payments require a completed sandbox gateway flow. Money, stock, settings, timestamps and messages may vary with configuration and state.

@@ -1,0 +1,482 @@
+{
+  "note": "Static api.method URL mapping only; does not prove payload compatibility, successful flows, or calls through other HTTP clients.",
+  "routes": [
+    {
+      "method": "GET",
+      "route": "/affiliates",
+      "covered": true,
+      "files": [
+        "pages/HomePage.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/affiliates/track",
+      "covered": true,
+      "files": [
+        "App.jsx"
+      ]
+    },
+    {
+      "method": "PUT",
+      "route": "/auth/change-password",
+      "covered": true,
+      "files": [
+        "pages/account/ProfilePage.jsx"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/auth/forgot-password",
+      "covered": true,
+      "files": [
+        "pages/account/AccountLayout.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/auth/getme",
+      "covered": true,
+      "files": [
+        "redux/slices/authSlice.js",
+        "redux/slices/authSlice.js",
+        "redux/slices/authSlice.js"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/auth/login",
+      "covered": true,
+      "files": [
+        "redux/slices/authSlice.js"
+      ]
+    },
+    {
+      "method": "PUT",
+      "route": "/auth/profile",
+      "covered": true,
+      "files": [
+        "redux/slices/authSlice.js"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/auth/register",
+      "covered": true,
+      "files": [
+        "redux/slices/authSlice.js"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/auth/reset-password",
+      "covered": true,
+      "files": [
+        "pages/account/AccountLayout.jsx",
+        "pages/ResetPasswordPage.jsx"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/auth/send-checkout-otp",
+      "covered": true,
+      "files": [
+        "pages/CheckoutPage.jsx"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/auth/verify-checkout-otp",
+      "covered": true,
+      "files": [
+        "pages/CheckoutPage.jsx"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/auth/verify-otp",
+      "covered": true,
+      "files": [
+        "pages/account/AccountLayout.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/banners",
+      "covered": true,
+      "files": [
+        "redux/slices/bannersSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/cart",
+      "covered": true,
+      "files": [
+        "redux/slices/cartSlice.js"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/cart/add",
+      "covered": true,
+      "files": [
+        "redux/slices/cartSlice.js"
+      ]
+    },
+    {
+      "method": "PUT",
+      "route": "/cart/item/{param}",
+      "covered": true,
+      "files": [
+        "redux/slices/cartSlice.js"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "route": "/cart/item/{param}",
+      "covered": true,
+      "files": [
+        "redux/slices/cartSlice.js"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/cart/sync",
+      "covered": true,
+      "files": [
+        "redux/slices/cartSlice.js",
+        "redux/slices/cartSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/categories/tree",
+      "covered": true,
+      "files": [
+        "components/Footer.jsx",
+        "components/Navbar.jsx",
+        "redux/slices/categoriesSlice.js"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/contact-enquiries",
+      "covered": true,
+      "files": [
+        "pages/ContactPage.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/coupons",
+      "covered": true,
+      "files": [
+        "pages/CheckoutPage.jsx"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/coupons/validate",
+      "covered": true,
+      "files": [
+        "pages/CheckoutPage.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/currency/rate",
+      "covered": true,
+      "files": [
+        "App.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/customers/loyalty",
+      "covered": true,
+      "files": [
+        "pages/account/LoyaltyPage.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/customers/wishlist",
+      "covered": true,
+      "files": [
+        "redux/slices/wishlistSlice.js"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/customers/wishlist",
+      "covered": true,
+      "files": [
+        "redux/slices/wishlistSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/delivery-zones/check/{param}",
+      "covered": true,
+      "files": [
+        "pages/CheckoutPage.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/gift-service",
+      "covered": true,
+      "files": [
+        "pages/CartPage.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/marketing-messages",
+      "covered": true,
+      "files": [
+        "components/Navbar.jsx"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/orders",
+      "covered": true,
+      "files": [
+        "redux/slices/ordersSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/orders/my",
+      "covered": true,
+      "files": [
+        "redux/slices/ordersSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/orders/my/{param}",
+      "covered": true,
+      "files": [
+        "redux/slices/ordersSlice.js"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/orders/my/{param}/cancel",
+      "covered": true,
+      "files": [
+        "redux/slices/ordersSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/orders/track/{param}",
+      "covered": true,
+      "files": [
+        "redux/slices/ordersSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/payments/geo-detect",
+      "covered": true,
+      "files": [
+        "pages/CheckoutPage.jsx"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/payments/initiate",
+      "covered": true,
+      "files": [
+        "pages/CheckoutPage.jsx"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/payments/verify",
+      "covered": true,
+      "files": [
+        "pages/CheckoutPage.jsx",
+        "pages/OrderConfirmationPage.jsx"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/personal-shopper",
+      "covered": true,
+      "files": [
+        "pages/account/PersonalShopperPage.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/products",
+      "covered": true,
+      "files": [
+        "redux/slices/productsSlice.js",
+        "redux/slices/productsSlice.js",
+        "redux/slices/productsSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/products/{param}",
+      "covered": true,
+      "files": [
+        "redux/slices/productsSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/products/featured",
+      "covered": true,
+      "files": [
+        "redux/slices/productsSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/products/price-range",
+      "covered": true,
+      "files": [
+        "pages/ProductListingPage.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/returns/my",
+      "covered": true,
+      "files": [
+        "redux/slices/returnsSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/returns/my/{param}",
+      "covered": true,
+      "files": [
+        "redux/slices/returnsSlice.js"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/returns/request",
+      "covered": true,
+      "files": [
+        "redux/slices/returnsSlice.js"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/reviews",
+      "covered": true,
+      "files": [
+        "redux/slices/reviewsSlice.js"
+      ]
+    },
+    {
+      "method": "PUT",
+      "route": "/reviews/{param}",
+      "covered": true,
+      "files": [
+        "redux/slices/reviewsSlice.js"
+      ]
+    },
+    {
+      "method": "DELETE",
+      "route": "/reviews/{param}",
+      "covered": true,
+      "files": [
+        "redux/slices/reviewsSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/reviews/my-delivered-items",
+      "covered": true,
+      "files": [
+        "redux/slices/reviewsSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/reviews/product/{param}",
+      "covered": true,
+      "files": [
+        "redux/slices/reviewsSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/search/autocomplete",
+      "covered": true,
+      "files": [
+        "redux/slices/searchSlice.js"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/search/track",
+      "covered": true,
+      "files": [
+        "redux/slices/searchSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/search/trending",
+      "covered": true,
+      "files": [
+        "redux/slices/searchSlice.js"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/settings/otp_threshold",
+      "covered": true,
+      "files": [
+        "pages/CheckoutPage.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/site-settings/about",
+      "covered": true,
+      "files": [
+        "pages/AboutPage.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/site-settings/loyalty",
+      "covered": true,
+      "files": [
+        "components/RegisterPopup.jsx",
+        "pages/account/LoyaltyPage.jsx",
+        "pages/AccountPage.jsx",
+        "pages/CheckoutPage.jsx"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/site-settings/tax",
+      "covered": true,
+      "files": [
+        "pages/CheckoutPage.jsx"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/stock-alerts",
+      "covered": true,
+      "files": [
+        "components/QuickViewModal.jsx",
+        "pages/ProductDetailsPage.jsx"
+      ]
+    }
+  ]
+}

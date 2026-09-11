@@ -1979,6 +1979,76 @@
   },
   {
     "id": "MOB-195",
+    "name": "Guest cannot read /products",
+    "method": "GET",
+    "route": "/mob-api/products",
+    "expected": 401,
+    "manual": false,
+    "prerequisites": [],
+    "note": ""
+  },
+  {
+    "id": "MOB-196",
+    "name": "Guest cannot read /categories",
+    "method": "GET",
+    "route": "/mob-api/categories",
+    "expected": 401,
+    "manual": false,
+    "prerequisites": [],
+    "note": ""
+  },
+  {
+    "id": "MOB-197",
+    "name": "Guest cannot read /banners",
+    "method": "GET",
+    "route": "/mob-api/banners",
+    "expected": 401,
+    "manual": false,
+    "prerequisites": [],
+    "note": ""
+  },
+  {
+    "id": "MOB-198",
+    "name": "Guest cannot read /marketing-messages",
+    "method": "GET",
+    "route": "/mob-api/marketing-messages",
+    "expected": 401,
+    "manual": false,
+    "prerequisites": [],
+    "note": ""
+  },
+  {
+    "id": "MOB-199",
+    "name": "Guest cannot read /search/trending",
+    "method": "GET",
+    "route": "/mob-api/search/trending",
+    "expected": 401,
+    "manual": false,
+    "prerequisites": [],
+    "note": ""
+  },
+  {
+    "id": "MOB-200",
+    "name": "Guest cannot read account",
+    "method": "GET",
+    "route": "/mob-api/auth/me",
+    "expected": 401,
+    "manual": false,
+    "prerequisites": [],
+    "note": ""
+  },
+  {
+    "id": "MOB-201",
+    "name": "Guest cannot checkout",
+    "method": "POST",
+    "route": "/mob-api/orders",
+    "expected": 401,
+    "manual": false,
+    "prerequisites": [],
+    "note": ""
+  },
+  {
+    "id": "MOB-202",
     "name": "Place online order",
     "method": "POST",
     "route": "/mob-api/orders",
@@ -1991,7 +2061,7 @@
     "note": "Requires isolated test inventory and an approved order lifecycle."
   },
   {
-    "id": "MOB-196",
+    "id": "MOB-203",
     "name": "Initiate sandbox payment",
     "method": "POST",
     "route": "/mob-api/payments/initiate",
@@ -2003,7 +2073,7 @@
     "note": "Requires configured sandbox gateway."
   },
   {
-    "id": "MOB-197",
+    "id": "MOB-204",
     "name": "Verify successful sandbox payment",
     "method": "POST",
     "route": "/mob-api/payments/verify",
@@ -2018,7 +2088,7 @@
     "note": ""
   },
   {
-    "id": "MOB-198",
+    "id": "MOB-205",
     "name": "Get owned order",
     "method": "GET",
     "route": "/mob-api/orders/my/{{orderId}}",
@@ -2030,7 +2100,7 @@
     "note": ""
   },
   {
-    "id": "MOB-199",
+    "id": "MOB-206",
     "name": "Track owned order",
     "method": "GET",
     "route": "/mob-api/orders/track/{{orderId}}",
@@ -2042,7 +2112,7 @@
     "note": ""
   },
   {
-    "id": "MOB-200",
+    "id": "MOB-207",
     "name": "Customer B cannot pay customer A order",
     "method": "POST",
     "route": "/mob-api/payments/initiate",
@@ -2055,7 +2125,7 @@
     "note": ""
   },
   {
-    "id": "MOB-201",
+    "id": "MOB-208",
     "name": "Cancel QA order",
     "method": "POST",
     "route": "/mob-api/orders/my/{{orderId}}/cancel",
@@ -2067,7 +2137,7 @@
     "note": "May send a cancellation email; order must be cancellable."
   },
   {
-    "id": "MOB-202",
+    "id": "MOB-209",
     "name": "Request recovery OTP",
     "method": "POST",
     "route": "/mob-api/auth/forgot-password",
@@ -2077,7 +2147,7 @@
     "note": "Requires a test mailbox/SMTP sink; replace qaEmail with that account."
   },
   {
-    "id": "MOB-203",
+    "id": "MOB-210",
     "name": "Verify recovery OTP",
     "method": "POST",
     "route": "/mob-api/auth/verify-otp",
@@ -2089,7 +2159,7 @@
     "note": ""
   },
   {
-    "id": "MOB-204",
+    "id": "MOB-211",
     "name": "Set new password with reset token",
     "method": "POST",
     "route": "/mob-api/auth/new-password",
@@ -2101,7 +2171,7 @@
     "note": ""
   },
   {
-    "id": "MOB-205",
+    "id": "MOB-212",
     "name": "Send checkout OTP",
     "method": "POST",
     "route": "/mob-api/checkout/send-otp",
@@ -2111,7 +2181,7 @@
     "note": "Requires test mailbox/SMTP sink."
   },
   {
-    "id": "MOB-206",
+    "id": "MOB-213",
     "name": "Verify valid checkout OTP",
     "method": "POST",
     "route": "/mob-api/checkout/verify-otp",
@@ -2123,7 +2193,7 @@
     "note": ""
   },
   {
-    "id": "MOB-207",
+    "id": "MOB-214",
     "name": "Submit contact enquiry",
     "method": "POST",
     "route": "/mob-api/contact-enquiries",
@@ -2133,7 +2203,7 @@
     "note": "Sends an admin notification; requires approved sandbox email delivery."
   },
   {
-    "id": "MOB-208",
+    "id": "MOB-215",
     "name": "Review delivered QA purchase",
     "method": "POST",
     "route": "/mob-api/reviews",
@@ -2146,7 +2216,7 @@
     "note": ""
   },
   {
-    "id": "MOB-209",
+    "id": "MOB-216",
     "name": "Update owned review",
     "method": "PUT",
     "route": "/mob-api/reviews/{{reviewId}}",
@@ -2158,7 +2228,7 @@
     "note": ""
   },
   {
-    "id": "MOB-210",
+    "id": "MOB-217",
     "name": "Delete owned review",
     "method": "DELETE",
     "route": "/mob-api/reviews/{{reviewId}}",
@@ -2170,7 +2240,7 @@
     "note": ""
   },
   {
-    "id": "MOB-211",
+    "id": "MOB-218",
     "name": "Return delivered QA item with video",
     "method": "POST",
     "route": "/mob-api/returns/request",
@@ -2184,7 +2254,7 @@
     "note": "Requires a delivered QA order within the return window, real unboxing video, and sandbox notification delivery."
   },
   {
-    "id": "MOB-212",
+    "id": "MOB-219",
     "name": "Clear customer A QA cart",
     "method": "DELETE",
     "route": "/mob-api/cart/clear",
@@ -2194,7 +2264,7 @@
     "note": ""
   },
   {
-    "id": "MOB-213",
+    "id": "MOB-220",
     "name": "Clear customer B QA cart",
     "method": "DELETE",
     "route": "/mob-api/cart/clear",
@@ -2204,7 +2274,7 @@
     "note": ""
   },
   {
-    "id": "MOB-214",
+    "id": "MOB-221",
     "name": "Confirm QA cart is empty",
     "method": "GET",
     "route": "/mob-api/cart",

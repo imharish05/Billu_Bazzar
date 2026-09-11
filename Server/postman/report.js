@@ -20,6 +20,7 @@ const fixtureKeys = ['baseUrl','qaEmail','qaEmailB','qaPhone','qaPhoneB','custom
 const data = Object.fromEntries(fixtureKeys.filter(k => environment[k] !== undefined).map(k => [k,environment[k]]));
 const slowRequests = rows.filter(r => r.durationMs > 5000).map(({id,name,durationMs}) => ({id,name,durationMs}));
 const supplemental = fs.existsSync(path.join(__dirname,'live-extra-results.json')) ? read('live-extra-results.json') : [];
+const integration = fs.existsSync(path.join(__dirname,'integration-results.json')) ? read('integration-results.json') : null;
 fs.writeFileSync(path.join(__dirname,'results.json'),JSON.stringify({generatedAt:new Date().toISOString(),runner:'Newman 6.2.2 (Postman collection runner)',totals,assertions:run.run.stats.assertions,slowRequests,supplemental,fixtures:data,scenarios:rows},null,2));
 const escape = x => String(x ?? '').replace(/\|/g,'\\|').replace(/\r?\n/g,' ');
 let md = '# Mobile API Postman test report\n\n';
@@ -38,8 +39,14 @@ md += slowRequests.map(r=>`- ${r.id}: ${r.name} took ${(r.durationMs/1000).toFix
 md += 'The latest run allows 60 seconds per request. Earlier affiliate requests timed out at 30 seconds. Eventual functional success does not resolve this latency. Direct reads of Affiliates also stalled, while SELECT 1 and an indexed ID lookup responded. The local MySQL log contains InnoDB consistency warnings, but a causal link to this latency has not been established. No database repair or restart was performed.\n\n';
 md += '## Additional live email checks\n\n';
 md += supplemental.map(r=>`- ${r.name}: ${r.status}. ${r.note || ''}`).join('\n')+'\n\n';
+if (integration) {
+  md += '## Dedicated fixture integration run\n\n' + integration.mode + '. Executed ' + integration.executedAt + '. These are separate scenarios, not replacements for skipped main-collection requests.\n\n';
+  md += integration.rows.map(r => `- ${r.status}: ${r.name} (HTTP ${r.actual ?? 'unavailable'}).`).join('\n') + '\n\n';
+  md += 'The run creates labelled QA customers, products, a coupon, a seeded delivered order, and a pending order through the API. Catalog/coupon fixtures are deactivated afterward; QA records remain for inspection. Notifications are captured locally. A video URL was supplied; multipart video upload and physical delivery were not tested. Successful gateway payment verification remains pending.\n\n';
+}
 md += '## Fixes found during live testing\n\n';
-md += '- Subcategory and sub-subcategory routes previously called the root-category controller. They now call their own handlers, and the collection checks subCategories/subSubCategories response arrays.\n- Marketing-message requests previously called the banner controller. The route now returns the messages array from the marketing-message controller.\n- Wishlist variant JSON was returned as a serialized string by this database. The comparison now normalizes serialized JSON before matching, so the second toggle removes the item. The final run verifies the added -> removed transition.\n- Test fixtures now use India-format phone numbers accepted by account/profile validation, and the stock-alert JSON payload was corrected.\n\nAuth implementation and token behavior were not changed. The eight existing mocked boundary-test groups also passed after the fixes.\n\n';
+md += '- Subcategory and sub-subcategory routes previously called the root-category controller. They now call their own handlers, and the collection checks subCategories/subSubCategories response arrays.\n- Marketing-message requests previously called the banner controller. The route now returns the messages array from the marketing-message controller.\n- Wishlist variant JSON was returned as a serialized string by this database. The comparison now normalizes serialized JSON before matching, so the second toggle removes the item. The final run verifies the added -> removed transition.\n- Test fixtures now use India-format phone numbers accepted by account/profile validation, and the stock-alert JSON payload was corrected.\n\nAuth implementation and token behavior were not changed. All nine mocked boundary-test groups passed, including guest access and private-route protection.\n\n';
+md += '- Guest discovery now allows browsing before login; private commerce still requires an active customer.\n- Review creation now rejects products absent from the delivered order, including single-item orders. The missing ProductVariant import and product-hook Op import were corrected.\n\n';
 md += '## Pending integration scenarios\n\n';
 md += rows.filter(r=>r.status==='NOT RUN').map(r=>`- ${r.id}: ${r.name}. ${r.reason}. ${r.note}`).join('\n')+'\n\n';
 md += 'The main collection keeps email/payment cases disabled by default; separately executed mailbox checks are listed above. Successful gateway verification needs sandbox credentials and a completed gateway transaction. Reviews/returns need a delivered order owned by the QA customer, with eligible items and return evidence. No skipped main-collection case is counted as passed.\n\n';
@@ -48,5 +55,5 @@ md += '## Test records and cleanup\n\nThe run creates two QA customers and their
 md += 'Earlier exploratory runs created additional clearly labeled QA accounts/service records. Their records, including wishlist entries created before the fix, remain for inspection. before-fixes-results.json preserves the preceding run summary; the table below is the final run.\n\n';
 md += '## Every scenario\n\n| ID | Scenario | Method / route | Expected | Actual | Result |\n|---|---|---|---:|---:|---|\n';
 md += rows.map(r=>`| ${r.id} | ${escape(r.name)} | ${r.method} ${escape(r.route)} | ${r.expected} | ${r.actual??'—'} | ${r.status} |`).join('\n')+'\n';
-fs.writeFileSync(path.join(__dirname,'REPORT.md'),md);
+fs.writeFileSync(path.join(__dirname,'REPORT.md'),md.replace(/[ \t]+$/gm, ''));
 console.log(JSON.stringify({totals,failures:failed.map(r=>({id:r.id,name:r.name,expected:r.expected,actual:r.actual,response:r.response}))},null,2));

@@ -2,7 +2,7 @@
   {
     "name": "Checkout OTP email delivery",
     "status": "PASS",
-    "note": "HTTP 200 from Newman; user confirmed email receipt. Fresh delivery was also successful. Covers main-collection scenario MOB-205 separately."
+    "note": "HTTP 200 from Newman; user confirmed email receipt. Fresh delivery was also successful. Historical supplementary check; scenario IDs may change when regenerated."
   },
   {
     "name": "First checkout OTP verification",
@@ -12,7 +12,7 @@
   {
     "name": "Fresh checkout OTP verification",
     "status": "PASS",
-    "note": "Executed through Newman with the fresh user-provided code; HTTP 200, Security verification successful. Covers main-collection scenario MOB-206 separately."
+    "note": "Executed through Newman with the fresh user-provided code; HTTP 200, Security verification successful. Historical supplementary check; scenario IDs may change when regenerated."
   },
   {
     "name": "Used checkout OTP replay",

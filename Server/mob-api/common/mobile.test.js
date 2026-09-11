@@ -30,7 +30,7 @@ for (const name of fs.readdirSync(featureRoot)) {
   const controller = fs.readFileSync(path.join(featureRoot, name, name + 'Controller.js'), 'utf8');
   for (const [, variable, file] of controller.matchAll(/const (\w+) = require\('..\/..\/controllers\/(\w+)Controller'\)/g)) {
     if (!shared.has(file)) shared.set(file, {});
-    for (const [, action] of controller.matchAll(new RegExp(variable + '\\.([A-Za-z]+)', 'g'))) shared.get(file)[action] = (req, res) => res.json({ success: true, customerId: req.customer.id, query: req.query, action });
+    for (const [, action] of controller.matchAll(new RegExp(variable + '\\.([A-Za-z]+)', 'g'))) shared.get(file)[action] = (req, res) => res.json({ success: true, customerId: req.customer?.id, query: req.query, action });
   }
 }
 for (const [source, handlers] of shared) stub(path.join('../../controllers', source + 'Controller'), handlers);
@@ -55,16 +55,27 @@ const request = (url, { access = token, method = 'GET', body } = {}) => fetch(ba
   ...(body ? { body: JSON.stringify(body) } : {}),
 });
 
-test('every commerce route requires authentication on both mounts', async () => {
+test('every feature route requires authentication on both mounts', async () => {
   for (const prefix of ['/mob-api', '/api/mob']) for (const [method, route] of endpoints) {
     const result = await request(prefix + route.replace(/:[A-Za-z]+/g, '1'), { access: null, method: method.toUpperCase() });
     assert.equal(result.status, 401, method + ' ' + prefix + route);
   }
 });
+test('storefront routes are strictly protected and require authentication on both mounts', async () => {
+  for (const prefix of ['/mob-api', '/api/mob']) {
+    for (const route of ['/products', '/categories', '/banners', '/reviews/product/1']) {
+      const response = await request(prefix + route, { access: null });
+      assert.equal(response.status, 401, route + ' must return 401 unauthenticated');
+      const authedResponse = await request(prefix + route);
+      assert.equal(authedResponse.status, 200, route + ' must return 200 with token');
+    }
+    assert.equal((await request(prefix + '/reviews/my-delivered-items', { access: null })).status, 401);
+  }
+});
 test('rejects admin, reset, expired, and forged tokens', async () => {
-  const claims = [{ id: 7, type: 'ADMIN' }, { id: 7, purpose: 'password_reset' }, { id: 7, type: 'CUSTOMER', purpose: 'mobile_access', exp: 1 }];
+  const claims = [{ id: 7, type: 'ADMIN' }, { id: 7, purpose: 'password_reset' }, { id: 7, exp: 1 }];
   for (const payload of claims) assert.equal((await request('/mob-api/cart', { access: jwt.sign(payload, process.env.JWT_SECRET) })).status, 401);
-  assert.equal((await request('/mob-api/cart', { access: jwt.sign({ id: 7, type: 'CUSTOMER', purpose: 'mobile_access' }, 'wrong-secret') })).status, 401);
+  assert.equal((await request('/mob-api/cart', { access: jwt.sign({ id: 7 }, 'wrong-secret') })).status, 401);
 });
 test('accepts original mobile tokens and strips admin catalog flags', async () => {
   const result = await request('/mob-api/products?admin=true&all=true&limit=999');
@@ -101,7 +112,7 @@ test('login and recovery are reachable without a token; profile aliases are prot
   for (const route of ['/login', '/register', '/forgot-password', '/verify-otp', '/new-password', '/reset-password']) {
     assert.equal((await request('/mob-api/auth' + route, { method: 'POST', access: null, body: {} })).status, 400);
   }
-  for (const route of ['/me', '/getme']) assert.equal((await request('/mob-api/auth' + route, { access: null })).status, 401);
+  for (const route of ['/me', '/getme', '/profile']) assert.equal((await request('/mob-api/auth' + route, { access: null })).status, 401);
 });
 test('Swagger serves every allowed operation with bearer security and request schemas', async () => {
   const response = await request('/mob-api/openapi.json', { access: null });
@@ -117,4 +128,40 @@ test('Swagger serves every allowed operation with bearer security and request sc
     assert.equal(page.status, 200);
     assert.match(await page.text(), /Mobile Customer API/);
   }
+});
+
+
+test('every Swagger operation has success examples and valid structured request fixtures', () => {
+  const spec = require('../swagger');
+  const validate = (schema, value, context) => {
+    if (!schema) return;
+    if (value === null && schema.nullable) return;
+    if (schema.type === 'object') {
+      assert.ok(value && typeof value === 'object' && !Array.isArray(value), context);
+      for (const key of schema.required || []) assert.ok(key in value, context + ' missing ' + key);
+      for (const [key, item] of Object.entries(value)) validate(schema.properties?.[key], item, context + '.' + key);
+    } else if (schema.type === 'array') {
+      assert.ok(Array.isArray(value), context);
+      for (const item of value) validate(schema.items, item, context);
+    } else if (schema.type === 'integer') assert.ok(Number.isInteger(value), context);
+    else if (schema.type) assert.equal(typeof value, schema.type, context);
+    if (schema.enum) assert.ok(schema.enum.includes(value), context);
+    if (schema.minimum !== undefined) assert.ok(value >= schema.minimum, context);
+    if (schema.maximum !== undefined) assert.ok(value <= schema.maximum, context);
+  };
+  for (const [route, methods] of Object.entries(spec.paths)) for (const [method, operation] of Object.entries(methods)) {
+    for (const [status, response] of Object.entries(operation.responses)) if (/^2\d\d$/.test(status)) {
+      const media = response.content?.['application/json'];
+      assert.equal(media?.example?.success, true, method + ' ' + route + ' ' + status);
+      validate(media.schema, media.example, route);
+    }
+    for (const media of Object.values(operation.requestBody?.content || {})) {
+      assert.ok(media.example, method + ' ' + route);
+      validate(media.schema, media.example, route);
+    }
+  }
+  assert.deepEqual(Object.keys(spec.paths['/mob-api/auth/login'].post.responses['200'].content['application/json'].example).sort(), ['message', 'success', 'token']);
+  assert.ok(spec.paths['/mob-api/cart'].get.responses['200'].content['application/json'].example.cart.items.length);
+  assert.ok(spec.paths['/mob-api/contact-enquiries'].post.responses['201']);
+  assert.ok(spec.paths['/mob-api/stock-alerts'].post.responses['201']);
 });

@@ -60,4 +60,13 @@ Object.assign(spec.paths, require('./affiliates/affiliatesSwagger'));
 Object.assign(spec.paths, require('./checkout/checkoutSwagger'));
 spec.paths['/mob-api/auth/me'] = spec.paths['/mob-api/auth/getme'];
 spec.paths['/mob-api/auth/reset-password'] = spec.paths['/mob-api/auth/new-password'];
+// Public access is limited to registration, login and password recovery.
+const publicAuthPaths = new Set(['register', 'login', 'forgot-password', 'verify-otp', 'new-password', 'reset-password'].map(name => '/mob-api/auth/' + name));
+for (const [path, operations] of Object.entries(spec.paths)) {
+  for (const [method, operation] of Object.entries(operations)) {
+    if (!['get', 'post', 'put', 'patch', 'delete', 'head', 'options'].includes(method)) continue;
+    operation.security = method === 'post' && publicAuthPaths.has(path) ? [] : [{ bearerAuth: [] }];
+  }
+}
+require('./swaggerExamples').enrichSpecWithExamples(spec);
 module.exports = spec;

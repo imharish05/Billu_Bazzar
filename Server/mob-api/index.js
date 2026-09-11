@@ -3,6 +3,7 @@ const router = require('express').Router();
 
 router.use('/auth', require('./Auth/authRoutes'));
 router.use('/auth', require('./Auth/authAliases'));
+// Every feature below this point requires an active customer access token.
 router.use(require('./common/auth'));
 router.use(require('./common/customerRequest'));
 router.use(require('./settings/settingsRoutes'));
