@@ -635,7 +635,7 @@ const AdminLayout = ({ children, title = '' }) => {
             <h1 className="font-playfair text-lg font-semibold text-brand-text">{title}</h1>
           </div>
           <div className="flex items-center gap-3">
-            <a href={import.meta.env.VITE_CLIENT_URL || 'http://localhost:5173'} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-grey hover:text-brand-gold transition-colors focus-visible:outline-brand-gold">
+            <a href={import.meta.env.VITE_CLIENT_URL || '/'} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-grey hover:text-brand-gold transition-colors focus-visible:outline-brand-gold">
               View Store ↗
             </a>
 

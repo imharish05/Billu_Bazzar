@@ -1,3 +1,4 @@
+import { getImageUrl } from '../utils/imageUrl';
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDispatch, useSelector } from 'react-redux';
@@ -474,7 +475,7 @@ const QuickViewModal = () => {
                 {/* Main Product Image with subtle zoom effect */}
                 <div className="relative flex-1 w-full h-full min-h-0 bg-neutral-900 overflow-hidden flex items-center justify-center">
                   <img
-                    src={galleryImages[activeImgIndex]}
+                    src={getImageUrl(galleryImages[activeImgIndex])}
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                   />
@@ -511,7 +512,7 @@ const QuickViewModal = () => {
                             : 'border-white/20 opacity-60 hover:opacity-100'
                         }`}
                       >
-                        <img src={img} alt="" className="w-full h-full object-cover" />
+                        <img src={getImageUrl(img)} alt="" className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>
@@ -636,7 +637,7 @@ const QuickViewModal = () => {
                                       <span
                                         className="w-6 h-6 rounded-full inline-block flex items-center justify-center relative overflow-hidden"
                                         style={{
-                                          backgroundColor: resolveColor(val),
+                                          background: directVariantMatch?.colorHex || anyVariantWithVal?.colorHex || resolveColor(val),
                                           boxShadow: 'inset 0 0 0 1.5px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.12)'
                                         }}
                                       >

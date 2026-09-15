@@ -27,6 +27,7 @@ const ProductVariant = sequelize.define('ProductVariant', {
       return rawValue || {};
     }
   },
+  colorHex: { type: DataTypes.STRING(7), allowNull: true, validate: { is: /^#[0-9a-f]{6}$/i } },
   image: { type: DataTypes.STRING, allowNull: true },
   warehouseId: { type: DataTypes.INTEGER, allowNull: true },
   lowStockThreshold: { type: DataTypes.INTEGER, defaultValue: 10, allowNull: true },

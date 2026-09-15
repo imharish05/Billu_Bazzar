@@ -430,10 +430,10 @@ const HomePage = () => {
 
           <ScrollReveal delay={0.15}>
             <div className="relative">
-              {/* Scroll Buttons */}
+              {/* Scroll Buttons - hidden on mobile for clean touch swipe */}
               <button
                 onClick={() => scrollCategories(-1)}
-                className={`absolute left-1 md:-left-4 top-[40%] -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/95 border border-neutral-200/80 flex items-center justify-center text-brand-text shadow-lg hover:shadow-xl transition-all duration-300 focus-visible:outline-brand-gold ${
+                className={`absolute -left-2 md:-left-4 top-[40%] -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/95 border border-neutral-200/80 hidden sm:flex items-center justify-center text-brand-text shadow-lg hover:shadow-xl transition-all duration-300 focus-visible:outline-brand-gold ${
                   canScrollLeft ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'
                 }`}
                 aria-label="Scroll categories left"
@@ -444,7 +444,7 @@ const HomePage = () => {
 
               <button
                 onClick={() => scrollCategories(1)}
-                className={`absolute right-1 md:-right-4 top-[40%] -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/95 border border-neutral-200/80 flex items-center justify-center text-brand-text shadow-lg hover:shadow-xl transition-all duration-300 focus-visible:outline-brand-gold ${
+                className={`absolute -right-2 md:-right-4 top-[40%] -translate-y-1/2 z-10 w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/95 border border-neutral-200/80 hidden sm:flex items-center justify-center text-brand-text shadow-lg hover:shadow-xl transition-all duration-300 focus-visible:outline-brand-gold ${
                   canScrollRight ? 'opacity-100 scale-100' : 'opacity-0 scale-90 pointer-events-none'
                 }`}
                 aria-label="Scroll categories right"
@@ -622,7 +622,7 @@ const HomePage = () => {
                   <button
                     type="button"
                     onClick={() => scrollCarousel(-1)}
-                    className="absolute -left-2 sm:left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-800 flex items-center justify-center active:scale-95 transition-all shadow-md hover:text-brand-gold cursor-pointer"
+                    className="absolute -left-2 sm:left-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-800 hidden sm:flex items-center justify-center active:scale-95 transition-all shadow-md hover:text-brand-gold cursor-pointer"
                     aria-label="Previous products"
                   >
                     <ChevronLeft size={20} />
@@ -638,9 +638,9 @@ const HomePage = () => {
                   {productsToRender.map((product, i) => (
                     <div
                       key={product.id || i}
-                      className="w-[calc(50%-8px)] md:w-[calc(33.333%-16px)] lg:w-[calc(20%-15px)] flex-shrink-0"
+                      className="w-[calc(50%-8px)] md:w-[calc(33.333%-16px)] lg:w-[calc(20%-15px)] flex-shrink-0 flex"
                     >
-                      <ProductCard product={product} index={i} />
+                      <ProductCard product={product} index={i} compactMobile />
                     </div>
                   ))}
                 </div>
@@ -650,7 +650,7 @@ const HomePage = () => {
                   <button
                     type="button"
                     onClick={() => scrollCarousel(1)}
-                    className="absolute -right-2 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-800 flex items-center justify-center active:scale-95 transition-all shadow-md hover:text-brand-gold cursor-pointer"
+                    className="absolute -right-2 sm:right-2 top-1/2 -translate-y-1/2 z-10 w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-800 hidden sm:flex items-center justify-center active:scale-95 transition-all shadow-md hover:text-brand-gold cursor-pointer"
                     aria-label="Next products"
                   >
                     <ChevronRight size={20} />
@@ -914,7 +914,7 @@ const HomePage = () => {
                   {exclusiveBanners.map((banner) => (
                     <div
                       key={banner.id}
-                      className="w-full md:w-[calc(50%-12px)] flex-shrink-0 relative overflow-hidden aspect-[16/9] group"
+                      className="w-full md:w-[calc(50%-12px)] flex-shrink-0 relative overflow-hidden rounded-xl sm:rounded-2xl aspect-[4/3] sm:aspect-[16/9] min-h-[260px] sm:min-h-0 group shadow-md"
                     >
                       <img
                         src={getImageUrl(banner.image)}
@@ -922,26 +922,26 @@ const HomePage = () => {
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 transform-gpu"
                         loading="lazy"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-                      <div className="absolute inset-0 flex flex-col justify-end p-4 pb-6 md:p-8 md:pb-10 promo-card-overlay">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />
+                      <div className="absolute inset-0 flex flex-col justify-end p-5 pb-6 sm:p-6 sm:pb-8 md:p-8 md:pb-10 promo-card-overlay">
                         {banner.badgeText && (
-                          <span className="bg-brand-gold text-white text-[10px] md:text-sm font-bold px-2 py-1 md:px-3 self-start mb-2 md:mb-3">
+                          <span className="bg-brand-gold text-white text-[10px] sm:text-xs md:text-sm font-bold px-2.5 py-1 md:px-3 self-start mb-2 md:mb-3 rounded-full shadow-sm">
                             {banner.badgeText}
                           </span>
                         )}
                         {banner.title && (
-                          <h3 className="font-playfair text-xl md:text-3xl font-bold text-white mb-1 md:mb-2 line-clamp-2">
+                          <h3 className="font-playfair text-lg sm:text-2xl md:text-3xl font-bold text-white mb-1 md:mb-2 line-clamp-2 leading-tight">
                             {banner.title}
                           </h3>
                         )}
                         {banner.subtitle && (
-                          <p className="text-white/70 text-xs md:text-sm mb-2 md:mb-4 line-clamp-2">
+                          <p className="text-white/80 text-xs sm:text-sm mb-3 md:mb-4 line-clamp-2 max-w-md">
                             {banner.subtitle}
                           </p>
                         )}
                         <Link
                           to={banner.ctaLink}
-                          className="group/btn inline-flex items-center gap-1.5 md:gap-2 px-4 py-2 md:px-5 md:py-2.5 border border-brand-gold/60 hover:border-brand-gold bg-black/40 hover:bg-brand-gold text-brand-gold hover:text-neutral-950 text-[10px] md:text-xs font-semibold uppercase tracking-widest transition-all duration-300 rounded-none self-start mt-1"
+                          className="group/btn inline-flex items-center gap-1.5 md:gap-2 px-3.5 py-2 md:px-5 md:py-2.5 border border-brand-gold/80 hover:border-brand-gold bg-black/60 backdrop-blur-sm hover:bg-brand-gold text-brand-gold hover:text-neutral-950 text-[11px] md:text-xs font-semibold uppercase tracking-widest transition-all duration-300 rounded-sm self-start"
                           id={`promo-deal-${banner.id}`}
                         >
                           <span>{banner.ctaText || 'Shop Now'}</span>
@@ -1100,7 +1100,7 @@ const HomePage = () => {
                 ? products.filter(p => p.isFeatured).slice(0, 5)
                 : products.slice(0, 5)
             ).map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
+              <ProductCard key={product.id} product={product} index={i} compactMobile />
             ))}
           </div>
         </div>

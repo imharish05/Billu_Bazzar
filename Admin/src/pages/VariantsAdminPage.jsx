@@ -89,10 +89,10 @@ const VARIANT_PRESET_VALUES = {
  * - Preset chips with visual color swatches
  * - Custom typed value chip with color swatch dot
  */
-const VariantAttributeChips = ({ label, value, onChange, suggestions = [] }) => {
+const VariantAttributeChips = ({ label, value, onChange, colorHex, suggestions = [] }) => {
   const [showInput, setShowInput] = useState(false);
   const [customInput, setCustomInput] = useState('');
-  const [colorPickerHex, setColorPickerHex] = useState('#e53e3e');
+  const [colorPickerHex, setColorPickerHex] = useState(colorHex || '#e53e3e');
   const isColor = label.toLowerCase() === 'color';
 
   // Resolve presets — case-insensitive + handle plural labels & partial matches
@@ -145,10 +145,7 @@ const VariantAttributeChips = ({ label, value, onChange, suggestions = [] }) => 
               <input
                 type="color"
                 value={colorPickerHex}
-                onChange={e => {
-                  setColorPickerHex(e.target.value);
-                  setCustomInput(e.target.value);
-                }}
+                onChange={e => setColorPickerHex(e.target.value)}
                 className="w-5 h-5 rounded-full cursor-pointer border border-neutral-300 p-0 overflow-hidden flex-shrink-0"
                 title="Pick hex color"
               />
@@ -163,7 +160,7 @@ const VariantAttributeChips = ({ label, value, onChange, suggestions = [] }) => 
                 if (e.key === 'Enter') {
                   e.preventDefault();
                   if (customInput.trim()) {
-                    onChange(customInput.trim());
+                    onChange(customInput.trim(), isColor ? (/^#[0-9a-f]{6}$/i.test(customInput.trim()) ? customInput.trim() : colorPickerHex) : null);
                     setCustomInput('');
                     setShowInput(false);
                   }
@@ -175,7 +172,7 @@ const VariantAttributeChips = ({ label, value, onChange, suggestions = [] }) => 
             <button
               type="button"
               onClick={() => {
-                if (customInput.trim()) { onChange(customInput.trim()); setCustomInput(''); }
+                if (customInput.trim()) { onChange(customInput.trim(), isColor ? (/^#[0-9a-f]{6}$/i.test(customInput.trim()) ? customInput.trim() : colorPickerHex) : null); setCustomInput(''); }
                 setShowInput(false);
               }}
               className="text-emerald-700 text-xs font-bold hover:text-emerald-900"
@@ -186,7 +183,11 @@ const VariantAttributeChips = ({ label, value, onChange, suggestions = [] }) => 
         ) : (
           <button
             type="button"
-            onClick={() => setShowInput(true)}
+            onClick={() => {
+              setCustomInput(value || '');
+              setColorPickerHex(colorHex || (/^#[0-9a-f]{6}$/i.test(value) ? value : '#e53e3e'));
+              setShowInput(true);
+            }}
             className="border-2 border-dashed border-emerald-500 text-emerald-600 bg-emerald-50/40 hover:bg-emerald-50 text-xs font-bold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1 cursor-pointer"
           >
             <Plus size={14} /> Add {label}
@@ -210,7 +211,7 @@ const VariantAttributeChips = ({ label, value, onChange, suggestions = [] }) => 
               {isColor && (
                 <span
                   className="w-3.5 h-3.5 rounded-full border border-neutral-300 shadow-sm flex-shrink-0 inline-block"
-                  style={{ background: resolveColor(chip) }}
+                  style={{ background: (isSelected && colorHex) || resolveColor(chip) }}
                 />
               )}
               <span>{chip}</span>
@@ -228,7 +229,7 @@ const VariantAttributeChips = ({ label, value, onChange, suggestions = [] }) => 
             {isColor && (
               <span
                 className="w-3.5 h-3.5 rounded-full border border-neutral-300 shadow-sm flex-shrink-0 inline-block"
-                style={{ background: resolveColor(value) }}
+                style={{ background: colorHex || resolveColor(value) }}
               />
             )}
             <span>{value}</span>
@@ -257,6 +258,7 @@ const VariantModal = ({ variant, variants = [], onClose, onSave, products, wareh
   const [stock, setStock] = useState(variant?.stock !== undefined ? String(variant?.stock) : '0');
   const [warehouseId, setWarehouseId] = useState(variant?.warehouseId || '');
   const [attributes, setAttributes] = useState(variant?.attributes || {});
+  const [colorHex, setColorHex] = useState(variant?.colorHex || '');
   
   const [lowStockThreshold, setLowStockThreshold] = useState(variant?.lowStockThreshold !== undefined ? String(variant.lowStockThreshold) : '10');
 
@@ -355,6 +357,7 @@ const VariantModal = ({ variant, variants = [], onClose, onSave, products, wareh
         nextAttrs[k] = '';
       });
       setAttributes(nextAttrs);
+      setColorHex('');
       const prodVariants = (variants || selectedProduct?.variants || []).filter(v => Number(v.productId) === Number(selectedProductId));
       const nextNum = prodVariants.length + 1;
       setSku(`SKU-P${selectedProductId}-V${nextNum}`);
@@ -468,6 +471,7 @@ const VariantModal = ({ variant, variants = [], onClose, onSave, products, wareh
     fd.append('lowStockThreshold', lowStockThreshold);
     fd.append('warehouseId', warehouseId || '');
     fd.append('attributes', JSON.stringify(attributes));
+    fd.append('colorHex', colorHex);
     fd.append('existingImages', JSON.stringify(existingImages));
     
     if (mainImageFile) {
@@ -548,6 +552,7 @@ const VariantModal = ({ variant, variants = [], onClose, onSave, products, wareh
                           const copied = {};
                           optionKeys.forEach(k => { copied[k] = sourceVariant.attributes[k] || ''; });
                           setAttributes(copied);
+                          setColorHex(sourceVariant.colorHex || '');
                           toast.success('Variant values copied!');
                         }}
                         className="flex items-center gap-1.5 text-xs font-semibold text-neutral-600 hover:text-brand-gold border border-neutral-200 hover:border-brand-gold px-2.5 py-1.5 rounded-lg transition-colors bg-white shadow-sm"
@@ -570,7 +575,11 @@ const VariantModal = ({ variant, variants = [], onClose, onSave, products, wareh
                           key={key}
                           label={key}
                           value={attributes[key] || ''}
-                          onChange={(val) => handleAttributeChange(key, val)}
+                          colorHex={key.toLowerCase() === 'color' ? colorHex : null}
+                          onChange={(val, hex) => {
+                            handleAttributeChange(key, val);
+                            if (key.toLowerCase() === 'color') setColorHex(hex || '');
+                          }}
                           suggestions={[]}
                         />
                       );

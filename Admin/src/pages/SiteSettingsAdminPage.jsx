@@ -1,3 +1,4 @@
+import { getImageUrl } from '../utils/imageUrl';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Save, Upload, Eye, Sparkles, Target, Settings, HelpCircle, BarChart3, List, RefreshCw } from 'lucide-react';
@@ -414,13 +415,7 @@ const SiteSettingsAdminPage = () => {
                           {imagePreview ? (
                             <>
                               <img
-                                src={
-                                  imagePreview.startsWith('data:') || imagePreview.startsWith('http://') || imagePreview.startsWith('https://')
-                                    ? imagePreview
-                                    : imagePreview.startsWith('/uploads')
-                                    ? `${import.meta.env.VITE_SERVER_URL || 'http://localhost:5000'}${imagePreview}`
-                                    : imagePreview
-                                }
+                                src={getImageUrl(imagePreview)}
                                 alt="Story Banner Preview"
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

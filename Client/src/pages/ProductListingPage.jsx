@@ -357,10 +357,12 @@ const ProductListingPage = () => {
 
           {/* Product Listing Area */}
           <div className="col-span-1 md:col-span-3">
-            {/* Filter bar */}
-            <div className="flex items-center justify-end gap-4 mb-6">
-              {/* Sort + Collection + Filter toggle */}
-              <div className="flex flex-wrap items-center gap-4">
+            {/* Desktop Filter & Sort Bar */}
+            <div className="hidden md:flex items-center justify-between gap-4 mb-6 pb-4 border-b border-neutral-200">
+              <span className="text-xs text-brand-grey font-medium tracking-wide">
+                Showing <span className="text-brand-text font-semibold">{total}</span> items
+              </span>
+              <div className="flex items-center gap-4">
                 {/* Collection Filter Dropdown */}
                 <div className="flex items-center gap-2">
                   <label htmlFor="products-collection" className="text-xs font-semibold uppercase tracking-wider text-brand-grey whitespace-nowrap">
@@ -370,7 +372,7 @@ const ProductListingPage = () => {
                     id="products-collection"
                     value={selectedCollection}
                     onChange={e => handleCollectionChange(e.target.value)}
-                    className="border border-brand-light text-xs px-3 py-2 bg-white text-brand-text focus:outline-none focus:border-brand-gold"
+                    className="border border-neutral-300 rounded-sm text-xs px-3 py-1.5 bg-white text-brand-text focus:outline-none focus:border-brand-gold"
                   >
                     <option value="">All Collections</option>
                     <option value="newArrival">New Arrivals</option>
@@ -388,7 +390,7 @@ const ProductListingPage = () => {
                     id="products-discount"
                     value={filters.minDiscount ? `${filters.minDiscount}-${filters.maxDiscount}` : ''}
                     onChange={e => handleDiscountChange(e.target.value)}
-                    className="border border-brand-light text-xs px-3 py-2 bg-white text-brand-text focus:outline-none focus:border-brand-gold"
+                    className="border border-neutral-300 rounded-sm text-xs px-3 py-1.5 bg-white text-brand-text focus:outline-none focus:border-brand-gold"
                   >
                     <option value="">All Discounts</option>
                     <option value="1-10">Upto 10%</option>
@@ -405,24 +407,78 @@ const ProductListingPage = () => {
                   </label>
                   <select
                     id="products-sort"
+                    value={`${filters.sort}-${filters.order}`}
                     onChange={e => handleSort(e.target.value)}
-                    className="border border-brand-light text-xs px-3 py-2 bg-white text-brand-text focus:outline-none focus:border-brand-gold"
+                    className="border border-neutral-300 rounded-sm text-xs px-3 py-1.5 bg-white text-brand-text focus:outline-none focus:border-brand-gold"
                   >
                     {sortOptions.map(o => (
                       <option key={o.value} value={o.value}>{o.label}</option>
                     ))}
                   </select>
                 </div>
+              </div>
+            </div>
 
-                {/* Mobile Filter Toggle */}
+            {/* Mobile Filter & Sort Toolbar */}
+            <div className="md:hidden mb-5">
+              {/* Collection Quick Pills */}
+              <div className="flex items-center gap-2 overflow-x-auto pb-3 -mx-4 px-4 scrollbar-none">
+                {[
+                  { label: 'All', value: '' },
+                  { label: 'New Arrivals', value: 'newArrival' },
+                  { label: 'Best Sellers', value: 'bestSeller' },
+                  { label: 'Featured', value: 'featured' }
+                ].map(col => {
+                  const isActive = selectedCollection === col.value;
+                  return (
+                    <button
+                      key={col.label}
+                      type="button"
+                      onClick={() => handleCollectionChange(col.value)}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-medium tracking-wide whitespace-nowrap transition-all duration-200 ${
+                        isActive
+                          ? 'bg-neutral-900 text-white shadow-sm border border-neutral-900'
+                          : 'bg-white text-neutral-700 border border-neutral-200 hover:border-brand-gold/60'
+                      }`}
+                    >
+                      {col.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Dual Action Bar: Filters & Sort */}
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
                 <button
+                  type="button"
                   onClick={() => setFiltersOpen(!filtersOpen)}
-                  className="md:hidden border border-brand-light px-4 py-2 flex items-center gap-2 text-xs font-medium hover:border-brand-gold transition-colors focus-visible:outline-brand-gold"
-                  aria-expanded={filtersOpen} id="filters-toggle"
+                  className={`py-2.5 px-3 rounded-lg border text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                    filtersOpen || (filters.minPrice || filters.minDiscount)
+                      ? 'border-brand-gold bg-brand-gold/10 text-neutral-900 font-bold'
+                      : 'border-neutral-200 bg-white text-neutral-800 shadow-sm'
+                  }`}
+                  id="filters-toggle-mobile"
                 >
-                  <SlidersHorizontal size={14} /> Filters
-                  {filtersOpen && <X size={12} />}
+                  <SlidersHorizontal size={14} className="text-brand-gold" />
+                  <span>Filters</span>
+                  {(filters.minPrice || filters.minDiscount) && (
+                    <span className="w-2 h-2 rounded-full bg-brand-gold" />
+                  )}
                 </button>
+
+                <div className="relative">
+                  <select
+                    value={`${filters.sort}-${filters.order}`}
+                    onChange={e => handleSort(e.target.value)}
+                    className="w-full py-2.5 px-3 pr-8 rounded-lg border border-neutral-200 bg-white text-neutral-800 shadow-sm text-xs font-semibold uppercase tracking-wider appearance-none focus:outline-none focus:border-brand-gold"
+                    id="sort-select-mobile"
+                  >
+                    {sortOptions.map(o => (
+                      <option key={o.value} value={o.value}>Sort: {o.label}</option>
+                    ))}
+                  </select>
+                  <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none" />
+                </div>
               </div>
             </div>
 
@@ -432,15 +488,41 @@ const ProductListingPage = () => {
               animate={{ height: filtersOpen ? 'auto' : 0, opacity: filtersOpen ? 1 : 0 }}
               className="overflow-hidden md:hidden"
             >
-              <div className="bg-brand-light p-6 mb-6 grid sm:grid-cols-2 gap-6">
-                {/* Category tree on mobile */}
-                <div className="pb-4 border-b border-brand-light">
-                  {renderCategoryTree(categories, slug, sub, subsub)}
+              <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-5 mb-6 space-y-6 shadow-sm">
+                {/* Discount options */}
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-neutral-900 mb-2.5">Discounts</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { label: 'All Discounts', value: '' },
+                      { label: 'Upto 10%', value: '1-10' },
+                      { label: 'Upto 25%', value: '1-25' },
+                      { label: 'Upto 50%', value: '1-50' },
+                      { label: 'Above 50%', value: '51-100' }
+                    ].map(d => {
+                      const curVal = filters.minDiscount ? `${filters.minDiscount}-${filters.maxDiscount}` : '';
+                      const isSel = curVal === d.value;
+                      return (
+                        <button
+                          key={d.label}
+                          type="button"
+                          onClick={() => handleDiscountChange(d.value)}
+                          className={`px-3 py-1.5 text-xs rounded-full border transition-all ${
+                            isSel
+                              ? 'bg-brand-gold text-white border-brand-gold font-semibold'
+                              : 'bg-white text-neutral-700 border-neutral-200'
+                          }`}
+                        >
+                          {d.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Price range slider */}
-                <div>
-                  <p className="font-medium text-sm mb-3">Price Range</p>
+                <div className="pt-4 border-t border-neutral-200">
+                  <p className="text-xs font-bold uppercase tracking-wider text-neutral-900 mb-3">Price Range</p>
                   <PriceRangeSlider
                     priceMin={priceRange.min}
                     priceMax={priceRange.max}
@@ -451,7 +533,20 @@ const ProductListingPage = () => {
                   />
                 </div>
 
-                {/* Collection Filter section removed (placed in top bar dropdown) */}
+                {/* Category tree on mobile */}
+                <div className="pt-4 border-t border-neutral-200">
+                  <p className="text-xs font-bold uppercase tracking-wider text-neutral-900 mb-3">Categories</p>
+                  {renderCategoryTree(categories, slug, sub, subsub)}
+                </div>
+
+                {/* Apply / Close button */}
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen(false)}
+                  className="w-full py-2.5 bg-neutral-900 text-white text-xs font-bold uppercase tracking-widest rounded-lg hover:bg-brand-gold transition-colors shadow-sm"
+                >
+                  Apply & View {total} Products
+                </button>
               </div>
             </motion.div>
 

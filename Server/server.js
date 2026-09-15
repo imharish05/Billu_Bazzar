@@ -245,6 +245,11 @@ const start = async () => {
     await safeAddColumn("ALTER TABLE ProductVariants ADD COLUMN mrp DECIMAL(10, 2) NULL");
     await safeAddColumn("ALTER TABLE ProductVariants ADD COLUMN image VARCHAR(255) NULL");
     await safeAddColumn("ALTER TABLE ProductVariants ADD COLUMN images JSON NULL");
+    // Preserve custom color names in attributes and store the swatch separately.
+    const variantColumns = await sequelize.getQueryInterface().describeTable('ProductVariants');
+    if (!variantColumns.colorHex) {
+      await sequelize.query("ALTER TABLE ProductVariants ADD COLUMN colorHex VARCHAR(7) NULL");
+    }
     await safeAddColumn("ALTER TABLE InventoryMovementLogs ADD COLUMN warehouseId INT NULL");
     await safeAddColumn("ALTER TABLE InventoryMovementLogs ADD COLUMN toWarehouseId INT NULL");
     await safeAddColumn('ALTER TABLE Customers ADD COLUMN passwordResetToken VARCHAR(128) NULL DEFAULT NULL');

@@ -75,7 +75,7 @@ const WishlistPage = () => {
       </div>
 
       {items.length === 0 ? (
-        <div className="bg-white border border-brand-light p-16 text-center">
+        <div className="bg-white p-16 text-center">
           <Heart size={48} className="text-brand-gold/40 mx-auto mb-4 animate-pulse" strokeWidth={1} />
           <p className="font-playfair text-xl text-brand-text mb-2">Your Wishlist is Empty</p>
           <p className="text-brand-grey text-xs md:text-sm mb-6 max-w-sm mx-auto">

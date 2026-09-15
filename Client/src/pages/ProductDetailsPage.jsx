@@ -1,3 +1,4 @@
+import { getImageUrl } from '../utils/imageUrl';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
@@ -662,7 +663,7 @@ const ProductDetailsPage = () => {
                     id={`thumb-${i}`}
                   >
                     <img
-                      src={img}
+                      src={getImageUrl(img)}
                       alt=""
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -691,7 +692,7 @@ const ProductDetailsPage = () => {
                     <AnimatePresence mode="wait">
                       <motion.img
                         key={selectedImage}
-                        src={images[selectedImage]}
+                        src={getImageUrl(images[selectedImage])}
                         alt={product.name}
                         className="w-full h-full object-cover"
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -840,7 +841,7 @@ const ProductDetailsPage = () => {
                           ? (directVariantMatch.stock !== undefined && parseInt(directVariantMatch.stock, 10) <= 0)
                           : (anyVariantWithVal && anyVariantWithVal.stock !== undefined ? parseInt(anyVariantWithVal.stock, 10) <= 0 : false);
                         const isSelected = String(currentVal || '').toLowerCase() === String(val).toLowerCase();
-                        const cssColor = resolveColor(val);
+                        const cssColor = directVariantMatch?.colorHex || anyVariantWithVal?.colorHex || resolveColor(val);
                         const isGradient = cssColor.includes('gradient');
                         const lowerVal = val.toLowerCase();
                         const isLightColor = ['white', 'cream', 'beige', 'ivory', 'off', 'yellow', 'lemon'].some(c => lowerVal.includes(c)) || cssColor === '#f9fafb' || cssColor === '#ffffff';
@@ -1494,7 +1495,7 @@ const ProductDetailsPage = () => {
                 return (
                   <video
                     ref={videoRef}
-                    src={directSrc}
+                    src={getImageUrl(directSrc)}
                     className="w-full h-full object-contain"
                     controls
                     autoPlay
@@ -1545,7 +1546,7 @@ const ProductDetailsPage = () => {
               <AnimatePresence mode="wait">
                 <motion.img
                   key={lightboxIndex}
-                  src={allLightboxImages[lightboxIndex]}
+                  src={getImageUrl(allLightboxImages[lightboxIndex])}
                   alt={`${product.name} - View ${lightboxIndex + 1}`}
                   initial={{ opacity: 0, scale: 0.96 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -1582,7 +1583,7 @@ const ProductDetailsPage = () => {
                       lightboxIndex === i ? 'border-brand-gold scale-105 shadow-md' : 'border-white/20 hover:border-white/60 opacity-60'
                     }`}
                   >
-                    <img src={img} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
+                    <img src={getImageUrl(img)} alt={`Thumb ${i + 1}`} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>

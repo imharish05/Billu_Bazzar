@@ -1,3 +1,4 @@
+import { isLocalHost } from '../utils/imageUrl';
 import axios from 'axios';
 import { logout, updateAccessToken } from '../redux/slices/authSlice';
 
@@ -33,6 +34,12 @@ if (rawApiBase.startsWith('http://') || rawApiBase.startsWith('https://')) {
   baseURL = rawApiBase;
 } else if (serverUrl) {
   baseURL = `${serverUrl}${rawApiBase.startsWith('/') ? '' : '/'}${rawApiBase}`;
+}
+
+// A deployed storefront must never send API requests to the visitor's device.
+if (typeof window !== 'undefined' && !isLocalHost(window.location.hostname)) {
+  const configured = new URL(baseURL, window.location.origin);
+  if (isLocalHost(configured.hostname)) baseURL = configured.pathname || '/api';
 }
 
 const api = axios.create({ baseURL, timeout: 15000 });

@@ -875,96 +875,64 @@ const Navbar = () => {
           <div className="lg:hidden">
             {/* Top row: logo + actions */}
             <div className="flex items-center justify-between h-16 px-4">
-              <Link to="/" aria-label="Billu Bazaar — Home">
+              <Link to="/" aria-label="Billu Bazaar — Home" className="flex items-center">
                 <Logo size="sm" />
               </Link>
-              <div className="flex items-center gap-1">
-                <div className="mr-1 flex items-center">
-                  <div
-                    className="relative inline-flex items-center bg-neutral-900/90 border border-neutral-700/60 rounded-full p-[2px] h-[28px] w-[72px] cursor-pointer shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)] select-none"
-                    onClick={() => dispatch(setCurrency(currencyCode === 'INR' ? 'AED' : 'INR'))}
-                    role="group"
-                    aria-label="Currency Selector"
-                    id="nav-currency-toggle-mobile"
-                  >
-                    {/* Animated Sliding Luxury Pill */}
-                    <motion.div
-                      className="absolute top-[2px] left-[2px] w-[33px] h-[22px] rounded-full bg-gradient-to-r from-amber-600 via-brand-gold to-amber-600 shadow-[0_2px_5px_rgba(217,119,6,0.3)] border border-amber-400/30 pointer-events-none"
-                      animate={{ x: currencyCode === 'INR' ? 0 : 33 }}
-                      transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-                    />
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); dispatch(setCurrency('INR')); }}
-                      className={`relative z-10 w-[33px] h-[22px] flex items-center justify-center text-[9px] font-bold tracking-widest uppercase transition-colors rounded-full focus:outline-none ${
-                        currencyCode === 'INR' ? 'text-white' : 'text-neutral-400'
-                      }`}
-                      aria-pressed={currencyCode === 'INR'}
-                    >
-                      INR
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); dispatch(setCurrency('AED')); }}
-                      className={`relative z-10 w-[33px] h-[22px] flex items-center justify-center text-[9px] font-bold tracking-widest uppercase transition-colors rounded-full focus:outline-none ${
-                        currencyCode === 'AED' ? 'text-white' : 'text-neutral-400'
-                      }`}
-                      aria-pressed={currencyCode === 'AED'}
-                    >
-                      AED
-                    </button>
-                  </div>
-                </div>
-                <Link to="/account" className="p-2 text-white hover:text-brand-gold transition-colors" aria-label="Account">
-                  <User size={18} strokeWidth={1.5} />
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Link to="/account" className="p-2 text-white hover:text-brand-gold transition-colors rounded-full" aria-label="Account">
+                  <User size={19} strokeWidth={1.5} />
                 </Link>
-                <Link to="/account/wishlist" className="relative p-2 text-white hover:text-brand-gold transition-colors" aria-label={`Wishlist — ${wishlistCount} items`}>
-                  <Heart size={18} strokeWidth={1.5} />
+                <Link to="/account/wishlist" className="relative p-2 text-white hover:text-brand-gold transition-colors rounded-full" aria-label={`Wishlist — ${wishlistCount} items`}>
+                  <Heart size={19} strokeWidth={1.5} />
                   {wishlistCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-brand-gold text-white text-[9px] font-bold rounded-full flex items-center justify-center">{wishlistCount}</span>
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 bg-brand-gold text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                      {wishlistCount}
+                    </span>
                   )}
                 </Link>
-                {/* Cart drawer toggle commented out - redirecting directly to /cart page */}
-                {/* <button onClick={() => dispatch(toggleCart())} className="relative p-2 text-white hover:text-brand-gold transition-colors" aria-label={`Shopping cart — ${cartCount} items`}> */}
-                <Link to="/cart" className="relative p-2 text-white hover:text-brand-gold transition-colors" aria-label={`Shopping cart — ${cartCount} items`}>
-                  <ShoppingBag size={18} strokeWidth={1.5} />
+                <Link to="/cart" className="relative p-2 text-white hover:text-brand-gold transition-colors rounded-full" aria-label={`Shopping cart — ${cartCount} items`}>
+                  <ShoppingBag size={19} strokeWidth={1.5} />
                   {cartCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-brand-gold text-white text-[10px] font-bold rounded-full flex items-center justify-center">{cartCount}</span>
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[17px] h-[17px] px-1 bg-brand-gold text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-sm">
+                      {cartCount}
+                    </span>
                   )}
                 </Link>
-                {/* </button> */}
-                <button onClick={() => dispatch(toggleMobileMenu())} className="p-2 text-white hover:text-brand-gold transition-colors" aria-label="Toggle mobile menu" aria-expanded={mobileMenuOpen} id="nav-mobile-menu-btn">
-                  {mobileMenuOpen ? <X size={20} strokeWidth={1.5} /> : <Menu size={20} strokeWidth={1.5} />}
+                <button onClick={() => dispatch(toggleMobileMenu())} className="p-2 text-white hover:text-brand-gold transition-colors rounded-full" aria-label="Toggle mobile menu" aria-expanded={mobileMenuOpen} id="nav-mobile-menu-btn">
+                  {mobileMenuOpen ? <X size={22} strokeWidth={1.5} /> : <Menu size={22} strokeWidth={1.5} />}
                 </button>
               </div>
             </div>
-            {/* Search row — always visible under the top row on mobile */}
-            <div ref={searchRef} className="relative h-14 flex items-center px-4 border-t border-neutral-800/10 w-full">
+            {/* Search row — luxury pill with search icon and iOS Safari zoom-safe font */}
+            <div ref={searchRef} className="relative h-13 flex items-center px-4 pb-2.5 pt-0.5 w-full">
               <form onSubmit={handleSearchSubmit} role="search" className="relative w-full">
-                <input
-                  type="search"
-                  value={localQuery}
-                  onChange={handleSearchInput}
-                  onFocus={handleSearchFocus}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Search luxury..."
-                  className="w-full border border-neutral-800 bg-neutral-900 text-white placeholder-neutral-500 px-3 py-2 pr-16 text-xs focus:outline-none focus:border-brand-gold transition-colors font-inter"
-                  aria-label="Search products"
-                  id="nav-search-input-mobile"
-                  autoComplete="off"
-                />
-                <button
-                  type="submit"
-                  disabled={isEmpty}
-                  className={`absolute right-1 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
-                    isEmpty
-                      ? 'bg-brand-gold/40 text-white/40 cursor-not-allowed'
-                      : 'bg-brand-gold text-white hover:bg-white hover:text-black'
-                  }`}
-                  id="nav-search-btn-mobile"
-                >
-                  Go
-                </button>
+                <div className="relative flex items-center bg-neutral-900/90 border border-neutral-800/80 rounded-full focus-within:border-brand-gold/70 focus-within:shadow-[0_0_12px_rgba(201,162,75,0.15)] transition-all duration-300">
+                  <Search size={15} className="absolute left-3.5 text-neutral-400 pointer-events-none" />
+                  <input
+                    type="search"
+                    value={localQuery}
+                    onChange={handleSearchInput}
+                    onFocus={handleSearchFocus}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Search luxury fashion, jewelry, tech..."
+                    className="w-full bg-transparent text-white placeholder-neutral-500 pl-10 pr-16 py-2 text-[16px] sm:text-xs focus:outline-none font-inter"
+                    aria-label="Search products"
+                    id="nav-search-input-mobile"
+                    autoComplete="off"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isEmpty}
+                    className={`absolute right-1.5 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider rounded-full transition-colors ${
+                      isEmpty
+                        ? 'bg-neutral-800 text-neutral-500 cursor-not-allowed'
+                        : 'bg-brand-gold text-white hover:bg-white hover:text-black shadow-sm'
+                    }`}
+                    id="nav-search-btn-mobile"
+                  >
+                    Go
+                  </button>
+                </div>
               </form>
 
               {renderDropdown()}
@@ -1104,6 +1072,44 @@ const Navbar = () => {
             </ul>
             
             <div className="mt-auto pt-6 pb-8 border-t border-neutral-800/60 flex flex-col gap-4 flex-shrink-0">
+              {/* Currency Selector inside mobile drawer */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/90 border border-neutral-800/80">
+                <div>
+                  <p className="text-xs font-semibold text-white tracking-wider uppercase">Currency</p>
+                  <p className="text-[11px] text-neutral-400 mt-0.5">Prices convert in real time</p>
+                </div>
+                <div
+                  className="relative inline-flex items-center bg-neutral-950 border border-neutral-700/60 rounded-full p-[2px] h-[30px] w-[82px] cursor-pointer shadow-inner select-none"
+                  onClick={() => dispatch(setCurrency(currencyCode === 'INR' ? 'AED' : 'INR'))}
+                  role="group"
+                  aria-label="Currency Selector"
+                >
+                  <motion.div
+                    className="absolute top-[2px] left-[2px] w-[37px] h-[24px] rounded-full bg-gradient-to-r from-amber-600 via-brand-gold to-amber-600 shadow-md border border-amber-400/30 pointer-events-none"
+                    animate={{ x: currencyCode === 'INR' ? 0 : 39 }}
+                    transition={{ type: 'spring', stiffness: 500, damping: 32 }}
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); dispatch(setCurrency('INR')); }}
+                    className={`relative z-10 w-[37px] h-[24px] flex items-center justify-center text-[10px] font-bold tracking-widest uppercase transition-colors rounded-full focus:outline-none ${
+                      currencyCode === 'INR' ? 'text-white' : 'text-neutral-400'
+                    }`}
+                  >
+                    INR
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); dispatch(setCurrency('AED')); }}
+                    className={`relative z-10 w-[37px] h-[24px] flex items-center justify-center text-[10px] font-bold tracking-widest uppercase transition-colors rounded-full focus:outline-none ${
+                      currencyCode === 'AED' ? 'text-white' : 'text-neutral-400'
+                    }`}
+                  >
+                    AED
+                  </button>
+                </div>
+              </div>
+
               {/* Phone number */}
               <a href="tel:+917338814319" className="flex items-center gap-3 text-neutral-300 hover:text-brand-gold transition-colors text-sm w-max">
                 <span className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800/80 flex items-center justify-center text-rose-500">

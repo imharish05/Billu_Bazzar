@@ -114,12 +114,31 @@ test('login and recovery are reachable without a token; profile aliases are prot
   }
   for (const route of ['/me', '/getme', '/profile']) assert.equal((await request('/mob-api/auth' + route, { access: null })).status, 401);
 });
-test('Swagger serves every allowed operation with bearer security and request schemas', async () => {
+test('Swagger shows only the requested sections while retaining the complete API definitions', async () => {
   const response = await request('/mob-api/openapi.json', { access: null });
   assert.equal(response.status, 200);
   const spec = await response.json();
+  const fullSpec = require('../swagger');
+  const expectedTags = ['Auth & Security', 'Myaccount', 'Banners', 'Categories', 'Search', 'Products'];
+  assert.deepEqual(spec.tags.map(tag => tag.name), expectedTags);
+  assert.ok(spec.tags.every(tag => tag.description));
+  assert.ok(fullSpec.paths['/mob-api/reviews/product/{productId}']);
+  assert.equal(spec.paths['/mob-api/reviews/product/{productId}'], undefined);
+  assert.equal(spec.paths['/mob-api/cart'], undefined);
+  assert.ok(spec.components.schemas.Error);
+  assert.deepEqual(await (await request('/api/mob/openapi.json', { access: null })).json(), spec);
+  const sourceTags = new Set(['Auth & Security', 'myaccount', 'banners', 'categories', 'search', 'products']);
+  for (const [route, operations] of Object.entries(fullSpec.paths)) {
+    for (const [method, operation] of Object.entries(operations)) {
+      assert.equal(Boolean(spec.paths[route]?.[method]), operation.tags.some(tag => sourceTags.has(tag)), method + ' ' + route);
+    }
+  }
+  for (const operations of Object.values(spec.paths)) for (const operation of Object.values(operations)) {
+    assert.ok(operation.tags.every(tag => expectedTags.includes(tag)));
+    assert.ok(operation.description, operation.summary);
+  }
   for (const [method, route, , , , schema] of endpoints) {
-    const operation = spec.paths['/mob-api' + route.replace(/:([A-Za-z]+)/g, '{$1}')][method];
+    const operation = fullSpec.paths['/mob-api' + route.replace(/:([A-Za-z]+)/g, '{$1}')][method];
     assert.deepEqual(operation.security, [{ bearerAuth: [] }]);
     if (schema) assert.ok(operation.requestBody);
   }
@@ -127,6 +146,9 @@ test('Swagger serves every allowed operation with bearer security and request sc
     const page = await request(url, { access: null });
     assert.equal(page.status, 200);
     assert.match(await page.text(), /Mobile Customer API/);
+    const initializer = await (await request(url + 'swagger-ui-init.js', { access: null })).text();
+    assert.match(initializer, /"defaultModelsExpandDepth":\s*-1/);
+    assert.doesNotMatch(initializer, /"tagsSorter":\s*"alpha"/);
   }
 });
 

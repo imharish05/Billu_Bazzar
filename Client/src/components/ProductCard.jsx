@@ -43,7 +43,7 @@ const resolveColor = (name = '') => {
  * Hover state exposes quick-view + add-to-cart. Framer Motion stagger entrance.
  * NOT glass — uses standard white card surface per spec.
  */
-const ProductCard = ({ product, index = 0 }) => {
+const ProductCard = ({ product, index = 0, compactMobile = false }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const wishlist = useSelector(s => s.wishlist.items) || [];
@@ -51,13 +51,11 @@ const ProductCard = ({ product, index = 0 }) => {
   const inCart = product ? cartItems.some(item => Number(item.productId || item.id) === Number(product.id)) : false;
   const { code: currencyCode, rate: currencyRate } = useSelector(s => s.currency);
   const [imgLoaded, setImgLoaded] = useState(false);
-  const [activeVariantId, setActiveVariantId] = useState(null);
-  const [hoverImage, setHoverImage] = useState(null);
 
   const resolveDefaultVariant = (prod) => {
     if (prod.variants && prod.variants.length > 0) {
-      // Find variant matching activeVariantId if set, otherwise first variant
-      const v = (activeVariantId && prod.variants.find(varItem => varItem.id === activeVariantId)) || prod.variants[0];
+      // Listing cards use the default variant; options are selected in quick view or product details.
+      const v = prod.variants[0];
       const attrs = typeof v.attributes === 'string' ? JSON.parse(v.attributes || '{}') : (v.attributes || {});
       return {
         variantId: v.id,
@@ -100,7 +98,7 @@ const ProductCard = ({ product, index = 0 }) => {
   };
 
   const resolvedDefault = resolveDefaultVariant(product);
-  const currentCardImage = hoverImage || product?.defaultProductImage || product?.images?.[0] || resolvedDefault.image || '';
+  const currentCardImage = product?.defaultProductImage || product?.images?.[0] || resolvedDefault.image || '';
 
   const isWishlisted = wishlist.some(item => {
     const sameProd = Number(item.productId || item.id) === Number(product.id);
@@ -193,11 +191,11 @@ const ProductCard = ({ product, index = 0 }) => {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.07 }}
-      className="relative bg-white flex flex-col border border-neutral-200/60 shadow-sm hover:shadow-md transition-all duration-300"
+      className="relative w-full min-w-0 bg-white flex flex-col border border-neutral-200/70 rounded-lg overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] transition-all duration-300"
       aria-label={product.name}
     >
       {/* Image */}
-      <Link to={`/products/${product.slug}`} className="group block relative overflow-hidden aspect-[3/4] bg-brand-light" target="_blank" rel="noopener noreferrer">
+      <Link to={`/products/${product.slug}`} className={`group block relative shrink-0 overflow-hidden ${compactMobile ? 'aspect-square sm:aspect-[3/4]' : 'aspect-[3/4]'} bg-brand-light`} target="_blank" rel="noopener noreferrer">
         {/* Skeleton while image loads */}
         {!imgLoaded && <div className="skeleton absolute inset-0" aria-hidden="true" />}
         <img
@@ -212,32 +210,47 @@ const ProductCard = ({ product, index = 0 }) => {
           }}
         />
 
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+        {/* Badges — prioritized & clean */}
+        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10 pointer-events-none">
+          {discount !== null && discount > 0 ? (
+            <span className="bg-brand-gold text-white text-[10px] font-bold px-2 py-0.5 tracking-wider uppercase rounded-sm shadow-sm">
+              −{discount}%
+            </span>
+          ) : product.isNewArrival ? (
+            <span className="bg-neutral-900 text-white text-[9px] font-bold px-2 py-0.5 tracking-wider uppercase rounded-sm shadow-sm">
+              New
+            </span>
+          ) : product.isBestSeller ? (
+            <span className="bg-white/95 backdrop-blur-sm text-neutral-900 text-[9px] font-bold px-2 py-0.5 tracking-wider uppercase border border-neutral-200 rounded-sm shadow-sm">
+              Best Seller
+            </span>
+          ) : null}
           {product.spin_images?.length > 1 && (
-            <span className="bg-black/70 backdrop-blur text-white text-[9px] font-bold px-1.5 py-0.5 tracking-wider uppercase flex items-center gap-1 border border-white/10 rounded-sm">
+            <span className="bg-black/75 backdrop-blur-sm text-white text-[9px] font-semibold px-1.5 py-0.5 tracking-wider uppercase flex items-center gap-1 border border-white/10 rounded-sm shadow-sm">
               <RotateCcw size={9} /> 360°
             </span>
           )}
-          {product.isNewArrival && (
-            <span className="bg-brand-text text-white text-[10px] font-bold px-2 py-0.5 tracking-wider uppercase">New</span>
-          )}
-          {discount !== null && discount > 0 && (
-            <span className="bg-brand-gold text-white text-[10px] font-bold px-2 py-0.5">−{discount}%</span>
-          )}
-          {product.isBestSeller && (discount === null || discount <= 0) && (
-            <span className="bg-white text-brand-text text-[10px] font-bold px-2 py-0.5 border border-brand-text">Best Seller</span>
+          {Number(product.reviewCount) > 0 && Number(product.rating) > 0 && (
+            <span
+              className="self-start inline-flex items-center gap-1 rounded-sm bg-white/95 px-1.5 py-1 text-[10px] sm:text-[11px] font-medium leading-none text-neutral-700 shadow-sm"
+              aria-label={`Rated ${Number(product.rating).toFixed(1)} out of 5 from ${product.reviewCount} reviews`}
+            >
+              <Star size={11} className="shrink-0 fill-brand-gold text-brand-gold" aria-hidden="true" />
+              <span>{Number(product.rating).toFixed(1)} ({product.reviewCount})</span>
+            </span>
           )}
         </div>
 
         {/* Wishlist */}
         <button
           onClick={handleWishlistToggle}
-          className={`absolute top-3 right-3 p-2 rounded-full shadow-sm transition-all duration-200 ${isWishlisted ? 'bg-red-50 text-red-500' : 'bg-white/80 text-brand-grey hover:text-red-400'} focus-visible:outline-brand-gold`}
+          className={`absolute top-2.5 right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center backdrop-blur-md shadow-sm transition-all duration-200 z-10 ${
+            isWishlisted ? 'bg-red-50 text-red-500' : 'bg-white/85 text-neutral-600 hover:text-red-500 hover:bg-white'
+          } focus-visible:outline-brand-gold active:scale-90`}
           aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
           id={`wishlist-${product.id}`}
         >
-          <Heart size={16} className={isWishlisted ? 'fill-current' : ''} />
+          <Heart size={15} className={isWishlisted ? 'fill-current' : ''} />
         </button>
 
         {/* Hover overlay — quick-view + add to cart */}
@@ -262,25 +275,17 @@ const ProductCard = ({ product, index = 0 }) => {
       </Link>
 
       {/* Info */}
-      <div className="p-4 flex-1 flex flex-col">
+      <div className={`${compactMobile ? 'p-2.5' : 'p-3'} sm:p-4 min-w-0 flex-1 flex flex-col`}>
         {product.category && (
-          <p className="text-[11px] text-brand-gold font-medium tracking-widest uppercase mb-1">
+          <p className="text-[10px] sm:text-[11px] text-brand-gold font-semibold tracking-widest uppercase mb-1 truncate">
             {product.category?.name || ''}
           </p>
         )}
         <Link to={`/products/${product.slug}`} className="hover:text-brand-gold transition-colors" target="_blank" rel="noopener noreferrer">
-          <h3 className="font-inter font-medium text-sm leading-snug text-brand-text line-clamp-2 mb-2">
+          <h3 className={`font-inter font-medium text-xs sm:text-sm leading-snug text-neutral-900 ${compactMobile ? 'line-clamp-1 sm:line-clamp-2 mb-1 sm:mb-1.5' : 'line-clamp-2 mb-1.5'}`} title={product.name}>
             {product.name}
           </h3>
         </Link>
-        {Number(product.reviewCount) > 0 && Number(product.rating) > 0 && (
-          <div className="flex items-center gap-1 mb-2">
-            {[1,2,3,4,5].map(s => (
-              <Star key={s} size={11} className={s <= Math.round(Number(product.rating)) ? 'fill-brand-gold text-brand-gold' : 'fill-brand-light text-brand-light'} />
-            ))}
-            <span className="text-[11px] text-brand-grey ml-1 font-medium">{parseFloat(product.rating).toFixed(1)} ({product.reviewCount})</span>
-          </div>
-        )}
         {(() => {
           const entries = Object.entries(resolvedDefault.attributes || {}).filter(([k, v]) => {
             if (!v || v === 'undefined' || v === 'null') return false;
@@ -297,7 +302,7 @@ const ProductCard = ({ product, index = 0 }) => {
           );
         })()}
 
-        {/* Color swatches — interactive variant selector */}
+        {/* Color swatches — available variant indicators */}
         {(() => {
           const variants = product.variants || [];
           const colorKey = variants.length > 0
@@ -317,7 +322,7 @@ const ProductCard = ({ product, index = 0 }) => {
             const colorList = Array.isArray(prodAttrs[colorAttrKey])
               ? prodAttrs[colorAttrKey]
               : [prodAttrs[colorAttrKey]];
-            const SHOW = 4;
+            const SHOW = 5;
             const visible = colorList.slice(0, SHOW);
             const extra = colorList.length - SHOW;
             return (
@@ -331,7 +336,7 @@ const ProductCard = ({ product, index = 0 }) => {
                   />
                 ))}
                 {extra > 0 && (
-                  <span className="text-[10px] text-brand-grey font-medium">+{extra} more</span>
+                  <span className="text-[10px] text-brand-grey font-medium" aria-label={`${extra} more colors`}>+{extra}</span>
                 )}
               </div>
             );
@@ -350,49 +355,33 @@ const ProductCard = ({ product, index = 0 }) => {
           });
           if (colorVariants.length === 0) return null;
 
-          const SHOW = 4;
+          const SHOW = 5;
           const visible = colorVariants.slice(0, SHOW);
           const extra = colorVariants.length - SHOW;
 
           return (
             <div className="flex items-center gap-1.5 mb-1.5">
-              {visible.map(({ color: c, variant: v }, i) => {
-                const isSelected = resolvedDefault.variantId === v.id;
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    title={`${colorKey}: ${c}`}
-                    onMouseEnter={() => {
-                      if (v.image) setHoverImage(v.image);
-                    }}
-                    onMouseLeave={() => setHoverImage(null)}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setActiveVariantId(v.id);
-                      if (v.image) setHoverImage(v.image);
-                    }}
-                    className={`w-4 h-4 rounded-full border transition-all flex-shrink-0 cursor-pointer ${
-                      isSelected
-                        ? 'ring-2 ring-brand-gold ring-offset-1 scale-110 border-brand-gold'
-                        : 'border-neutral-300 hover:scale-110 hover:border-brand-gold'
-                    }`}
-                    style={{ background: resolveColor(c) }}
-                  />
-                );
-              })}
+              {visible.map(({ color: c, variant: v }) => (
+                <span
+                  key={c}
+                  role="img"
+                  aria-label={`Available ${colorKey}: ${c}`}
+                  title={`${colorKey}: ${c}`}
+                  className="w-4 h-4 rounded-full border border-neutral-300 shadow-sm flex-shrink-0"
+                  style={{ background: v.colorHex || resolveColor(c) }}
+                />
+              ))}
               {extra > 0 && (
-                <span className="text-[10px] text-brand-grey font-medium">+{extra} more</span>
+                <span className="text-[10px] text-brand-grey font-medium" aria-label={`${extra} more colors`}>+{extra}</span>
               )}
             </div>
           );
         })()}
 
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-auto">
-          <span className="font-semibold text-brand-text whitespace-nowrap">{fmt(displayPrice)}</span>
+        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pt-1">
+          <span className="font-bold text-sm sm:text-base text-neutral-900 whitespace-nowrap tracking-tight">{fmt(displayPrice)}</span>
           {displayComparePrice && Number(displayComparePrice) > Number(displayPrice) && (
-            <span className="text-brand-grey text-sm line-through whitespace-nowrap">{fmt(displayComparePrice)}</span>
+            <span className="text-neutral-400 text-xs line-through whitespace-nowrap font-normal">{fmt(displayComparePrice)}</span>
           )}
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { getImageUrl } from '../utils/imageUrl';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -280,15 +281,7 @@ const EMPTY_FORM = {
   has360View: false, hasVideo: false, videoUrl: '', defaultProductImage: null,
 };
 
-const getFullImageUrl = (src) => {
-  if (!src) return '';
-  if (typeof src !== 'string') return src;
-  if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('blob:') || src.startsWith('data:')) {
-    return src;
-  }
-  const serverUrl = (import.meta.env.VITE_SERVER_URL || 'http://localhost:5000').replace(/\/$/, '');
-  return `${serverUrl}${src.startsWith('/') ? '' : '/'}${src}`;
-};
+const getFullImageUrl = getImageUrl;
 
 const getVideoPreviewInfo = (file, url) => {
   if (file) {
@@ -699,7 +692,8 @@ const ProductModal = ({ product, onClose, onSave }) => {
             id: Date.now() + i,
             optionName: keyStr,
             optionValue: valStr,
-            colorHex: keyStr.toLowerCase() === 'color' && valStr.startsWith('#') ? valStr : '#8B0000',
+            colorHex: primaryVar.colorHex || (valStr.startsWith('#') ? valStr : '#8B0000'),
+            savedColorHex: keyStr.toLowerCase() === 'color' ? (primaryVar.colorHex || null) : null,
           };
         });
       }
@@ -742,6 +736,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
         lowStockThreshold: primaryVar.lowStockThreshold !== undefined ? String(primaryVar.lowStockThreshold) : '10',
         gstRate: primaryVar.gstRate || product?.gstRate || '0%',
         attributes: rawAttrs,
+        colorHex: primaryVar.colorHex || null,
         existingImages: gallery,
         mainImagePreview: mainImg,
         warehouseId: primaryVar.warehouseId || '',
@@ -794,6 +789,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
     };
 
     const combinations = cartesian(optionMap);
+    const colorHex = validRows.find(r => r.optionName.toLowerCase() === 'color')?.savedColorHex || null;
 
     setProductVariants(prev => {
       const existingMap = new Map();
@@ -815,7 +811,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
         if (existing) {
           const currentSku = (existing.sku && existing.sku.trim() !== '') ? existing.sku : generatedSku;
-          return { ...existing, attributes: combo, sku: currentSku };
+          return { ...existing, attributes: combo, colorHex, sku: currentSku };
         }
 
         const basePrice = form.price || '';
@@ -834,6 +830,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
           lowStockThreshold: '10',
           gstRate: form.gstRate || '0%',
           attributes: combo,
+          colorHex,
           existingImages: [],
           newFiles: [],
         };
@@ -1427,6 +1424,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
           lowStockThreshold: v.lowStockThreshold || '10',
           gstRate: v.gstRate || form.gstRate || '0%',
           attributes: v.attributes,
+          colorHex: v.colorHex || null,
           image: (v.mainImagePreview && typeof v.mainImagePreview === 'string' && !v.mainImagePreview.startsWith('blob:')) ? v.mainImagePreview : (v.existingImages?.[0] || null),
           existingImages: (v.existingImages || []).filter(img => img && img !== v.mainImagePreview),
           warehouseId: v.warehouseId || form.warehouseId || null,
@@ -1810,9 +1808,10 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
                 const presets = resolvePresetValues(optName);
 
-                const toggleValue = (valToToggle) => {
+                const toggleValue = (valToToggle, hex = null) => {
                   const nextValue = selectedValue === valToToggle ? '' : valToToggle;
                   updateOptionRow(row.id, 'optionValue', nextValue);
+                  if (isColor) updateOptionRow(row.id, 'savedColorHex', nextValue ? hex : null);
                 };
 
                 return (
@@ -1864,7 +1863,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                               if (e.key === 'Enter') {
                                 e.preventDefault();
                                 if (row.customInput?.trim()) {
-                                  toggleValue(row.customInput.trim());
+                                  toggleValue(row.customInput.trim(), isColor ? (/^#[0-9a-f]{6}$/i.test(row.customInput.trim()) ? row.customInput.trim() : row.colorHex) : null);
                                   updateOptionRow(row.id, 'customInput', '');
                                   updateOptionRow(row.id, 'showCustomInput', false);
                                 }
@@ -1876,7 +1875,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                             type="button"
                             onClick={() => {
                               if (row.customInput?.trim()) {
-                                toggleValue(row.customInput.trim());
+                                toggleValue(row.customInput.trim(), isColor ? (/^#[0-9a-f]{6}$/i.test(row.customInput.trim()) ? row.customInput.trim() : row.colorHex) : null);
                                 updateOptionRow(row.id, 'customInput', '');
                               }
                               updateOptionRow(row.id, 'showCustomInput', false);
@@ -1913,7 +1912,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                             {isColor && (
                               <span
                                 className="w-3.5 h-3.5 rounded-full border border-neutral-300 shadow-sm flex-shrink-0 inline-block"
-                                style={{ background: resolveColor(val) }}
+                                style={{ background: (isSelected && row.savedColorHex) || resolveColor(val) }}
                               />
                             )}
                             <span>{val}</span>
@@ -1931,7 +1930,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
                           {isColor && (
                             <span
                               className="w-3.5 h-3.5 rounded-full border border-neutral-300 shadow-sm flex-shrink-0 inline-block"
-                              style={{ background: resolveColor(selectedValue) }}
+                              style={{ background: row.savedColorHex || resolveColor(selectedValue) }}
                             />
                           )}
                           <span>{selectedValue}</span>

@@ -250,6 +250,7 @@ const add = async (req, res) => {
       lowStockThreshold: lowStockThreshold ? parseInt(lowStockThreshold, 10) : 10,
       gstRate: inheritedGstRate,
       attributes: parsedAttributes,
+      colorHex: req.body.colorHex || null,
       image: mainVarImg,
       images: allImages.slice(0, 5),
       warehouseId: warehouseId ? parseInt(warehouseId, 10) : null
@@ -290,6 +291,7 @@ const update = async (req, res) => {
     }
 
     const updates = {
+      ...(req.body.colorHex !== undefined && { colorHex: req.body.colorHex || null }),
       ...(sku !== undefined && { sku: sku.trim() }),
       ...(price !== undefined && { price: price === '' ? null : parseFloat(price) }),
       ...(priceAED !== undefined && { priceAED: (priceAED === '' || priceAED === 'null' || priceAED === null) ? null : parseFloat(priceAED) }),

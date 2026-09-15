@@ -254,7 +254,7 @@ const getAll = async (req, res) => {
         { model: SubSubCategory, as: 'subsubcategory', attributes: ['id', 'name', 'slug'] },
         { model: Vendor, as: 'vendor', attributes: ['id', 'name', 'logo', 'gstin'] },
         { model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] },
-        { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'priceAED', 'mrp', 'mrpAED', 'stock', 'attributes', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] }
+        { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'priceAED', 'mrp', 'mrpAED', 'stock', 'attributes', 'colorHex', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] }
       ],
     });
 
@@ -275,7 +275,7 @@ const getOne = async (req, res) => {
         { model: SubSubCategory, as: 'subsubcategory' },
         { model: Vendor, as: 'vendor', attributes: ['id', 'name', 'rating', 'logo', 'gstin'] },
         { model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] },
-        { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'priceAED', 'mrp', 'mrpAED', 'stock', 'attributes', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] }
+        { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'priceAED', 'mrp', 'mrpAED', 'stock', 'attributes', 'colorHex', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] }
       ],
     });
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
@@ -377,6 +377,7 @@ const create = async (req, res) => {
             lowStockThreshold: v.lowStockThreshold ? parseInt(v.lowStockThreshold, 10) : (product.lowStockThreshold || 10),
             gstRate: (v.gstRate !== undefined && v.gstRate !== null && v.gstRate !== '') ? v.gstRate : (product.gstRate || '0%'),
             attributes: v.attributes || {},
+            ...(v.colorHex !== undefined && { colorHex: v.colorHex || null }),
             image: mainVarImg,
             images: (newGalleryPaths.length > 0 ? newGalleryPaths : (v.images || [])).filter(img => img && img !== mainVarImg).slice(0, 5),
             warehouseId: v.warehouseId ? parseInt(v.warehouseId, 10) : (product.warehouseId ? parseInt(product.warehouseId, 10) : null),
@@ -395,7 +396,7 @@ const create = async (req, res) => {
         { model: SubSubCategory, as: 'subsubcategory', attributes: ['id', 'name', 'slug'] },
         { model: Vendor, as: 'vendor', attributes: ['id', 'name', 'logo', 'gstin'] },
         { model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] },
-        { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'priceAED', 'mrp', 'mrpAED', 'stock', 'attributes', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] }
+        { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'priceAED', 'mrp', 'mrpAED', 'stock', 'attributes', 'colorHex', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] }
       ]
     });
 
@@ -504,6 +505,7 @@ const update = async (req, res) => {
               lowStockThreshold: varLowStock,
               gstRate: varGst,
               attributes: v.attributes || {},
+              ...(v.colorHex !== undefined && { colorHex: v.colorHex || null }),
               image: mainVarImg,
               images: vImages,
               warehouseId: variantWarehouseId,
@@ -522,6 +524,7 @@ const update = async (req, res) => {
               lowStockThreshold: varLowStock,
               gstRate: varGst,
               attributes: v.attributes || {},
+              ...(v.colorHex !== undefined && { colorHex: v.colorHex || null }),
               image: mainVarImg,
               images: vImages,
               warehouseId: variantWarehouseId,
@@ -584,7 +587,7 @@ const update = async (req, res) => {
         { model: SubSubCategory, as: 'subsubcategory', attributes: ['id', 'name', 'slug'] },
         { model: Vendor, as: 'vendor', attributes: ['id', 'name', 'logo', 'gstin'] },
         { model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] },
-        { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'priceAED', 'mrp', 'mrpAED', 'stock', 'attributes', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] }
+        { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'priceAED', 'mrp', 'mrpAED', 'stock', 'attributes', 'colorHex', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] }
       ]
     });
 
@@ -651,8 +654,15 @@ const remove = async (req, res) => {
 
 const getFeatured = async (req, res) => {
   try {
-    const products = await Product.findAll({ where: { isFeatured: true, isActive: true }, limit: 12, include: [{ model: Category, as: 'category', attributes: ['name', 'slug'] }] });
-    res.json({ success: true, products });
+    const products = await Product.findAll({
+      where: { isFeatured: true, isActive: true },
+      limit: 12,
+      include: [
+        { model: Category, as: 'category', attributes: ['name', 'slug'] },
+        { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'priceAED', 'mrp', 'mrpAED', 'stock', 'attributes', 'colorHex', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] },
+      ],
+    });
+    res.json({ success: true, products: products.map(product => formatProduct(product, req)) });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
