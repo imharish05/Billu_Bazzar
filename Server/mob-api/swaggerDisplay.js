@@ -7,7 +7,7 @@ const fullSpec = require('./swagger');
 const sections = [
   ['Auth & Security', 'Auth & Security', true, 'Register, sign in, recover a password using email OTP, and retrieve the signed-in customer. Use the returned access token in Authorize.'],
   ['myaccount', 'Myaccount', true, 'View and update your profile, change your password, manage your wishlist, check loyalty points, and contact support. Requires a customer access token.'],
-  ['banners', 'Banners', true, 'Load active promotional banners and storefront messages for the home screen.'],
+  ['banners', 'Banners', false, 'Load active promotional banners and storefront messages for the home screen.'],
   ['categories', 'Categories', true, 'Build catalog navigation using categories, subcategories, and sub-subcategories, or fetch the complete category tree.'],
   ['search', 'Search', true, 'Suggest keywords and products while typing, display trending searches, and record submitted searches.'],
   ['products', 'Products', true, 'Browse and filter products, load featured items, search the catalog, retrieve price bounds, and inspect product details and variants.'],

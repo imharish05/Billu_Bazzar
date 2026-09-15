@@ -119,7 +119,7 @@ test('Swagger shows only the requested sections while retaining the complete API
   assert.equal(response.status, 200);
   const spec = await response.json();
   const fullSpec = require('../swagger');
-  const expectedTags = ['Auth & Security', 'Myaccount', 'Banners', 'Categories', 'Search', 'Products'];
+  const expectedTags = ['Auth & Security', 'Myaccount', 'Categories', 'Search', 'Products'];
   assert.deepEqual(spec.tags.map(tag => tag.name), expectedTags);
   assert.ok(spec.tags.every(tag => tag.description));
   assert.ok(fullSpec.paths['/mob-api/reviews/product/{productId}']);
@@ -127,7 +127,11 @@ test('Swagger shows only the requested sections while retaining the complete API
   assert.equal(spec.paths['/mob-api/cart'], undefined);
   assert.ok(spec.components.schemas.Error);
   assert.deepEqual(await (await request('/api/mob/openapi.json', { access: null })).json(), spec);
-  const sourceTags = new Set(['Auth & Security', 'myaccount', 'banners', 'categories', 'search', 'products']);
+  for (const route of ['/mob-api/banners', '/mob-api/marketing-messages']) {
+    assert.equal(spec.paths[route], undefined);
+    assert.ok(fullSpec.paths[route]);
+  }
+  const sourceTags = new Set(['Auth & Security', 'myaccount', 'categories', 'search', 'products']);
   for (const [route, operations] of Object.entries(fullSpec.paths)) {
     for (const [method, operation] of Object.entries(operations)) {
       assert.equal(Boolean(spec.paths[route]?.[method]), operation.tags.some(tag => sourceTags.has(tag)), method + ' ' + route);
