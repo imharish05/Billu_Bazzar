@@ -787,19 +787,19 @@ const OrderDetailPage = () => {
             <div>
               <span className="text-xs text-neutral-500 font-medium block">Payment Transaction ID</span>
               <div className="mt-1">
-                <button
+                <span className="text-xs sm:text-sm text-neutral-700 mt-1 font-medium">{order.razorpay_payment_id}</span>
+                {/* <button
                   type="button"
                   onClick={() => handleCopyTxn(order.razorpay_payment_id)}
-                  className="inline-flex items-center gap-1.5 font-mono text-xs font-medium text-brand-gold bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/70 px-2.5 py-1 rounded-md transition-colors cursor-pointer group"
+                  className="inline-flex items-center  bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/70 px-2.5 py-1 rounded-md transition-colors cursor-pointer group"
                   title="Click to copy Transaction ID"
                 >
-                  <span className="select-all tracking-tight">{order.razorpay_payment_id}</span>
                   {copiedTxn ? (
                     <Check size={12} className="text-emerald-600 shrink-0" />
                   ) : (
                     <Copy size={12} className="text-neutral-400 group-hover:text-brand-gold shrink-0 transition-colors" />
                   )}
-                </button>
+                </button> */}
               </div>
             </div>
           )}

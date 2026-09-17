@@ -3,7 +3,7 @@ import InfluencerCarouselMobile from '../components/InfluencerCarouselMobile';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Play, Star, ArrowRight, Clock, Truck, Award, Lock, Headphones } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Star, ArrowRight, Clock, Truck, Award, Lock, Headphones, Sparkles, Volume2, Compass, Eye, Plus, X } from 'lucide-react';
 import { fetchProducts, fetchFeatured, fetchNewArrivals, fetchBestSellers } from '../redux/slices/productsSlice';
 import { fetchCategories } from '../redux/slices/categoriesSlice';
 import { fetchBanners } from '../redux/slices/bannersSlice';
@@ -799,28 +799,74 @@ const HomePage = () => {
 
       {/* ── PARALLAX SECTION A: The Art of Curated Living ── */}
       <section 
-        className="relative min-h-[50vh] md:min-h-[60vh] flex items-center bg-black overflow-hidden bg-cover bg-center bg-scroll md:bg-fixed py-10"
+        className="relative min-h-[520px] md:min-h-[600px] lg:min-h-[640px] flex items-center bg-neutral-950 overflow-hidden bg-cover bg-center md:bg-fixed py-14 sm:py-20 md:py-24"
         style={{ backgroundImage: `url('/home-luxury-lifestyle.png')` }}
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
+        {/* Cinematic smooth gradient vignette across full width - NO BOXES */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/55 to-black/20 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30 pointer-events-none" />
+
         <div className="relative max-w-site mx-auto px-6 md:px-8 z-10 w-full">
           <ScrollReveal>
-            <div className="max-w-xl space-y-4 md:space-y-6 text-left">
-              <span className="text-[11px] font-bold text-brand-gold tracking-[0.25em] uppercase block">Lifestyle Philosophy</span>
-              <h2 className="font-playfair text-3xl md:text-5xl font-bold text-white leading-tight">
-                The Art of <br />Curated Living
+            <div className="max-w-2xl text-left">
+              {/* Refined Gold Eyebrow with hairline rule */}
+              <div className="flex items-center gap-3 mb-4 sm:mb-5">
+                <span className="w-8 h-[1px] bg-brand-gold inline-block" />
+                <span className="text-[11px] sm:text-xs font-bold text-brand-gold tracking-[0.25em] uppercase">
+                  Lifestyle Philosophy
+                </span>
+              </div>
+
+              {/* Bold Editorial Headline */}
+              <h2 className="font-playfair text-3xl sm:text-5xl md:text-6xl font-normal text-white leading-[1.08] tracking-tight mb-5 sm:mb-6">
+                The Art of <br />
+                <span className="italic font-serif font-light text-amber-200/95">
+                  Curated Living
+                </span>
               </h2>
-              <p className="text-white/70 text-xs md:text-sm font-light leading-relaxed max-w-md">
-                We believe that true elegance is a harmony of parts. The devices you connect with, the garments you express yourself in, and the items that shape your home—they all write the story of who you are. Our selection is curated to elevate every chapter of your modern life.
+
+              {/* Poetic description */}
+              <p className="text-white/80 text-xs sm:text-sm md:text-base font-light leading-relaxed max-w-lg mb-7 sm:mb-8">
+                Discover thoughtfully selected products designed to elevate everyday living. From stylish essentials and statement pieces to functional finds and refined details, every item in our collection is chosen to bring quality, character, and convenience into your space and lifestyle.
               </p>
-              <div className="pt-2">
-                <Link to="/products" className="inline-flex items-center gap-2 text-xs font-semibold text-brand-gold tracking-widest uppercase hover:text-white transition-colors group">
-                  Explore Curation <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+
+              {/* Clean architectural metric row (Pure typography & thin lines - NO BOXES) */}
+              <div className="flex items-center gap-5 sm:gap-8 pt-5 border-t border-white/20 max-w-lg mb-8">
+                <div>
+                  <span className="block text-white font-playfair text-sm sm:text-base font-medium">Handcrafted</span>
+                  <span className="text-white/60 text-[11px] sm:text-xs font-light">Tactile Furnishings</span>
+                </div>
+                {/* <div className="w-[1px] h-7 bg-white/20" /> */}
+                {/* <div>
+                  <span className="block text-white font-playfair text-sm sm:text-base font-medium">Audiophile</span>
+                  <span className="text-white/60 text-[11px] sm:text-xs font-light">Acoustic Clarity</span>
+                </div> */}
+                <div className="w-[1px] h-7 bg-white/20" />
+                <div>
+                  <span className="block text-white font-playfair text-sm sm:text-base font-medium">Heritage</span>
+                  <span className="text-white/60 text-[11px] sm:text-xs font-light">Curated Ateliers</span>
+                </div>
+              </div>
+
+              {/* Primary Luxury CTA */}
+              <div>
+                <Link
+                  to="/products"
+                  className="group inline-flex items-center gap-2.5 px-7 py-3.5 bg-brand-gold hover:bg-amber-400 text-neutral-950 text-xs font-bold uppercase tracking-[0.18em] rounded-full transition-all duration-300 shadow-xl hover:shadow-brand-gold/30 active:scale-95 cursor-pointer"
+                >
+                  <span>Explore Curation</span>
+                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-300" />
                 </Link>
               </div>
             </div>
           </ScrollReveal>
         </div>
+
+        {/* Ambient Lookbook Corner Caption (Desktop only - NO BOX) */}
+        {/* <div className="hidden lg:block absolute bottom-8 right-8 z-10 text-right pointer-events-none">
+          <p className="text-[10px] font-mono tracking-[0.25em] text-white/40 uppercase mb-0.5">Living Curation</p>
+          <p className="text-xs text-white/80 font-playfair italic">The Penthouse Suite · High-Fidelity Sanctuary</p>
+        </div> */}
       </section>
 
       {/* ── SECTION 8: Dual Promo Tiles / Exclusive Collection Banner ───── */}
