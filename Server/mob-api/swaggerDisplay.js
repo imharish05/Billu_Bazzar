@@ -19,16 +19,16 @@ const sections = [
   ['wishlist', 'Wishlist', true, 'Save products and variants, view saved items, and remove or clear them.'],
   ['checkout', 'Checkout', true, 'Load your cart and addresses, submit an order, and initiate or verify payment.'],
   ['delivery', 'Delivery Zones', true, 'Check delivery availability and shipping charges by pincode.'],
-  ['payments', 'Payments', false, 'Initiate and verify order payments.'],
+  ['payments', 'Razorpay Payments', true, 'Initiate and verify payment for an owned INR order using Razorpay. The same endpoints use Telr for AED orders.'],
   ['orders', 'My Orders', true, 'List your orders, view details and tracking, or cancel an eligible order.'],
-  ['returns', 'Returns', false, 'Request and track returns.'],
+  ['returns', 'Returns', true, 'Request a return with unboxing evidence and track your return requests.'],
   ['stock', 'Stock', false, 'Manage product stock alerts.'],
   ['currency', 'Currency', false, 'Retrieve supported currencies and exchange rates.'],
-  ['gifts', 'Gifts', false, 'Access gifting options.'],
+  ['gifts', 'Gift Messages', true, 'Read gift wrapping options and send a giftMessage when placing an order.'],
   ['contact', 'Contact', false, 'Submit contact requests.'],
   ['personalshopper', 'Personal Shopper', false, 'Request personal shopping assistance.'],
   ['affiliates', 'Affiliates', false, 'Access customer affiliate features.'],
-  ['settings', 'Settings', false, 'Retrieve customer-facing storefront settings.'],
+  ['settings', 'Settings', true, 'Retrieve customer-facing storefront settings.'],
 ];
 
 const descriptions = {
@@ -65,6 +65,13 @@ const descriptions = {
   'Update my review': 'Change a review written by the signed-in customer.',
   'Delete my review': 'Remove a review written by the signed-in customer.',
   'Check delivery availability': 'Check whether a pincode is serviceable and return its delivery charge and free-delivery threshold.',
+  'Initiate payment for my order': 'Start payment for an owned order. INR orders return Razorpay checkout details; AED orders use Telr.',
+  'Verify payment for my order': 'Verify an owned INR order using the Razorpay payment ID, order ID, and signature returned by the mobile SDK.',
+  'My return requests': 'List return requests belonging to the signed-in customer.',
+  'My return details': 'Get one return request belonging to the signed-in customer.',
+  'Gift wrapping options': 'Get the currently configured gift wrapping option. Include giftMessage and optional isGiftWrap when placing an order.',
+  'Storefront settings: about, loyalty, tax, otp_threshold': 'Read a customer-facing storefront setting by key.',
+  'Subscribe to newsletter': 'Subscribe the supplied email address to the newsletter.',
 };
 
 const visibleSections = sections.filter(([, , visible]) => visible);
@@ -79,6 +86,7 @@ const hiddenPaths = new Set([
   '/mob-api/auth/profile', '/mob-api/auth/change-password',
   '/mob-api/myaccount/wishlist', '/mob-api/myaccount/loyalty', '/mob-api/myaccount/tickets',
   '/mob-api/orders',
+  '/mob-api/payments/geo-detect',
 ]);
 const paths = {};
 for (const [path, item] of Object.entries(fullSpec.paths)) {
@@ -88,9 +96,11 @@ for (const [path, item] of Object.entries(fullSpec.paths)) {
   if (!operations.length) continue;
   paths[path] = Object.fromEntries(Object.entries(item).filter(([key]) => !methods.has(key)));
   for (const [method, operation] of operations) {
+    const tags = operation.tags.filter(tag => names.has(tag)).map(tag => names.get(tag));
+    if (path === '/mob-api/checkout/place-order' && method === 'post') tags.push('Gift Messages');
     paths[path][method] = {
       ...operation,
-      tags: operation.tags.filter(tag => names.has(tag)).map(tag => names.get(tag)),
+      tags,
       description: operation.description || descriptions[operation.summary],
     };
   }

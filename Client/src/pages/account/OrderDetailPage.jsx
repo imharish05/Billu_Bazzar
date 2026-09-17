@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, Circle, MapPin, Truck, CreditCard, FileText, Phone, MessageSquare, RefreshCw, XCircle, Star, X, AlertTriangle, RotateCcw, Video, Upload, ShieldAlert, ShieldCheck, Play, ExternalLink, Clock, CheckCircle, Trash2, Film } from 'lucide-react';
+import { ArrowLeft, Check, Circle, MapPin, Truck, CreditCard, FileText, Phone, MessageSquare, RefreshCw, XCircle, Star, X, AlertTriangle, RotateCcw, Video, Upload, ShieldAlert, ShieldCheck, Play, ExternalLink, Clock, CheckCircle, Trash2, Film, Copy } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchOrderById, cancelCustomerOrder } from '../../redux/slices/ordersSlice';
 import { fetchProfile } from '../../redux/slices/authSlice';
@@ -100,6 +100,19 @@ const OrderDetailPage = () => {
   const dispatch = useDispatch();
   const { current: order, loading, error } = useSelector(s => s.orders);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [copiedTxn, setCopiedTxn] = useState(false);
+
+  const handleCopyTxn = (txnId) => {
+    if (!txnId) return;
+    try {
+      navigator.clipboard.writeText(txnId);
+      setCopiedTxn(true);
+      toast.success('Transaction ID copied');
+      setTimeout(() => setCopiedTxn(false), 2000);
+    } catch {
+      toast.error('Failed to copy transaction ID');
+    }
+  };
 
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [targetItem, setTargetItem] = useState(null);
@@ -430,7 +443,23 @@ const OrderDetailPage = () => {
     return null;
   };
 
-  const renderAddress = (rawAddr) => {
+  const isBillingSameAsShipping = (() => {
+    if (!order) return true;
+    if (!order.billingAddress) return true;
+    const ship = parseAddressObj(order.shippingAddress);
+    const bill = parseAddressObj(order.billingAddress);
+    if (!ship || !bill) return false;
+    const keys = ['fullName', 'name', 'flatHouse', 'addressLine1', 'line1', 'city', 'state', 'pincode', 'postalCode', 'phone'];
+    return keys.every(k => {
+      const sVal = String(ship[k] || '').trim().toLowerCase();
+      const bVal = String(bill[k] || '').trim().toLowerCase();
+      if (!sVal && !bVal) return true;
+      return sVal === bVal;
+    });
+  })();
+
+  const renderAddress = (rawAddr, options = {}) => {
+    const { compact = false } = options;
     const addr = parseAddressObj(rawAddr);
     if (!addr) return <p className="text-neutral-400 text-sm">No address details recorded</p>;
     if (addr.plainText) {
@@ -454,7 +483,7 @@ const OrderDetailPage = () => {
           {line1}{line2 ? `, ${line2}` : ''}{landmark ? ` (near ${landmark})` : ''}{city ? `, ${city}` : ''}{state ? `, ${state}` : ''} {pincode}
           {country ? `, ${country}` : ''}
         </p>
-        {(phone || email) && (
+        {!compact && (phone || email) && (
           <div className="text-neutral-500 text-sm mt-3 pt-2 border-t border-neutral-100 space-y-1">
             {phone && (
               <p className="text-sm text-neutral-700">
@@ -692,53 +721,113 @@ const OrderDetailPage = () => {
         </div>
       </div>
 
-      {/* Shipping Address & Payment Card Grid */}
-      <div className="grid md:grid-cols-2 gap-5 mb-5">
+      {/* Address Grid: Shipping Address (Left) & Billing Address (Right) */}
+      <div className="grid md:grid-cols-2 gap-5 mb-5 items-stretch">
         {/* Shipping Address */}
-        <div className="bg-white shadow-sm p-4 sm:p-6 border border-neutral-100 rounded-lg flex gap-3">
-          {/* <MapPin size={18} className="text-brand-gold flex-shrink-0 mt-0.5" /> */}
-          <div className="flex-1">
-            <h2 className="font-sans text-sm font-semibold mb-3 text-neutral-900">Shipping Address</h2>
+        <div className="bg-white shadow-sm p-4 sm:p-6 border border-neutral-100 rounded-lg flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2 pb-3 mb-4 border-b border-neutral-100">
+              <MapPin size={16} className="text-brand-gold shrink-0" />
+              <h2 className="font-sans text-sm font-semibold text-neutral-900">Shipping Address</h2>
+            </div>
             {renderAddress(order.shippingAddress)}
           </div>
         </div>
 
-        {/* Payment & Billing Details */}
-        <div className="bg-white shadow-sm p-4 sm:p-6 border border-neutral-100 rounded-lg flex gap-3">
-          {/* <CreditCard size={18} className="text-brand-gold flex-shrink-0 mt-0.5" /> */}
-          <div className="flex-1">
-            <h2 className="font-sans text-sm font-semibold mb-3 text-neutral-900">Payment & Billing</h2>
-
-            <div className="mb-4 bg-neutral-50 p-3 rounded-lg border border-neutral-100 text-sm">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-neutral-500 text-sm">Method</span>
-                <span className="font-semibold text-neutral-800 text-sm">{order.paymentMethod || 'Online Payment'}</span>
+        {/* Billing Address */}
+        <div className="bg-white shadow-sm p-4 sm:p-6 border border-neutral-100 rounded-lg flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-neutral-100">
+              <div className="flex items-center gap-2">
+                <FileText size={16} className="text-brand-gold shrink-0" />
+                <h2 className="font-sans text-sm font-semibold text-neutral-900">Billing Address</h2>
               </div>
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-neutral-500 text-sm">Payment Status</span>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${order.paymentStatus === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
-                  {order.paymentStatus || 'UNPAID'}
+              {isBillingSameAsShipping && (
+                <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                  <Check size={10} className="stroke-[3]" /> Same as Shipping
                 </span>
-              </div>
-              {order.razorpay_payment_id && (
-                <div className="mt-2 pt-2 border-t border-neutral-200/60">
-                  <span className="text-[11px] text-neutral-400 block uppercase tracking-wider font-semibold">Payment Transaction ID</span>
-                  <span className="text-sm font-mono font-medium text-brand-gold select-all">{order.razorpay_payment_id}</span>
-                </div>
-              )}
-              {order.statusTimeline?.refundGatewayRef && (
-                <div className="mt-2 pt-2 border-t border-neutral-200/60">
-                  <span className="text-[11px] text-emerald-700 block uppercase tracking-wider font-bold">Refund Reference ID</span>
-                  <span className="text-sm font-mono font-bold text-emerald-800 select-all">{order.statusTimeline.refundGatewayRef}</span>
-                </div>
               )}
             </div>
+            {renderAddress(order.billingAddress || order.shippingAddress)}
+          </div>
+        </div>
+      </div>
 
-            <div>
-              <p className="font-sans text-sm font-semibold text-neutral-500 mb-1">Billing Address</p>
-              {renderAddress(order.billingAddress || order.shippingAddress)}
+      {/* Payment Details (Below Addresses, Same Style Card, No Box Inside Box) */}
+      <div className="bg-white shadow-sm p-4 sm:p-6 mb-5 border border-neutral-100 rounded-lg">
+        <div className="flex items-center gap-2 pb-3 mb-4 border-b border-neutral-100">
+          <CreditCard size={16} className="text-brand-gold shrink-0" />
+          <h2 className="font-sans text-sm font-semibold text-neutral-900">Payment Details</h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 items-start">
+          {/* Method */}
+          <div>
+            <span className="text-xs text-neutral-500 font-medium block">Payment Method</span>
+            <p className="text-sm font-semibold text-neutral-900 mt-1">{order.paymentMethod || 'Online Payment'}</p>
+          </div>
+
+          {/* Status */}
+          <div>
+            <span className="text-xs text-neutral-500 font-medium block">Payment Status</span>
+            <div className="mt-1">
+              <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5 ${
+                order.paymentStatus === 'PAID'
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                  : 'bg-amber-50 text-amber-700 border border-amber-200/80'
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${order.paymentStatus === 'PAID' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                {order.paymentStatus || 'UNPAID'}
+              </span>
             </div>
           </div>
+
+          {/* Transaction ID */}
+          {order.razorpay_payment_id && (
+            <div>
+              <span className="text-xs text-neutral-500 font-medium block">Payment Transaction ID</span>
+              <div className="mt-1">
+                <button
+                  type="button"
+                  onClick={() => handleCopyTxn(order.razorpay_payment_id)}
+                  className="inline-flex items-center gap-1.5 font-mono text-xs font-medium text-brand-gold bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/70 px-2.5 py-1 rounded-md transition-colors cursor-pointer group"
+                  title="Click to copy Transaction ID"
+                >
+                  <span className="select-all tracking-tight">{order.razorpay_payment_id}</span>
+                  {copiedTxn ? (
+                    <Check size={12} className="text-emerald-600 shrink-0" />
+                  ) : (
+                    <Copy size={12} className="text-neutral-400 group-hover:text-brand-gold shrink-0 transition-colors" />
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Refund Reference ID or Payment / Order Date */}
+          {order.statusTimeline?.refundGatewayRef ? (
+            <div>
+              <span className="text-xs text-neutral-500 font-medium block">Refund Reference ID</span>
+              <div className="mt-1">
+                <span className="font-mono text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md select-all tracking-tight inline-block">
+                  {order.statusTimeline.refundGatewayRef}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <span className="text-xs text-neutral-500 font-medium block">Payment Date</span>
+              <p className="text-xs sm:text-sm text-neutral-700 mt-1 font-medium">
+                {new Date(order.statusTimeline?.PAID || order.updatedAt || order.createdAt).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 

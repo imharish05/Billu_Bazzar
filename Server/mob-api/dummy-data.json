@@ -1718,7 +1718,9 @@
         "shippingAddressId": 1,
         "billingAddressId": 1,
         "paymentMethod": "Razorpay Secure Online",
-        "requestedCurrency": "INR"
+        "requestedCurrency": "INR",
+        "isGiftWrap": true,
+        "giftMessage": "Happy birthday! With love."
       }
     },
     "POST /mob-api/checkout/payments/initiate": {

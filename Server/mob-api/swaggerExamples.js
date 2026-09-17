@@ -110,7 +110,7 @@ add('PUT', '/addresses/{addressId}/default', { success: true, address: savedAddr
 add('DELETE', '/addresses/{addressId}', ok('Saved address deleted'));
 
 add('GET', '/checkout', { success: true, checkout: { cart: examples['GET /mob-api/cart'].response.cart, addresses: [savedAddress], defaultAddressId: 1, stockIssues: [], totalsAreFinal: false } });
-examples['POST /mob-api/checkout/place-order'] = { ...examples['POST /mob-api/orders'], request: { shippingAddressId: 1, billingAddressId: 1, paymentMethod: 'Razorpay Secure Online', requestedCurrency: 'INR' } };
+examples['POST /mob-api/checkout/place-order'] = { ...examples['POST /mob-api/orders'], request: { shippingAddressId: 1, billingAddressId: 1, paymentMethod: 'Razorpay Secure Online', requestedCurrency: 'INR', isGiftWrap: true, giftMessage: 'Happy birthday! With love.' } };
 examples['POST /mob-api/checkout/payments/initiate'] = examples['POST /mob-api/payments/initiate'];
 examples['POST /mob-api/checkout/payments/verify'] = examples['POST /mob-api/payments/verify'];
 

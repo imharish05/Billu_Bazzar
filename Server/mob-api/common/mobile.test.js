@@ -120,7 +120,7 @@ test('Swagger shows only the requested sections while retaining the complete API
   assert.equal(response.status, 200);
   const spec = await response.json();
   const fullSpec = require('../swagger');
-  const expectedTags = ['Auth & Security', 'My Profile', 'Categories', 'Search', 'Products & Review', 'Coupons', 'Saved Addresses', 'Cart', 'Wishlist', 'Checkout', 'Delivery Zones', 'My Orders'];
+  const expectedTags = ['Auth & Security', 'My Profile', 'Categories', 'Search', 'Products & Review', 'Coupons', 'Saved Addresses', 'Cart', 'Wishlist', 'Checkout', 'Delivery Zones', 'Razorpay Payments', 'My Orders', 'Returns', 'Gift Messages', 'Settings'];
   assert.deepEqual(spec.tags.map(tag => tag.name), expectedTags);
   assert.ok(spec.tags.every(tag => tag.description));
   assert.ok(fullSpec.paths['/mob-api/reviews/product/{productId}']);
@@ -141,6 +141,16 @@ test('Swagger shows only the requested sections while retaining the complete API
   }
   assert.equal(spec.paths['/mob-api/orders'], undefined);
   assert.equal(spec.paths['/mob-api/myaccount/wishlist'], undefined);
+  for (const route of ['/mob-api/payments/initiate', '/mob-api/payments/verify']) {
+    assert.deepEqual(spec.paths[route].post.tags, ['Razorpay Payments']);
+  }
+  assert.equal(spec.paths['/mob-api/payments/geo-detect'], undefined);
+  for (const route of ['/mob-api/returns/my', '/mob-api/returns/my/{id}', '/mob-api/returns/request']) {
+    assert.ok(spec.paths[route]);
+  }
+  assert.deepEqual(spec.paths['/mob-api/gift-service'].get.tags, ['Gift Messages']);
+  assert.deepEqual(spec.paths['/mob-api/checkout/place-order'].post.tags, ['Checkout', 'Gift Messages']);
+  assert.ok(spec.paths['/mob-api/checkout/place-order'].post.requestBody.content['application/json'].schema.properties.giftMessage);
   assert.ok(spec.components.schemas.Error);
   assert.deepEqual(await (await request('/api/mob/openapi.json', { access: null })).json(), spec);
   for (const route of ['/mob-api/banners', '/mob-api/marketing-messages']) {
@@ -153,8 +163,9 @@ test('Swagger shows only the requested sections while retaining the complete API
     '/mob-api/auth/profile', '/mob-api/auth/change-password',
     '/mob-api/myaccount/wishlist', '/mob-api/myaccount/loyalty', '/mob-api/myaccount/tickets',
     '/mob-api/orders',
+    '/mob-api/payments/geo-detect',
   ]);
-  const sourceTags = new Set(['Auth & Security', 'myaccount', 'categories', 'search', 'products', 'reviews', 'coupons', 'addresses', 'cart', 'wishlist', 'checkout', 'delivery', 'orders']);
+  const sourceTags = new Set(['Auth & Security', 'myaccount', 'categories', 'search', 'products', 'reviews', 'coupons', 'addresses', 'cart', 'wishlist', 'checkout', 'delivery', 'payments', 'orders', 'returns', 'gifts', 'settings']);
   for (const [route, operations] of Object.entries(fullSpec.paths)) {
     for (const [method, operation] of Object.entries(operations)) {
       assert.equal(Boolean(spec.paths[route]?.[method]), !hiddenPaths.has(route) && operation.tags.some(tag => sourceTags.has(tag)), method + ' ' + route);
