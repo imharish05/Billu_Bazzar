@@ -38,7 +38,7 @@ const SupportPage = () => {
       <h1 className="font-playfair text-xl font-semibold mb-5">Support</h1>
 
       {/* Concierge / live chat */}
-      <div className="bg-brand-text text-white p-6 mb-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-brand-text text-white p-6 mb-5 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <p className="font-medium mb-1">Need help right now?</p>
           <p className="text-sm text-white/70">Chat with our concierge team on WhatsApp or live chat.</p>
@@ -48,14 +48,14 @@ const SupportPage = () => {
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="btn-primary-hero text-xs px-4 py-2.5 flex items-center gap-2"
+            className="btn-primary-hero text-xs px-4 py-2.5 flex items-center gap-2 rounded-lg"
             id="support-whatsapp"
           >
             <MessageCircle size={14} /> WhatsApp
           </a>
           <button
             onClick={() => toast('Live chat widget not connected yet')}
-            className="bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs px-4 py-2.5 flex items-center gap-2 transition-colors"
+            className="bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs px-4 py-2.5 flex items-center gap-2 transition-colors rounded-lg"
             id="support-live-chat"
           >
             <Headphones size={14} /> Live Chat
@@ -64,7 +64,7 @@ const SupportPage = () => {
       </div>
 
       {/* New ticket form */}
-      <div className="bg-white shadow-sm p-6 mb-5">
+      <div className="bg-white shadow-sm p-6 mb-5 rounded-lg">
         <h2 className="font-medium text-sm mb-4">Raise a Ticket</h2>
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
@@ -76,7 +76,7 @@ const SupportPage = () => {
               placeholder="Issue with my order..."
               value={form.subject}
               onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
-              className="w-full border border-brand-light px-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold"
+              className="w-full border border-brand-light px-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold rounded-lg"
             />
           </div>
           <div>
@@ -87,7 +87,7 @@ const SupportPage = () => {
               placeholder="Describe your issue in detail..."
               value={form.description}
               onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              className="w-full border border-brand-light px-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold resize-none"
+              className="w-full border border-brand-light px-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold resize-none rounded-lg"
             />
           </div>
           <button type="submit" className="btn-primary" id="ticket-submit">Submit Ticket</button>
@@ -95,7 +95,7 @@ const SupportPage = () => {
       </div>
 
       {/* Ticket history */}
-      <div className="bg-white shadow-sm p-6">
+      <div className="bg-white shadow-sm p-6 rounded-lg">
         <h2 className="font-medium text-sm mb-4">Your Tickets</h2>
         {tickets.length === 0 ? (
           <p className="text-sm text-brand-grey">No support tickets yet.</p>

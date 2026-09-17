@@ -160,9 +160,8 @@ const NAV_SECTIONS = [
   {
     heading: 'Products',
     items: [
-      { to: '/categories', label: 'Root Categories', icon: Tag },
-      { to: '/sub-categories', label: 'Parent Categories', icon: Tag },
-      { to: '/sub-sub-categories', label: 'Child Categories', icon: Tag },
+      { to: '/categories', label: 'Categories', icon: Tag },
+      { to: '/sub-categories', label: 'Sub-Categories', icon: Tag },
       { to: '/products', label: 'Products', icon: Package },
       { to: '/variants', label: 'Variants', icon: Package },
       { to: '/stock-alerts', label: 'Restock Requests', icon: Bell },

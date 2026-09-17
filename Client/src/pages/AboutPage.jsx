@@ -237,8 +237,8 @@ const AboutPage = () => {
             transition={{ duration: 0.8 }}
             className="lg:col-span-5 relative"
           >
-            <div className="absolute -inset-4 border border-brand-gold/20 translate-x-2 translate-y-2 pointer-events-none rounded-sm" />
-            <div className="relative bg-neutral-100 border border-brand-light shadow-lg overflow-hidden group">
+            <div className="absolute -inset-4 border border-brand-gold/20 translate-x-2 translate-y-2 pointer-events-none rounded-lg" />
+            <div className="relative bg-neutral-100 border border-brand-light shadow-lg overflow-hidden group rounded-lg">
               <img 
                 src={getImageUrl(data.story?.imageUrl || '/about-story-general.png')}
                 alt="Premium multi-category lifestyle curation showroom display" 
@@ -251,7 +251,7 @@ const AboutPage = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               
               {/* Floating badge inside image */}
-              <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm border border-brand-light p-4 shadow-xl max-w-[180px] z-10 rounded-sm">
+              <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm border border-brand-light p-4 shadow-xl max-w-[180px] z-10 rounded-lg">
                 <span className="text-[10px] text-brand-gold font-semibold uppercase block mb-1">{data.story.qualityOathTitle}</span>
                 <p className="text-[9px] text-brand-grey leading-normal">
                   {data.story.qualityOathDesc}
@@ -296,7 +296,7 @@ const AboutPage = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="flex flex-col items-center text-center p-6 bg-white/5 border border-white/10 rounded-sm hover:border-brand-gold/30 hover:bg-white/10 transition-all duration-300 group"
+                className="flex flex-col items-center text-center p-6 bg-white/5 border border-white/10 rounded-lg hover:border-brand-gold/30 hover:bg-white/10 transition-all duration-300 group"
               >
                 <div className="w-12 h-12 border border-brand-gold/20 flex items-center justify-center mb-4 rounded-full bg-black/40 group-hover:border-brand-gold/50 transition-colors">
                   {item.icon}
@@ -370,13 +370,13 @@ const AboutPage = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: idx * 0.15 }}
               whileHover={{ y: -8, transition: { duration: 0.3 } }}
-              className="bg-white border border-brand-light p-6 sm:p-8 flex flex-col justify-between shadow-sm hover:shadow-lg hover:border-brand-gold/30 transition-all duration-300 relative overflow-hidden group"
+              className="bg-white border border-brand-light p-6 sm:p-8 flex flex-col justify-between shadow-sm hover:shadow-lg hover:border-brand-gold/30 transition-all duration-300 relative overflow-hidden group rounded-lg"
             >
               {/* Decorative Corner Gold accent */}
               <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-brand-gold/10 to-transparent transform rotate-45 translate-x-8 -translate-y-8 group-hover:translate-x-6 group-hover:-translate-y-6 transition-all duration-300" />
               
               <div className="space-y-6">
-                <div className="w-16 h-16 border border-brand-light flex items-center justify-center bg-brand-muted/50 rounded-sm group-hover:border-brand-gold/40 group-hover:bg-white transition-all duration-300">
+                <div className="w-16 h-16 border border-brand-light flex items-center justify-center bg-brand-muted/50 rounded-lg group-hover:border-brand-gold/40 group-hover:bg-white transition-all duration-300">
                   {val.icon}
                 </div>
                 <div>
@@ -412,14 +412,14 @@ const AboutPage = () => {
           <div className="pt-2 flex flex-col sm:flex-row justify-center items-center gap-4">
             <Link 
               to="/contact" 
-              className="btn-primary flex items-center gap-2 group w-full sm:w-auto justify-center"
+              className="btn-primary flex items-center gap-2 group w-full sm:w-auto justify-center rounded-lg"
               id="about-contact-btn"
             >
               Contact Support <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link 
               to="/products" 
-              className="px-6 py-3 border border-brand-light text-brand-text text-sm font-semibold hover:border-brand-gold transition-colors w-full sm:w-auto justify-center inline-flex"
+              className="px-6 py-3 border border-brand-light text-brand-text text-sm font-semibold hover:border-brand-gold transition-colors w-full sm:w-auto justify-center inline-flex rounded-lg"
             >
               Start Shopping
             </Link>

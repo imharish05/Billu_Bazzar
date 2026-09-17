@@ -7,7 +7,6 @@ import ProductsAdminPage from './pages/ProductsAdminPage';
 import VariantsAdminPage from './pages/VariantsAdminPage';
 import CategoriesAdminPage from './pages/CategoriesAdminPage';
 import SubCategoriesAdminPage from './pages/SubCategoriesAdminPage';
-import SubSubCategoriesAdminPage from './pages/SubSubCategoriesAdminPage';
 import OrdersAdminPage from './pages/OrdersAdminPage';
 import ReturnsAdminPage from './pages/ReturnsAdminPage';
 import CustomersAdminPage from './pages/CustomersAdminPage';
@@ -98,7 +97,6 @@ const App = () => {
         <Route path="/variants"    element={<Protected><VariantsAdminPage /></Protected>} />
         <Route path="/categories"  element={<Protected><CategoriesAdminPage /></Protected>} />
         <Route path="/sub-categories" element={<Protected><SubCategoriesAdminPage /></Protected>} />
-        <Route path="/sub-sub-categories" element={<Protected><SubSubCategoriesAdminPage /></Protected>} />
         <Route path="/orders"      element={<Protected><OrdersAdminPage /></Protected>} />
         <Route path="/returns"     element={<Protected><ReturnsAdminPage /></Protected>} />
         <Route path="/customers"   element={<Protected><CustomersAdminPage /></Protected>} />

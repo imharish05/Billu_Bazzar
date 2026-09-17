@@ -198,7 +198,7 @@ const CategoriesAdminPage = () => {
     setUploadError(null);
 
     if (!form.name.trim()) {
-      const msg = 'Root category name is required.';
+      const msg = 'Category name is required.';
       setUploadError(msg);
       toast.error(msg);
       return;
@@ -212,7 +212,7 @@ const CategoriesAdminPage = () => {
     }
 
     if (!imagePreview) {
-      const msg = 'Root category image is required.';
+      const msg = 'Category image is required.';
       setUploadError(msg);
       toast.error(msg);
       return;
@@ -271,8 +271,8 @@ const CategoriesAdminPage = () => {
     toast((t) => (
       <div className="flex flex-col items-center text-center gap-2 p-1">
         <p className="text-sm font-semibold text-neutral-800">Confirm Deletion</p>
-        <p className="text-xs text-neutral-600">
-          Are you sure you want to permanently delete this category? This will delete all products under it and cannot be undone.
+        <p className="text-xs text-neutral-600 max-w-sm">
+          Are you sure you want to permanently delete this category? This will delete all linked sub-categories and all their products &amp; variants. This action cannot be undone.
         </p>
         <div className="flex justify-center items-center gap-3 mt-2 w-full">
           <button
@@ -293,12 +293,12 @@ const CategoriesAdminPage = () => {
   };
 
   return (
-    <AdminLayout title="Root Categories">
+    <AdminLayout title="Categories">
       <div className="flex justify-between items-center mb-6">
-        <p className="text-sm text-brand-grey">{categories.length} root categories · drag rows to reorder</p>
+        <p className="text-sm text-brand-grey">{categories.length} categories · drag rows to reorder</p>
         {canAddCategory && (
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2" id="add-cat-btn">
-            <Plus size={16} /> Add Root Category
+            <Plus size={16} /> Add Category
           </button>
         )}
       </div>
@@ -307,7 +307,7 @@ const CategoriesAdminPage = () => {
         <PaginationTop
           search={search}
           onSearchChange={(s) => { setSearch(s); setPage(1); }}
-          searchPlaceholder="Search root categories..."
+          searchPlaceholder="Search categories..."
           currentPage={page}
           totalItems={total}
           limit={limit}
@@ -319,8 +319,8 @@ const CategoriesAdminPage = () => {
           </div>
         ) : categories.length === 0 ? (
           <div className="p-12 text-center">
-            <p className="font-playfair text-xl text-brand-grey">No root categories yet</p>
-            <button onClick={() => openModal()} className="btn-primary mt-4" id="add-first-cat">Add First Root Category</button>
+            <p className="font-playfair text-xl text-brand-grey">No categories yet</p>
+            <button onClick={() => openModal()} className="btn-primary mt-4" id="add-first-cat">Add First Category</button>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -336,7 +336,7 @@ const CategoriesAdminPage = () => {
                     <th className="pl-3 pr-1 py-3 w-8"></th>
                     <th className="px-5 py-3 w-16">NO</th>
                     <th className="px-5 py-3 w-24">Image</th>
-                    <th className="px-5 py-3">Root Category Name</th>
+                    <th className="px-5 py-3">Category Name</th>
                     <th className="px-5 py-3 w-32">Status</th>
                     <th className="px-5 py-3 w-32">Header</th>
                     {canShowActions && <th className="px-5 py-3 w-28 text-right">Actions</th>}
@@ -414,7 +414,7 @@ const CategoriesAdminPage = () => {
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={e => e.target === e.currentTarget && !saving && setModalOpen(false)}>
             <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} className="bg-white rounded-xl w-full max-w-md shadow-xl overflow-hidden">
               <div className="flex items-center justify-between px-6 py-4 border-b border-brand-light">
-                <h2 className="font-playfair text-lg font-semibold">{editing ? 'Edit Root Category' : 'Add Root Category'}</h2>
+                <h2 className="font-playfair text-lg font-semibold">{editing ? 'Edit Category' : 'Add Category'}</h2>
                 <button onClick={() => !saving && setModalOpen(false)} className="p-1.5 hover:text-brand-gold focus-visible:outline-brand-gold transition-colors"><X size={18} /></button>
               </div>
               <form onSubmit={handleSave} className="p-6 space-y-4">
@@ -423,7 +423,7 @@ const CategoriesAdminPage = () => {
                 )}
                 
                 <div>
-                  <label className="block text-xs font-medium text-brand-grey mb-1.5" htmlFor="cat-name">Root Category Name *</label>
+                  <label className="block text-xs font-medium text-brand-grey mb-1.5" htmlFor="cat-name">Category Name *</label>
                   <input id="cat-name" type="text" value={form.name} onChange={handleNameChange} required className="w-full border border-brand-light px-3 py-2 text-sm focus:outline-none focus:border-brand-gold transition-colors" placeholder="e.g. Party Wear" />
                 </div>
 
@@ -434,7 +434,7 @@ const CategoriesAdminPage = () => {
 
                 {/* Categories Image upload zone */}
                 <div>
-                  <label className="block text-xs font-medium text-brand-grey mb-1.5">Root Category Image (Square 1:1 Aspect Ratio) *</label>
+                  <label className="block text-xs font-medium text-brand-grey mb-1.5">Category Image (Square 1:1 Aspect Ratio) *</label>
                   <div
                     className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer ${
                       isDragging ? 'border-brand-gold bg-brand-gold/5' : 'border-brand-light hover:border-brand-gold'

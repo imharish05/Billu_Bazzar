@@ -12,7 +12,11 @@ uploads
 dist
 dist-ssr
 *.local
+
 postman/*.local.json
+*.zip
+.zip/*
+
 
 # Editor directories and files
 .vscode/*

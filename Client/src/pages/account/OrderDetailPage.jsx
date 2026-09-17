@@ -556,7 +556,7 @@ const OrderDetailPage = () => {
         </div>
 
         {canCancel && (
-          <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-xs text-amber-900 bg-amber-50/60 p-2.5 rounded-md border border-amber-200/50">
+          <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-xs text-amber-900 bg-amber-50/60 p-2.5 rounded-lg border border-amber-200/50">
             <div className="flex items-center gap-2">
               <AlertTriangle size={14} className="text-amber-600 shrink-0" />
               <span>
@@ -709,14 +709,14 @@ const OrderDetailPage = () => {
           <div className="flex-1">
             <h2 className="font-sans text-sm font-semibold mb-3 text-neutral-900">Payment & Billing</h2>
 
-            <div className="mb-4 bg-neutral-50 p-3 rounded border border-neutral-100 text-sm">
+            <div className="mb-4 bg-neutral-50 p-3 rounded-lg border border-neutral-100 text-sm">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-neutral-500 text-sm">Method</span>
                 <span className="font-semibold text-neutral-800 text-sm">{order.paymentMethod || 'Online Payment'}</span>
               </div>
               <div className="flex justify-between items-center mb-1">
                 <span className="text-neutral-500 text-sm">Payment Status</span>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded ${order.paymentStatus === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
+                <span className={`text-xs font-bold px-2 py-0.5 rounded-lg ${order.paymentStatus === 'PAID' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'}`}>
                   {order.paymentStatus || 'UNPAID'}
                 </span>
               </div>
@@ -772,7 +772,7 @@ const OrderDetailPage = () => {
                 <img
                   src={getImageUrl(item.displayImage || item.variantImage || item.variant?.image || item.image || item.productImage || item.product?.defaultProductImage) || getPlaceholderSvg(item.productName || item.name || 'Product')}
                   alt={item.productName || item.name || 'Product'}
-                  className="w-16 h-20 object-cover rounded border border-neutral-100 flex-shrink-0"
+                  className="w-16 h-20 object-cover rounded-lg border border-neutral-100 flex-shrink-0"
                   onError={(e) => { e.target.onerror = null; e.target.src = getPlaceholderSvg(item.productName || item.name || 'Product'); }}
                 />
                 <div className="flex-1 min-w-0">
@@ -873,7 +873,7 @@ const OrderDetailPage = () => {
             <button
               onClick={handleOpenCancelModal}
               disabled={isCancelling}
-              className="px-4 py-2 border border-red-200 text-red-600 text-xs font-semibold rounded hover:bg-red-50 transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
+              className="px-4 py-2 border border-red-200 text-red-600 text-xs font-semibold rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
               id="btn-cancel-order-bottom"
             >
               <XCircle size={14} />
@@ -897,7 +897,7 @@ const OrderDetailPage = () => {
       {reviewModalOpen && targetItem && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setReviewModalOpen(false)}>
           <div
-            className="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl relative"
+            className="bg-white rounded-lg max-w-lg w-full p-6 shadow-2xl relative"
             onClick={e => e.stopPropagation()}
           >
             <button
@@ -944,7 +944,7 @@ const OrderDetailPage = () => {
                   value={reviewTitle}
                   onChange={e => setReviewTitle(e.target.value)}
                   placeholder="e.g. Absolutely loved it!"
-                  className="w-full px-3 py-2 border border-neutral-200 rounded text-sm focus:border-brand-gold focus:outline-none"
+                  className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:border-brand-gold focus:outline-none"
                 />
               </div>
 
@@ -956,7 +956,7 @@ const OrderDetailPage = () => {
                   value={reviewBody}
                   onChange={e => setReviewBody(e.target.value)}
                   placeholder="Describe what you liked or disliked about the product..."
-                  className="w-full px-3 py-2 border border-neutral-200 rounded text-sm focus:border-brand-gold focus:outline-none resize-none"
+                  className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:border-brand-gold focus:outline-none resize-none"
                   required
                 />
               </div>
@@ -965,7 +965,7 @@ const OrderDetailPage = () => {
                 <button
                   type="button"
                   onClick={() => setReviewModalOpen(false)}
-                  className="px-4 py-2 border border-neutral-200 text-neutral-600 text-xs font-semibold rounded hover:bg-neutral-50"
+                  className="px-4 py-2 border border-neutral-200 text-neutral-600 text-xs font-semibold rounded-lg hover:bg-neutral-50"
                 >
                   Cancel
                 </button>
@@ -989,7 +989,7 @@ const OrderDetailPage = () => {
           onClick={() => setReturnModalOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl sm:rounded-3xl max-w-lg w-full p-4 sm:p-6 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto border border-neutral-100"
+            className="bg-white rounded-lg max-w-lg w-full p-4 sm:p-6 shadow-2xl relative my-auto max-h-[92vh] overflow-y-auto border border-neutral-100"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Close Button */}
@@ -1003,7 +1003,7 @@ const OrderDetailPage = () => {
 
             {/* Modal Header */}
             <div className="flex items-start gap-2.5 sm:gap-3 mb-3 pr-8">
-              <div className="p-2 sm:p-2.5 bg-amber-50 text-brand-gold rounded-xl shrink-0">
+              <div className="p-2 sm:p-2.5 bg-amber-50 text-brand-gold rounded-lg shrink-0">
                 <RotateCcw size={20} />
               </div>
               <div className="min-w-0">
@@ -1017,7 +1017,7 @@ const OrderDetailPage = () => {
             </div>
 
             {/* Target Item Snapshot */}
-            <div className="my-3 p-2.5 sm:p-3 bg-neutral-50 rounded-xl border border-neutral-200/70 flex items-center gap-3">
+            <div className="my-3 p-2.5 sm:p-3 bg-neutral-50 rounded-lg border border-neutral-200/70 flex items-center gap-3">
               <img
                 src={
                   getImageUrl(
@@ -1103,7 +1103,7 @@ const OrderDetailPage = () => {
               </div>
 
               {/* COMPULSORY UNBOXING VIDEO SECTION (Fully Responsive) */}
-              <div className="p-3.5 sm:p-4 bg-amber-500/10 border-2 border-brand-gold/40 rounded-xl sm:rounded-2xl space-y-3">
+              <div className="p-3.5 sm:p-4 bg-amber-500/10 border-2 border-brand-gold/40 rounded-lg space-y-3">
                 <div className="flex items-start gap-2.5 sm:gap-3">
                   <div className="p-1.5 bg-brand-gold/20 text-brand-gold rounded-lg shrink-0 mt-0.5">
                     <ShieldAlert size={18} />
@@ -1121,7 +1121,7 @@ const OrderDetailPage = () => {
                 {/* Video Upload Dropzone or Live Video Preview */}
                 {!returnVideoFile ? (
                   <div>
-                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-neutral-300 hover:border-brand-gold bg-white p-4 sm:p-5 rounded-xl cursor-pointer transition-all text-center group shadow-2xs hover:shadow-xs">
+                    <label className="flex flex-col items-center justify-center border-2 border-dashed border-neutral-300 hover:border-brand-gold bg-white p-4 sm:p-5 rounded-lg cursor-pointer transition-all text-center group shadow-2xs hover:shadow-xs">
                       <div className="w-10 h-10 rounded-full bg-amber-50 group-hover:bg-amber-100 flex items-center justify-center text-brand-gold mb-2 transition-colors">
                         <Upload size={18} />
                       </div>
@@ -1149,10 +1149,10 @@ const OrderDetailPage = () => {
                     </label>
                   </div>
                 ) : (
-                  <div className="bg-white rounded-xl border border-neutral-200 p-3 sm:p-3.5 space-y-2.5 shadow-2xs">
+                  <div className="bg-white rounded-lg border border-neutral-200 p-3 sm:p-3.5 space-y-2.5 shadow-2xs">
                     <div className="flex items-center justify-between gap-2 pb-2 border-b border-neutral-100">
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="w-7 h-7 rounded bg-amber-50 text-brand-gold flex items-center justify-center shrink-0">
+                        <div className="w-7 h-7 rounded-lg bg-amber-50 text-brand-gold flex items-center justify-center shrink-0">
                           <Film size={15} />
                         </div>
                         <div className="min-w-0">
@@ -1192,7 +1192,7 @@ const OrderDetailPage = () => {
               {/* Bank Details for COD Refunds */}
               {(order.paymentMethod?.toLowerCase().includes('cod') ||
                 order.paymentMethod?.toLowerCase().includes('cash')) && (
-                <div className="p-3 sm:p-3.5 bg-neutral-50 rounded-xl border border-neutral-200/80 space-y-2">
+                <div className="p-3 sm:p-3.5 bg-neutral-50 rounded-lg border border-neutral-200/80 space-y-2">
                   <h4 className="text-xs font-bold text-neutral-900 uppercase tracking-wider">
                     Bank / UPI Details for Refund
                   </h4>
@@ -1258,7 +1258,7 @@ const OrderDetailPage = () => {
       {/* ── Order Cancellation Modal ───────────────────────────────────────── */}
       {cancelModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-4 sm:p-6 relative border border-neutral-100 max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full p-4 sm:p-6 relative border border-neutral-100 max-h-[90vh] flex flex-col">
             <button
               onClick={() => !isCancelling && setCancelModalOpen(false)}
               className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-700 p-1 rounded-full hover:bg-neutral-100 transition-colors"

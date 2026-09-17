@@ -5,7 +5,7 @@ const { Op } = require('sequelize');
 
 // Load models and DB configuration
 const {
-  Category, SubCategory, SubSubCategory, Product,
+  Category, SubCategory, Product,
   Banner, Customer, Order, OrderItem,
   Cart, Coupon, Affiliate, MarketingMessage, SiteSetting
 } = require('../models');
@@ -46,7 +46,6 @@ async function run() {
   const realCoupons = await Coupon.findAll({ limit: 2 });
   const realSiteSettings = await SiteSetting.findAll({ limit: 2 });
   const realSubCategories = await SubCategory.findAll({ limit: 2 });
-  const realSubSubCategories = await SubSubCategory.findAll({ limit: 2 });
   const flatCategories = await Category.findAll({ limit: 2 });
   
   // Category tree query (limited to 2 parent categories for readability)
@@ -55,20 +54,13 @@ async function run() {
       {
         model: SubCategory,
         as: 'subcategories',
-        required: false,
-        include: [
-          {
-            model: SubSubCategory,
-            as: 'subsubcategories',
-            required: false
-          }
-        ]
+        required: false
       }
     ],
     order: [
       ['sortOrder', 'ASC'],
       [{ model: SubCategory, as: 'subcategories' }, 'sortOrder', 'ASC'],
-      [{ model: SubCategory, as: 'subcategories' }, { model: SubSubCategory, as: 'subsubcategories' }, 'sortOrder', 'ASC'],
+      
     ],
     limit: 2
   });
@@ -83,11 +75,7 @@ async function run() {
         id: sub.id,
         name: sub.name,
         slug: sub.slug,
-        children: (sub.subsubcategories || []).map(subsub => ({
-          id: subsub.id,
-          name: subsub.name,
-          slug: subsub.slug
-        }))
+        children: []
       }))
     };
   });
@@ -450,62 +438,7 @@ async function run() {
       purpose: 'Used in the admin panel to delete a subcategory.'
     },
 
-    // ─── Sub-Subcategories ───
-    {
-      name: 'List Sub-Subcategories',
-      method: 'GET',
-      endpoint: '/api/subsubcategories',
-      request: 'None',
-      response: cleanJSON({
-        success: true,
-        subSubCategories: realSubSubCategories
-      }),
-      purpose: 'Used in product filters and catalog navigation selectors.'
-    },
-    {
-      name: 'Create Sub-Subcategory',
-      method: 'POST',
-      endpoint: '/api/subsubcategories',
-      request: 'Headers:\nAuthorization: Bearer <token>\n\nBody:\n- name, parentId (Subcategory ID), image (file)',
-      response: cleanJSON({
-        success: true,
-        subSubCategory: realSubSubCategories[0] || { id: 1, name: 'New Sub-Subcategory' }
-      }),
-      purpose: 'Used in admin settings to create tertiary categories.'
-    },
-    {
-      name: 'Reorder Sub-Subcategories',
-      method: 'PATCH',
-      endpoint: '/api/subsubcategories/reorder',
-      request: 'Headers:\nAuthorization: Bearer <token>\n\nBody:\n' + cleanJSON({
-        order: [ { id: 1, sortOrder: 1 } ]
-      }),
-      response: cleanJSON({
-        success: true
-      }),
-      purpose: 'Used in admin settings to reorder tertiary categories.'
-    },
-    {
-      name: 'Update Sub-Subcategory',
-      method: 'PUT',
-      endpoint: '/api/subsubcategories/:id',
-      request: 'Headers:\nAuthorization: Bearer <token>\n\nParams:\n- id: number\n\nBody:\n- name, parentId, image (file)',
-      response: cleanJSON({
-        success: true,
-        subSubCategory: realSubSubCategories[0] || { id: 1, name: 'Updated Sub-Subcategory' }
-      }),
-      purpose: 'Used in admin settings to edit a tertiary category.'
-    },
-    {
-      name: 'Delete Sub-Subcategory',
-      method: 'DELETE',
-      endpoint: '/api/subsubcategories/:id',
-      request: 'Headers:\nAuthorization: Bearer <token>\n\nParams:\n- id: number',
-      response: cleanJSON({
-        success: true
-      }),
-      purpose: 'Used in admin settings to delete a tertiary category.'
-    },
+
 
     // ─── Orders ───
     {

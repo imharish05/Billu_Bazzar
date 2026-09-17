@@ -11,7 +11,7 @@ let dbFailure = false;
 const models = {
   Customer: { findByPk: async id => { if (dbFailure) throw Error('database unavailable'); return id === 7 ? { id, isActive: active, email: 'customer@example.com' } : null; } },
   Order: { findOne: async ({ where }) => Number(where.id) === 10 && where.customerId === 7 ? { id: 10, customerId: 7, paymentGatewayRef: 'owned-ref' } : null },
-  Product: { findOne: async ({ where }) => Number(where.id) === 1 ? { id: 1 } : null },
+  Product: { findAndCountAll: async options => { assert.equal(options.where.isActive, true); return { rows: [], count: 0 }; }, findOne: async ({ where }) => Number(where.id) === 1 ? { id: 1 } : null },
   Coupon: { findAll: async () => [] },
 };
 stub('../../models', models);
@@ -81,8 +81,9 @@ test('accepts original mobile tokens and strips admin catalog flags', async () =
   const result = await request('/mob-api/products?admin=true&all=true&limit=999');
   assert.equal(result.status, 200);
   const data = await result.json();
-  assert.equal(data.customerId, 7);
-  assert.deepEqual(data.query, { limit: '100' });
+  assert.equal(data.success, true);
+  assert.equal(data.limit, 100);
+  assert.deepEqual(data.products, []);
   assert.equal((await request('/api/mob/products?limit=-1')).status, 400);
 });
 test('rejects inactive or missing customers and reports database outages as server errors', async () => {
@@ -119,22 +120,44 @@ test('Swagger shows only the requested sections while retaining the complete API
   assert.equal(response.status, 200);
   const spec = await response.json();
   const fullSpec = require('../swagger');
-  const expectedTags = ['Auth & Security', 'Myaccount', 'Categories', 'Search', 'Products'];
+  const expectedTags = ['Auth & Security', 'My Profile', 'Categories', 'Search', 'Products & Review', 'Coupons', 'Saved Addresses', 'Cart', 'Wishlist', 'Checkout', 'Delivery Zones', 'My Orders'];
   assert.deepEqual(spec.tags.map(tag => tag.name), expectedTags);
   assert.ok(spec.tags.every(tag => tag.description));
   assert.ok(fullSpec.paths['/mob-api/reviews/product/{productId}']);
-  assert.equal(spec.paths['/mob-api/reviews/product/{productId}'], undefined);
-  assert.equal(spec.paths['/mob-api/cart'], undefined);
+  assert.deepEqual(spec.paths['/mob-api/reviews/product/{productId}'].get.tags, ['Products & Review']);
+  assert.deepEqual(spec.paths['/mob-api/reviews'].post.tags, ['Products & Review']);
+  assert.deepEqual(spec.paths['/mob-api/delivery-zones/check/{pincode}'].get.tags, ['Delivery Zones']);
+  assert.equal(spec.paths['/mob-api/delivery-zones/check'], undefined);
+  assert.equal(fullSpec.paths['/mob-api/delivery-zones/check'], undefined);
+  assert.ok(spec.paths['/mob-api/cart']);
+  assert.ok(spec.paths['/mob-api/wishlist']);
+  for (const route of ['/mob-api/myaccount/profile', '/mob-api/myaccount/change-password']) {
+    assert.ok(spec.paths[route]);
+    for (const operation of Object.values(spec.paths[route])) assert.deepEqual(operation.tags, ['My Profile']);
+  }
+  for (const route of ['/mob-api/orders/my', '/mob-api/orders/my/{id}', '/mob-api/orders/my/{id}/cancel', '/mob-api/orders/track/{identifier}']) {
+    assert.ok(spec.paths[route]);
+    for (const operation of Object.values(spec.paths[route])) assert.deepEqual(operation.tags, ['My Orders']);
+  }
+  assert.equal(spec.paths['/mob-api/orders'], undefined);
+  assert.equal(spec.paths['/mob-api/myaccount/wishlist'], undefined);
   assert.ok(spec.components.schemas.Error);
   assert.deepEqual(await (await request('/api/mob/openapi.json', { access: null })).json(), spec);
   for (const route of ['/mob-api/banners', '/mob-api/marketing-messages']) {
     assert.equal(spec.paths[route], undefined);
     assert.ok(fullSpec.paths[route]);
   }
-  const sourceTags = new Set(['Auth & Security', 'myaccount', 'categories', 'search', 'products']);
+  const hiddenPaths = new Set([
+    '/mob-api/search/trending', '/mob-api/search/track', '/mob-api/search/autocomplete',
+    '/mob-api/customers/wishlist', '/mob-api/customers/loyalty', '/mob-api/customers/tickets',
+    '/mob-api/auth/profile', '/mob-api/auth/change-password',
+    '/mob-api/myaccount/wishlist', '/mob-api/myaccount/loyalty', '/mob-api/myaccount/tickets',
+    '/mob-api/orders',
+  ]);
+  const sourceTags = new Set(['Auth & Security', 'myaccount', 'categories', 'search', 'products', 'reviews', 'coupons', 'addresses', 'cart', 'wishlist', 'checkout', 'delivery', 'orders']);
   for (const [route, operations] of Object.entries(fullSpec.paths)) {
     for (const [method, operation] of Object.entries(operations)) {
-      assert.equal(Boolean(spec.paths[route]?.[method]), operation.tags.some(tag => sourceTags.has(tag)), method + ' ' + route);
+      assert.equal(Boolean(spec.paths[route]?.[method]), !hiddenPaths.has(route) && operation.tags.some(tag => sourceTags.has(tag)), method + ' ' + route);
     }
   }
   for (const operations of Object.values(spec.paths)) for (const operation of Object.values(operations)) {

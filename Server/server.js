@@ -89,6 +89,13 @@ const start = async () => {
     // 2. Sync all models (safe — doesn't drop data)
     await sequelize.sync();
     console.log('✅ Models synced');
+    // Ensure SubSubCategories table and subSubCategoryId column are dropped
+    try {
+      await sequelize.query("DROP TABLE IF EXISTS SubSubCategories");
+      await sequelize.query("DROP TABLE IF EXISTS subsubcategories");
+      await sequelize.query("ALTER TABLE Products DROP COLUMN subSubCategoryId");
+    } catch (dropErr) {}
+
 
     // Run manual database alters for Banners table to support EXCLUSIVE_DEAL and optional title
     try {
@@ -217,7 +224,6 @@ const start = async () => {
     try {
       await sequelize.query("ALTER TABLE Products ADD COLUMN spinImagePath VARCHAR(300) NULL");
       await sequelize.query("ALTER TABLE Products ADD COLUMN subCategoryId INT NULL");
-      await sequelize.query("ALTER TABLE Products ADD COLUMN subSubCategoryId INT NULL");
       console.log('✅ Products table sub-category columns added');
     } catch (alterErr) {
       console.log('⚠️ Manual alter note (already altered or table not synced yet):', alterErr.message);

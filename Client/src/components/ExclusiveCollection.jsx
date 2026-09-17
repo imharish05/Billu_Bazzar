@@ -108,7 +108,7 @@ const ExclusiveCollection = () => {
               className="flex-shrink-0 w-52 md:w-60 group"
             >
               <Link to={`/products/${product.slug}`} className="block focus-visible:outline-brand-gold">
-                <div className="relative aspect-[3/4] overflow-hidden bg-brand-light mb-3">
+                <div className="relative aspect-square overflow-hidden bg-brand-light mb-2 rounded-lg">
                   {(product.defaultProductImage || product.images?.[0]) ? (
                     <img
                       src={getImageUrl(product.defaultProductImage || product.images[0])}
@@ -120,12 +120,12 @@ const ExclusiveCollection = () => {
                     <div className="w-full h-full flex items-center justify-center text-brand-grey text-xs">No image</div>
                   )}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-300 flex items-center justify-center">
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-medium text-xs px-4 py-2 border border-white bg-black/20 backdrop-blur-sm">
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-medium text-xs px-4 py-2 border border-white bg-black/20 backdrop-blur-sm rounded-lg">
                       Quick View
                     </span>
                   </div>
                   {product.discountPercent > 0 && (
-                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5">
+                    <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm">
                       -{product.discountPercent}%
                     </span>
                   )}

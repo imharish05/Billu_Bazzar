@@ -179,7 +179,6 @@ export const canAccessNav = (adminObj, path) => {
     case '/reviews': return checkPermission(adminObj, 'view_reviews');
     case '/categories':
     case '/sub-categories':
-    case '/sub-sub-categories': return checkPermission(adminObj, 'view_categories');
     case '/orders':
     case '/returns':
     case '/abandoned-carts': return checkPermission(adminObj, 'view_orders');

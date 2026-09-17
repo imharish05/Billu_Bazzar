@@ -417,16 +417,6 @@
     "note": ""
   },
   {
-    "id": "MOB-042",
-    "name": "Delivery by pincode query",
-    "method": "GET",
-    "route": "/mob-api/delivery-zones/check?pincode={{pincode}}",
-    "expected": 200,
-    "manual": false,
-    "prerequisites": [],
-    "note": ""
-  },
-  {
     "id": "MOB-043",
     "name": "Stock of selected product",
     "method": "GET",
@@ -883,16 +873,6 @@
     "method": "POST",
     "route": "/mob-api/offers/validate",
     "expected": 404,
-    "manual": false,
-    "prerequisites": [],
-    "note": ""
-  },
-  {
-    "id": "MOB-086",
-    "name": "Reject GET /delivery-zones/check",
-    "method": "GET",
-    "route": "/mob-api/delivery-zones/check",
-    "expected": 400,
     "manual": false,
     "prerequisites": [],
     "note": ""
@@ -1832,16 +1812,6 @@
     "name": "No token GET /mob-api/delivery-zones/check/{pincode}",
     "method": "GET",
     "route": "/mob-api/delivery-zones/check/1",
-    "expected": 401,
-    "manual": false,
-    "prerequisites": [],
-    "note": ""
-  },
-  {
-    "id": "MOB-181",
-    "name": "No token GET /mob-api/delivery-zones/check",
-    "method": "GET",
-    "route": "/mob-api/delivery-zones/check",
     "expected": 401,
     "manual": false,
     "prerequisites": [],

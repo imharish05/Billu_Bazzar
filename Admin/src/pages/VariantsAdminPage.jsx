@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Search, Edit2, Trash2, X, Upload, ChevronLeft, ChevronRight, Camera, Copy, Palette, Ruler, AlertTriangle } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';
+import { PaginationTop, PaginationBottom } from '../components/Pagination';
 import currencyJs from 'currency.js';
 import toast from 'react-hot-toast';
 import api from '../services/api';
@@ -912,6 +913,8 @@ const VariantsAdminPage = () => {
   const [productFilter, setProductFilter] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
 
   const fetchInitialData = async () => {
     setLoading(true);
@@ -1037,12 +1040,29 @@ const VariantsAdminPage = () => {
   };
 
   // Filter variants based on search (product name or SKU) and product selection
-  const filteredVariants = variants.filter(v => {
-    const matchesSearch = v.sku?.toLowerCase().includes(search.toLowerCase()) || 
-                          v.product?.name?.toLowerCase().includes(search.toLowerCase());
-    const matchesProduct = productFilter === '' || Number(v.productId) === Number(productFilter);
-    return matchesSearch && matchesProduct;
-  });
+  const filteredVariants = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return variants.filter(v => {
+      const matchesSearch = !q ||
+        v.sku?.toLowerCase().includes(q) || 
+        v.product?.name?.toLowerCase().includes(q);
+      const matchesProduct = productFilter === '' || Number(v.productId) === Number(productFilter);
+      return matchesSearch && matchesProduct;
+    });
+  }, [variants, search, productFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredVariants.length / limit));
+
+  useEffect(() => {
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [totalPages, page]);
+
+  const paginatedVariants = useMemo(() => {
+    const startIndex = (page - 1) * limit;
+    return filteredVariants.slice(startIndex, startIndex + limit);
+  }, [filteredVariants, page, limit]);
 
   const { admin } = useSelector((s) => s.auth);
   const canAddVariant = checkPermission(admin, 'add_variant');
@@ -1055,41 +1075,35 @@ const VariantsAdminPage = () => {
 
   return (
     <AdminLayout title="Variants">
-      <div className="mb-6 flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-grey" />
-          <input
-            type="search"
-            placeholder="Search SKU or Product..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 border border-brand-light text-sm focus:outline-none focus:border-brand-gold"
-          />
-        </div>
-
-        {/* Product Filter */}
-        <select
-          value={productFilter}
-          onChange={e => setProductFilter(e.target.value)}
-          className="border border-brand-light bg-white px-3 py-2 text-sm focus:outline-none focus:border-brand-gold max-w-xs"
-        >
-          <option value="">All Products</option>
-          {products.map(p => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
-
-        {canAddVariant && (
+      {canAddVariant && (
+        <div className="mb-6 flex justify-end">
           <button onClick={() => { setEditing(null); setModalOpen(true); }} className="btn-primary flex items-center gap-2 whitespace-nowrap">
             <Plus size={16} /> Add Variant
           </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-brand-light flex items-center justify-between">
-          <p className="text-sm text-brand-grey">{filteredVariants.length} variants found</p>
-        </div>
+        <PaginationTop
+          search={search}
+          onSearchChange={(s) => { setSearch(s); setPage(1); }}
+          searchPlaceholder="Search SKU or Product..."
+          currentPage={page}
+          totalItems={filteredVariants.length}
+          limit={limit}
+          onLimitChange={(l) => { setLimit(l); setPage(1); }}
+        >
+          <select
+            value={productFilter}
+            onChange={(e) => { setProductFilter(e.target.value); setPage(1); }}
+            className="border border-neutral-300 bg-neutral-50/50 rounded-lg px-3 py-1.5 text-xs font-medium text-neutral-800 focus:outline-none focus:border-brand-gold cursor-pointer"
+          >
+            <option value="">All Products</option>
+            {products.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+        </PaginationTop>
         <div className="overflow-x-auto">
           <table className="w-full text-sm" aria-label="Variants table">
             <thead>
@@ -1121,7 +1135,7 @@ const VariantsAdminPage = () => {
                   <td colSpan={variantHeaders.length} className="px-4 py-8 text-center text-brand-grey italic">No variants found matching criteria</td>
                 </tr>
               ) : (
-                filteredVariants.map(variant => {
+                paginatedVariants.map(variant => {
                   let rawAttrs = variant.attributes;
                   for (let k = 0; k < 4; k++) {
                     if (typeof rawAttrs === 'string') {
@@ -1209,6 +1223,13 @@ const VariantsAdminPage = () => {
             </tbody>
           </table>
         </div>
+        <PaginationBottom
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={filteredVariants.length}
+          limit={limit}
+          onPageChange={(p) => setPage(p)}
+        />
       </div>
 
       <AnimatePresence>

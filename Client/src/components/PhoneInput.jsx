@@ -245,7 +245,7 @@ const PhoneInput = ({
       )}
 
       <div
-        className={`relative flex items-center w-full rounded border bg-white transition-all ${
+        className={`relative flex items-center w-full rounded-lg border bg-white transition-all ${
           hasError
             ? 'border-red-500 ring-1 ring-red-200'
             : 'border-neutral-300 hover:border-neutral-400 focus-within:border-brand-gold focus-within:ring-1 focus-within:ring-brand-gold/30'
@@ -260,7 +260,7 @@ const PhoneInput = ({
             onClick={() => setDropdownOpen((prev) => !prev)}
             aria-haspopup="listbox"
             aria-expanded={dropdownOpen}
-            className={`flex items-center gap-1.5 px-3 py-2.5 text-xs sm:text-sm font-medium text-neutral-800 bg-neutral-50/70 hover:bg-neutral-100 rounded-l transition-colors select-none ${
+            className={`flex items-center gap-1.5 px-3 py-2.5 text-xs sm:text-sm font-medium text-neutral-800 bg-neutral-50/70 hover:bg-neutral-100 rounded-l-lg transition-colors select-none ${
               disabled || filteredCountries.length <= 1 ? 'cursor-default' : 'cursor-pointer'
             }`}
           >

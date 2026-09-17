@@ -274,7 +274,7 @@ const OrderConfirmationPage = () => {
         {order && (
           <div className="grid md:grid-cols-2 gap-4 sm:gap-6 mb-6">
             {/* Left Card: Order Summary */}
-            <div className="bg-white shadow-sm p-5 sm:p-6 border border-brand-light rounded-xl flex flex-col justify-between">
+            <div className="bg-white shadow-sm p-5 sm:p-6 border border-brand-light rounded-lg flex flex-col justify-between">
               <div>
                 <h3 className="font-playfair text-base sm:text-lg font-bold text-brand-text mb-4 flex items-center gap-2.5">
                   <Package size={20} className="text-brand-gold shrink-0" /> Order Details
@@ -321,7 +321,7 @@ const OrderConfirmationPage = () => {
             </div>
 
             {/* Right Card: Shipping Address */}
-            <div className="bg-white shadow-sm p-5 sm:p-6 border border-brand-light rounded-xl">
+            <div className="bg-white shadow-sm p-5 sm:p-6 border border-brand-light rounded-lg">
               <h3 className="font-playfair text-base sm:text-lg font-bold text-brand-text mb-4 flex items-center gap-2.5">
                 <MapPin size={20} className="text-brand-gold shrink-0" /> 
                 Shipping Address
@@ -356,7 +356,7 @@ const OrderConfirmationPage = () => {
 
         {/* Order Items List Card */}
         {order && items.length > 0 && (
-          <div className="bg-white shadow-sm p-5 sm:p-6 mb-6 border border-brand-light rounded-xl">
+          <div className="bg-white shadow-sm p-5 sm:p-6 mb-6 border border-brand-light rounded-lg">
             <div className="flex items-center justify-between gap-3 pb-4 mb-4 border-b border-neutral-100">
               <h3 className="font-playfair text-base sm:text-lg font-bold text-brand-text flex items-center gap-2.5">
                 <ShoppingBag size={20} className="text-brand-gold shrink-0" />
@@ -412,7 +412,7 @@ const OrderConfirmationPage = () => {
                       {/* Variant Attributes */}
                       {variantInfo && (
                         <div className="mt-1">
-                          <span className="inline-flex items-center text-[11px] sm:text-xs font-medium text-amber-900 bg-amber-50/80 border border-amber-200/60 px-2 py-0.5 rounded-md">
+                          <span className="inline-flex items-center text-[11px] sm:text-xs font-medium text-amber-900 bg-amber-50/80 border border-amber-200/60 px-2 py-0.5 rounded-lg">
                             {variantInfo}
                           </span>
                         </div>
@@ -486,7 +486,7 @@ const OrderConfirmationPage = () => {
         )}
 
         {/* Order Tracking */}
-        <div className="bg-white shadow-sm p-5 sm:p-6 mb-6 border border-brand-light rounded-xl">
+        <div className="bg-white shadow-sm p-5 sm:p-6 mb-6 border border-brand-light rounded-lg">
           <div className="flex items-center justify-between gap-3 mb-6">
             <h3 className="font-playfair text-base sm:text-lg font-bold text-brand-text flex items-center gap-2 min-w-0">
               <Clock size={20} className="text-brand-gold shrink-0" />
@@ -538,7 +538,7 @@ const OrderConfirmationPage = () => {
 
         {/* Cancellation Notice Banner */}
         {canCancel && (
-          <div className="mb-8 bg-amber-50/90 border border-amber-200 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 shadow-2xs">
+          <div className="mb-8 bg-amber-50/90 border border-amber-200 rounded-lg p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 shadow-2xs">
             <div className="flex items-center gap-3 text-xs text-amber-950">
               <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0 text-amber-700">
                 <AlertTriangle size={16} />
@@ -581,7 +581,7 @@ const OrderConfirmationPage = () => {
       {/* ── Order Cancellation Modal ───────────────────────────────────────── */}
       {cancelModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fade-in">
-          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full p-4 sm:p-6 relative border border-neutral-100 max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full p-4 sm:p-6 relative border border-neutral-100 max-h-[90vh] flex flex-col">
             <button
               onClick={() => !isCancelling && setCancelModalOpen(false)}
               className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-700 p-1 rounded-full hover:bg-neutral-100 transition-colors"

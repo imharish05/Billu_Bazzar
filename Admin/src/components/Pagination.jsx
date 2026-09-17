@@ -13,6 +13,7 @@ export const PaginationTop = ({
   currentPage,
   page,
   onLimitChange,
+  children,
 }) => {
   const effectiveTotal = Number(total !== undefined ? total : (totalItems !== undefined ? totalItems : 0));
   const effectivePage = Math.max(1, Number(page !== undefined ? page : (currentPage !== undefined ? currentPage : 1)));
@@ -23,21 +24,22 @@ export const PaginationTop = ({
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-5 py-3 bg-white border-b border-neutral-200/80 rounded-t-xl">
-      {/* Left side: Search input */}
-      {onSearchChange ? (
-        <div className="relative w-full sm:w-72">
-          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
-          <input
-            type="search"
-            placeholder={searchPlaceholder}
-            value={search || ''}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 border border-neutral-300 rounded-lg text-xs font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-brand-gold bg-neutral-50/50"
-          />
-        </div>
-      ) : (
-        <div />
-      )}
+      {/* Left side: Search input and optional filters */}
+      <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+        {onSearchChange ? (
+          <div className="relative w-full sm:w-72">
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400" />
+            <input
+              type="search"
+              placeholder={searchPlaceholder}
+              value={search || ''}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 border border-neutral-300 rounded-lg text-xs font-medium text-neutral-800 placeholder-neutral-400 focus:outline-none focus:border-brand-gold bg-neutral-50/50"
+            />
+          </div>
+        ) : null}
+        {children}
+      </div>
 
       {/* Right side: Show X per page | Showing A to B of C entries */}
       <div className="flex items-center gap-4 text-xs text-neutral-600 font-medium">
@@ -174,6 +176,7 @@ const Pagination = ({
   onPageChange,
   onLimitChange,
   position = 'bottom',
+  children,
 }) => {
   if (position === 'top') {
     return (
@@ -187,6 +190,7 @@ const Pagination = ({
         currentPage={currentPage}
         page={page}
         onLimitChange={onLimitChange}
+        children={children}
       />
     );
   }

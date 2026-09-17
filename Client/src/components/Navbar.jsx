@@ -120,7 +120,7 @@ const Navbar = () => {
               label: c.name,
               slug: c.slug,
               highlight: c.slug === 'sale',
-              children: (c.children || []).filter(s => s.isActive),
+              children: (c.subcategories || c.children || []).filter(s => s.isActive),
             }));
           if (headerLinks.length > 0) setDynamicNavLinks(headerLinks);
         }
@@ -458,7 +458,7 @@ const Navbar = () => {
                     onClick={() => handleSuggestionClick(product)}
                     className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-neutral-900 transition-colors text-left"
                   >
-                    <div className="w-10 h-12 bg-neutral-900 flex-shrink-0 overflow-hidden border border-neutral-800 rounded">
+                    <div className="w-10 h-12 bg-neutral-900 flex-shrink-0 overflow-hidden border border-neutral-800 rounded-lg">
                       {product.image && (
                         <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
                       )}
@@ -709,7 +709,7 @@ const Navbar = () => {
                     <button className="p-2 text-white hover:text-brand-gold transition-colors rounded-full focus-visible:outline-2 focus-visible:outline-brand-gold" aria-label="Account menu" id="nav-account-btn">
                       <User size={20} strokeWidth={1.5} />
                     </button>
-                    <div className="absolute right-0 top-10 w-48 bg-neutral-950 text-white shadow-xl border border-neutral-800 opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50">
+                    <div className="absolute right-0 top-10 w-48 bg-neutral-950 text-white shadow-xl border border-neutral-800 rounded-lg overflow-hidden opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-all duration-200 z-50">
                       <div className="px-4 py-3 border-b border-neutral-800">
                         <p className="font-medium text-sm truncate">{customer?.name}</p>
                       </div>
@@ -794,14 +794,12 @@ const Navbar = () => {
                 const activeLink = activeNavLinks.find(l => l.slug === openDropdownSlug);
                 const subs = activeLink?.children || [];
                 if (!subs.length) return null;
-                const activeSub = subs.find(s => s.slug === activeSubSlug) || subs[0];
-                const subSubs = (activeSub?.children || []).filter(s => s.isActive !== false);
                 return (
                   <div
                     ref={dropdownRef}
                     onMouseEnter={keepDropdown}
                     onMouseLeave={closeDropdown}
-                    className="absolute z-[100] bg-[#050505] shadow-[0_8px_30px_rgba(0,0,0,0.3)] py-2 px-0 border border-neutral-800"
+                    className="absolute z-[100] bg-[#050505] shadow-[0_8px_30px_rgba(0,0,0,0.3)] py-2 px-0 border border-neutral-800 rounded-lg"
                     style={{
                       top: '100%',
                       left: `${dropdownLeft}px`,
@@ -811,57 +809,20 @@ const Navbar = () => {
                     }}
                   >
                     <ul className="flex flex-col">
-                      {subs.map(sub => {
-                        const hasSubSubs = sub.children && sub.children.length > 0;
-                        const isSubActive = activeSubSlug === sub.slug;
-                        return (
-                          <li
-                            key={sub.id}
-                            className={`relative flex items-center h-8 px-5 transition-colors hover:bg-neutral-900 ${isSubActive ? 'bg-neutral-900 text-brand-gold' : ''}`}
-                            onMouseEnter={() => hasSubSubs ? setActiveSubSlug(sub.slug) : setActiveSubSlug(null)}
+                      {subs.map(sub => (
+                        <li
+                          key={sub.id}
+                          className="relative flex items-center h-8 px-5 transition-colors hover:bg-neutral-900"
+                        >
+                          <Link
+                            to={`/category/${activeLink.slug}/${sub.slug}`}
+                            onClick={closeDropdown}
+                            className="flex-1 text-sm transition-all duration-200 whitespace-nowrap hover:pl-1.5 text-neutral-300 hover:text-brand-gold"
                           >
-                            <Link
-                              to={`/category/${activeLink.slug}/${sub.slug}`}
-                              onClick={closeDropdown}
-                              className={`flex-1 text-sm transition-all duration-200 whitespace-nowrap hover:pl-1.5 ${
-                                isSubActive ? 'text-brand-gold pl-1.5 font-medium' : 'text-neutral-300 hover:text-brand-gold'
-                              }`}
-                            >
-                              {sub.name}
-                            </Link>
-                            {hasSubSubs && (
-                              <ChevronRight size={14} className={`ml-1 transition-colors ${isSubActive ? 'text-brand-gold' : 'text-neutral-500'}`} />
-                            )}
-                            
-                            {/* Level 3 Dropdown (Flyout) */}
-                            {hasSubSubs && isSubActive && (
-                              <div
-                                className="absolute top-0 z-[101] bg-[#050505] shadow-[0_8px_30px_rgba(0,0,0,0.3)] py-2 px-0 border border-neutral-800"
-                                style={{
-                                  minWidth: '180px',
-                                  width: 'max-content',
-                                  left: flyoutDirection === 'right' ? '100%' : 'auto',
-                                  right: flyoutDirection === 'left' ? '100%' : 'auto'
-                                }}
-                              >
-                                <ul className="flex flex-col">
-                                  {sub.children.map(ss => (
-                                    <li key={ss.id} className="flex items-center h-8 px-5 hover:bg-neutral-900 transition-colors">
-                                      <Link
-                                        to={`/category/${activeLink.slug}/${sub.slug}/${ss.slug}`}
-                                        onClick={closeDropdown}
-                                        className="flex-1 text-sm text-neutral-300 hover:text-brand-gold hover:pl-1.5 transition-all duration-200 whitespace-nowrap"
-                                      >
-                                        {ss.name}
-                                      </Link>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                          </li>
-                        );
-                      })}
+                            {sub.name}
+                          </Link>
+                        </li>
+                      ))}
                     </ul>
                   </div>
                 );
@@ -1004,66 +965,19 @@ const Navbar = () => {
                           <ArrowRight size={13} />
                         </Link>
 
-                        {link.children.map(sub => {
-                          const hasLevel3 = sub.children && sub.children.length > 0;
-                          const isL2Expanded = expandedLevel2 === sub.slug;
-                          
-                          return (
-                            <div key={sub.slug || sub.id} className="py-0.5">
-                              <div className="flex items-center justify-between rounded-lg hover:bg-neutral-900/60 transition-colors">
-                                {hasLevel3 ? (
-                                  <button
-                                    onClick={() => setExpandedLevel2(isL2Expanded ? null : sub.slug)}
-                                    className={`text-[15px] font-medium text-left flex-1 py-2.5 px-2.5 flex items-center justify-between ${isL2Expanded ? 'text-brand-gold' : 'text-neutral-200'} hover:text-brand-gold transition-colors`}
-                                  >
-                                    <span>{sub.name}</span>
-                                    <ChevronRight
-                                      size={16}
-                                      className={`transform transition-transform duration-200 text-neutral-400 ${isL2Expanded ? 'rotate-90 text-brand-gold' : ''}`}
-                                    />
-                                  </button>
-                                ) : (
-                                  <Link
-                                    to={`/category/${link.slug}/${sub.slug}`}
-                                    onClick={() => dispatch(closeMobileMenu())}
-                                    className="text-[15px] font-medium text-neutral-200 hover:text-brand-gold flex-1 py-2.5 px-2.5"
-                                  >
-                                    {sub.name}
-                                  </Link>
-                                )}
-                              </div>
-                              
-                              {/* Level 3 Sub-subcategories (Child Categories) */}
-                              {hasLevel3 && isL2Expanded && (
-                                <div className="pl-3 pr-1 py-1.5 space-y-1.5 border-l-2 border-brand-gold/30 ml-2 my-1">
-                                  <Link
-                                    to={`/category/${link.slug}/${sub.slug}`}
-                                    onClick={() => dispatch(closeMobileMenu())}
-                                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-brand-gold/90 hover:text-brand-gold uppercase tracking-wider py-1 px-2"
-                                  >
-                                    <span>View All {sub.name}</span>
-                                    <ArrowRight size={11} />
-                                  </Link>
-
-                                  {sub.children.map(ss => (
-                                    <Link
-                                      key={ss.slug || ss.id}
-                                      to={`/category/${link.slug}/${sub.slug}/${ss.slug}`}
-                                      onClick={() => dispatch(closeMobileMenu())}
-                                      className="flex items-center justify-between px-3.5 py-3 rounded-lg bg-neutral-900/70 hover:bg-neutral-800 active:bg-neutral-800 border border-neutral-800/60 hover:border-brand-gold/40 text-[14px] font-medium text-neutral-200 hover:text-brand-gold transition-all min-h-[44px] active:scale-[0.98] group"
-                                    >
-                                      <div className="flex items-center gap-2.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-brand-gold/70 group-hover:bg-brand-gold group-hover:scale-125 transition-all" />
-                                        <span className="leading-snug">{ss.name}</span>
-                                      </div>
-                                      <ChevronRight size={14} className="text-neutral-500 group-hover:text-brand-gold group-hover:translate-x-0.5 transition-transform" />
-                                    </Link>
-                                  ))}
-                                </div>
-                              )}
+                        {link.children.map(sub => (
+                          <div key={sub.slug || sub.id} className="py-0.5">
+                            <div className="flex items-center justify-between rounded-lg hover:bg-neutral-900/60 transition-colors">
+                              <Link
+                                to={`/category/${link.slug}/${sub.slug}`}
+                                onClick={() => dispatch(closeMobileMenu())}
+                                className="text-[15px] font-medium text-neutral-200 hover:text-brand-gold flex-1 py-2.5 px-2.5"
+                              >
+                                {sub.name}
+                              </Link>
                             </div>
-                          );
-                        })}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </li>
@@ -1073,7 +987,7 @@ const Navbar = () => {
             
             <div className="mt-auto pt-6 pb-8 border-t border-neutral-800/60 flex flex-col gap-4 flex-shrink-0">
               {/* Currency Selector inside mobile drawer */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/90 border border-neutral-800/80">
+              <div className="flex items-center justify-between p-3.5 rounded-lg bg-neutral-900/90 border border-neutral-800/80">
                 <div>
                   <p className="text-xs font-semibold text-white tracking-wider uppercase">Currency</p>
                   <p className="text-[11px] text-neutral-400 mt-0.5">Prices convert in real time</p>

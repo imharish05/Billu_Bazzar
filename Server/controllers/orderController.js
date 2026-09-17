@@ -1,3 +1,4 @@
+const { couponReason, couponDiscount } = require('../services/couponRules');
 'use strict';
 const { sequelize, Order, OrderItem, Product, ProductVariant, Customer, Coupon, Affiliate, Cart, CartItem, InventoryMovementLog, Warehouse, WarehouseStock, SiteSetting, LoyaltyLedger, DeliveryZone, Category, ReturnRequest } = require('../models');
 const { Op } = require('sequelize');
@@ -665,10 +666,11 @@ const placeOrder = async (req, res) => {
     let subtotal = itemsToLock.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     let discountAmount = 0;
     let couponId = null;
+    let couponFreeShipping = false;
 
     if (couponCode) {
       const coupon = await Coupon.findOne({ where: { code: String(couponCode).trim().toUpperCase(), isActive: true }, transaction });
-      if (coupon && Number(subtotal) >= Number(coupon.minOrderValue || 0)) {
+      if (coupon && !couponReason(coupon, subtotal)) {
         // Check per-person redemption limit
         const customerId = req.customer?.id || req.user?.id || req.user?.customerId || null;
         let limitExceeded = false;
@@ -682,11 +684,8 @@ const placeOrder = async (req, res) => {
 
         if (!limitExceeded) {
           couponId = coupon.id;
-          if (coupon.type === 'PERCENT') {
-            discountAmount = Math.min((subtotal * Number(coupon.value)) / 100, Number(coupon.maxDiscount || Infinity));
-          } else if (coupon.type === 'FLAT') {
-            discountAmount = Math.min(Number(coupon.value), subtotal);
-          }
+          discountAmount = couponDiscount(coupon, subtotal);
+          couponFreeShipping = coupon.type === 'FREE_SHIPPING';
           await coupon.increment('usageCount', { transaction });
         }
       }
@@ -767,6 +766,7 @@ const placeOrder = async (req, res) => {
         }
       }
     }
+    if (couponId && couponFreeShipping) shippingAmount = 0;
     let totalDiscount = discountAmount + loyaltyDiscount;
     let taxableSubtotal = Math.max(0, subtotal - totalDiscount);
 

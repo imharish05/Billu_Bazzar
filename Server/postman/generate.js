@@ -29,7 +29,7 @@ const request = (group, name, method, route, expected, body, options = {}) => {
     event: [{ listen: 'test', script: { type: 'text/javascript', exec: tests } }, ...(pre.length ? [{ listen: 'prerequest', script: { type: 'text/javascript', exec: pre } }] : [])],
   };
   group.item.push(item);
-  const responseKeys = { '/mob-api/subcategories': 'subCategories', '/mob-api/subsubcategories': 'subSubCategories', '/mob-api/marketing-messages': 'messages', '/mob-api/banners': 'banners', '/mob-api/categories': 'categories' };
+  const responseKeys = { '/mob-api/subcategories': 'subCategories', '/mob-api/marketing-messages': 'messages', '/mob-api/banners': 'banners', '/mob-api/categories': 'categories' };
   if (method === 'GET' && expected === 200 && responseKeys[route]) tests.push(`pm.test('Correct feature response data', () => pm.expect(pm.response.json()['${responseKeys[route]}']).to.be.an('array'));`);
   scenarios.push({ id, name, method, route, expected, manual: !!options.manual, prerequisites: options.requires || [], note: options.note || '' });
   return item;
@@ -55,12 +55,11 @@ request(catalog, 'Fetch products and choose an in-stock product', 'GET', '/mob-a
 request(catalog, 'Product details using captured slug', 'GET', '/mob-api/products/{{productSlug}}', 200, null, { requires: ['productSlug'] });
 request(catalog, 'Variants for the selected product', 'GET', '/mob-api/variants/product/{{productId}}', 200, null, { requires: ['productId'], tests: ["const v = (pm.response.json().variants || []).find(v => Number(v.stock) >= 3); if (v) pm.environment.set('variantId',v.id);"] });
 request(catalog, 'Category tree', 'GET', '/mob-api/categories/tree', 200, null, { tests: ["const c=(pm.response.json().categories||[])[0]; if(c) pm.environment.set('categoryId',c.id);"] });
-for (const route of ['/categories', '/subcategories', '/subsubcategories', '/products/featured', '/products/price-range', '/products/search?q=sample', '/products?newArrival=true', '/products?bestSeller=true', '/banners', '/marketing-messages', '/search/autocomplete?q=sample', '/search/trending', '/currency/rate', '/gift-service', '/affiliates', '/payments/geo-detect?geo=IN', '/payments/geo-detect?geo=AE']) request(catalog, 'Read '+route, 'GET', '/mob-api'+route, 200);
+for (const route of ['/categories', '/subcategories', '/products/featured', '/products/price-range', '/products/search?q=sample', '/products?newArrival=true', '/products?bestSeller=true', '/banners', '/marketing-messages', '/search/autocomplete?q=sample', '/search/trending', '/currency/rate', '/gift-service', '/affiliates', '/payments/geo-detect?geo=IN', '/payments/geo-detect?geo=AE']) request(catalog, 'Read '+route, 'GET', '/mob-api'+route, 200);
 for (const prefix of ['site-settings', 'settings']) for (const key of ['about', 'loyalty', 'tax', 'otp_threshold']) request(catalog, `Read ${prefix}/${key}`, 'GET', `/mob-api/${prefix}/${key}`, 200);
 for (const route of ['/offers', '/coupons']) request(catalog, 'Read '+route, 'GET', '/mob-api'+route, 200, null, { tests: ["const c=(pm.response.json().coupons||[]).find(c => new Date(c.validFrom)<=new Date() && new Date(c.validUntil)>new Date()); if(c){pm.environment.set('couponCode',c.code);pm.environment.set('couponSubtotal',Math.max(1000,Number(c.minOrderValue||0)));}"] });
 request(catalog, 'Validate real active offer', 'POST', '/mob-api/offers/validate', 200, '{"code":"{{couponCode}}","subtotal":{{couponSubtotal}}}', { requires: ['couponCode', 'couponSubtotal'] });
 request(catalog, 'Delivery by pincode path', 'GET', '/mob-api/delivery-zones/check/{{pincode}}', 200);
-request(catalog, 'Delivery by pincode query', 'GET', '/mob-api/delivery-zones/check?pincode={{pincode}}', 200);
 request(catalog, 'Stock of selected product', 'GET', '/mob-api/stock-status?productId={{productId}}', 200, null, { requires: ['productId'] });
 request(catalog, 'Alias API base accepts same customer token', 'GET', '/api/mob/products?limit=1', 200);
 
@@ -97,7 +96,7 @@ request(negative,'Empty cart cannot be ordered','POST','/mob-api/orders',400,{pa
 const negatives = [
  ['GET','/products?limit=-1',400],['GET','/products/qa-product-does-not-exist',404],['GET','/variants/product/2147483647',404],
  ['GET','/site-settings/private-secrets',404],['POST','/offers/validate',404,{code:'QA_DOES_NOT_EXIST',subtotal:1000}],
- ['GET','/delivery-zones/check',400],['GET','/stock-status',400],['POST','/search/track',400,{q:''}],
+ ['GET','/stock-status',400],['POST','/search/track',400,{q:''}],
  ['POST','/payments/initiate',400,{}],['POST','/payments/initiate',404,{orderId:2147483647}],
  ['POST','/payments/verify',404,{orderId:2147483647,razorpayPaymentId:'pay_qa_invalid',razorpayOrderId:'order_qa_invalid',razorpaySignature:'invalid'}],
  ['POST','/customers/tickets',404,{orderId:2147483647,subject:'QA',description:'QA'}],

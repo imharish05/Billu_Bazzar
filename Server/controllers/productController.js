@@ -1,12 +1,13 @@
 'use strict';
 const { Op } = require('sequelize');
-const { Product, Category, SubCategory, SubSubCategory, Vendor, ProductVariant, Warehouse, WarehouseStock } = require('../models');
+const { Product, Category, SubCategory, Vendor, ProductVariant, Warehouse, WarehouseStock } = require('../models');
 const { syncProductVariants, syncWarehouseStock } = require('./variantController');
 const fs = require('fs');
 const path = require('path');
 const { materializeSpinSequence, deleteSpinSequence } = require('../services/spinSequenceService');
 
 const { deleteLocalFile } = require('../utils/fileHelper');
+const { deleteProductsCascade } = require('../services/productCascadeService');
 
 // Helper to process FormData body & files
 const processProductData = (req) => {
@@ -57,7 +58,6 @@ const processProductData = (req) => {
   if (data.stock !== undefined) data.stock = data.stock === '' ? 0 : parseInt(data.stock, 10);
   if (data.categoryId !== undefined) data.categoryId = data.categoryId === '' || data.categoryId === 'null' ? null : parseInt(data.categoryId, 10);
   if (data.subCategoryId !== undefined) data.subCategoryId = data.subCategoryId === '' || data.subCategoryId === 'null' ? null : parseInt(data.subCategoryId, 10);
-  if (data.subSubCategoryId !== undefined) data.subSubCategoryId = data.subSubCategoryId === '' || data.subSubCategoryId === 'null' ? null : parseInt(data.subSubCategoryId, 10);
   if (data.vendorId !== undefined) data.vendorId = data.vendorId === '' || data.vendorId === 'null' ? null : parseInt(data.vendorId, 10);
   if (data.warehouseId !== undefined) data.warehouseId = data.warehouseId === '' || data.warehouseId === 'null' ? null : parseInt(data.warehouseId, 10);
 
@@ -201,13 +201,7 @@ const getAll = async (req, res) => {
           if (found) {
             where.subCategoryId = found.id;
           } else {
-            // Try SubSubCategory
-            found = await SubSubCategory.findOne({ where: { slug: category, isActive: true } });
-            if (found) {
-              where.subSubCategoryId = found.id;
-            } else {
-              where.categoryId = -1;
-            }
+            where.categoryId = -1;
           }
         }
       } else {
@@ -251,7 +245,6 @@ const getAll = async (req, res) => {
       include: [
         { model: Category, as: 'category', attributes: ['id', 'name', 'slug'] },
         { model: SubCategory, as: 'subcategory', attributes: ['id', 'name', 'slug'] },
-        { model: SubSubCategory, as: 'subsubcategory', attributes: ['id', 'name', 'slug'] },
         { model: Vendor, as: 'vendor', attributes: ['id', 'name', 'logo', 'gstin'] },
         { model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] },
         { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'priceAED', 'mrp', 'mrpAED', 'stock', 'attributes', 'colorHex', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] }
@@ -272,7 +265,6 @@ const getOne = async (req, res) => {
       include: [
         { model: Category, as: 'category' },
         { model: SubCategory, as: 'subcategory' },
-        { model: SubSubCategory, as: 'subsubcategory' },
         { model: Vendor, as: 'vendor', attributes: ['id', 'name', 'rating', 'logo', 'gstin'] },
         { model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] },
         { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'priceAED', 'mrp', 'mrpAED', 'stock', 'attributes', 'colorHex', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] }
@@ -393,7 +385,6 @@ const create = async (req, res) => {
       include: [
         { model: Category, as: 'category', attributes: ['id', 'name', 'slug'] },
         { model: SubCategory, as: 'subcategory', attributes: ['id', 'name', 'slug'] },
-        { model: SubSubCategory, as: 'subsubcategory', attributes: ['id', 'name', 'slug'] },
         { model: Vendor, as: 'vendor', attributes: ['id', 'name', 'logo', 'gstin'] },
         { model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] },
         { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'priceAED', 'mrp', 'mrpAED', 'stock', 'attributes', 'colorHex', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] }
@@ -584,7 +575,6 @@ const update = async (req, res) => {
       include: [
         { model: Category, as: 'category', attributes: ['id', 'name', 'slug'] },
         { model: SubCategory, as: 'subcategory', attributes: ['id', 'name', 'slug'] },
-        { model: SubSubCategory, as: 'subsubcategory', attributes: ['id', 'name', 'slug'] },
         { model: Vendor, as: 'vendor', attributes: ['id', 'name', 'logo', 'gstin'] },
         { model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] },
         { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'priceAED', 'mrp', 'mrpAED', 'stock', 'attributes', 'colorHex', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] }
@@ -609,42 +599,11 @@ const remove = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     }
 
-    // Delete associated entries including variants and logs
-    const { ProductVariant, WarehouseStock, CartItem, Wishlist, Review, StockAlert, OrderItem, InventoryMovementLog } = require('../models');
-
-    // 1. Find and clean up variant-level dependencies
-    const variants = await ProductVariant.findAll({ where: { productId: id }, transaction });
-    const variantIds = variants.map(v => v.id);
-
-    // Unlink OrderItems to NULL so customer order history is preserved without triggering MySQL FK constraints
-    if (variantIds.length > 0) {
-      await OrderItem.update({ variantId: null }, { where: { variantId: variantIds }, transaction });
-      await WarehouseStock.destroy({ where: { variantId: variantIds }, transaction });
-      await CartItem.destroy({ where: { variantId: variantIds }, transaction });
-      await Wishlist.destroy({ where: { variantId: variantIds }, transaction });
-      await InventoryMovementLog.destroy({ where: { variantId: variantIds }, transaction });
-    }
-
-    // 2. Delete product-level dependencies
-    await OrderItem.update({ productId: null }, { where: { productId: id }, transaction });
-    await WarehouseStock.destroy({ where: { productId: id }, transaction });
-    await CartItem.destroy({ where: { productId: id }, transaction });
-    await Wishlist.destroy({ where: { productId: id }, transaction });
-    await Review.destroy({ where: { productId: id }, transaction });
-    await StockAlert.destroy({ where: { productId: id }, transaction });
-    await InventoryMovementLog.destroy({ where: { productId: id }, transaction });
-
-    // 3. Delete ProductVariants
-    await ProductVariant.destroy({ where: { productId: id }, transaction });
-
-    // 4. Preserve product image files on disk so past customer orders retain product images in My Orders
-
-    // 5. Delete product record
-    await product.destroy({ transaction });
+    // Cascade delete product and all its variants (preserves product & variant images on disk)
+    await deleteProductsCascade(id, transaction);
 
     await transaction.commit();
-    deleteSpinSequence(id);
-    res.json({ success: true, message: 'Product deleted successfully' });
+    res.json({ success: true, message: 'Product and all its variants deleted successfully' });
   } catch (err) {
     await transaction.rollback();
     console.error(`[Delete Product Error]:`, err);
@@ -702,4 +661,4 @@ const getPriceRange = async (req, res) => {
   }
 };
 
-module.exports = { getAll, getOne, create, update, remove, getFeatured, search, getPriceRange };
+module.exports = { formatProduct, getAll, getOne, create, update, remove, getFeatured, search, getPriceRange };

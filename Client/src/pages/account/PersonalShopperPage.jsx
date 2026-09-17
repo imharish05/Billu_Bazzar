@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Gift, CheckCircle2, Loader2 } from 'lucide-react';
+import { Gift, CheckCircle2, Loader2, Sparkles, Clock, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useSelector } from 'react-redux';
 import api from '../../services/api';
@@ -71,16 +71,29 @@ const PersonalShopperPage = () => {
 
   if (submitted) {
     return (
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-        <div className="bg-white shadow-sm p-10 text-center border border-brand-light">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="w-full">
+        {/* Top Header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2.5 mb-1">
+            <Gift size={22} className="text-brand-gold" />
+            <h1 className="font-playfair text-xl sm:text-2xl font-bold text-neutral-900 uppercase tracking-tight">
+              Personal Shopper
+            </h1>
+          </div>
+          <p className="text-xs sm:text-sm text-neutral-500 mt-1">
+            Our personal stylists will curate a luxury collection tailored specifically for you based on your preferences, occasion, and budget.
+          </p>
+        </div>
+
+        <div className="bg-white border border-neutral-200/80 rounded-lg p-10 text-center shadow-xs">
           <CheckCircle2 size={44} className="text-brand-gold mx-auto mb-3" strokeWidth={1.5} />
-          <h1 className="font-playfair text-xl font-semibold mb-2 text-brand-text">Request Received</h1>
-          <p className="text-brand-grey text-sm mb-6 max-w-sm mx-auto">
+          <h2 className="font-playfair text-xl font-semibold mb-2 text-neutral-900">Request Received</h2>
+          <p className="text-neutral-500 text-sm mb-6 max-w-sm mx-auto">
             A Billu Bazaar personal stylist will review your preferences and reach out with a curated selection soon.
           </p>
           <button
             onClick={() => setSubmitted(false)}
-            className="btn-outline text-xs px-5 py-2.5"
+            className="btn-outline text-xs px-5 py-2.5 rounded-lg"
             id="shopper-new-request"
           >
             Submit Another Request
@@ -91,19 +104,54 @@ const PersonalShopperPage = () => {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-      <div className="bg-white shadow-sm p-6 border border-brand-light">
-        <div className="flex items-center gap-2 mb-2">
-          <Gift size={20} className="text-brand-gold" />
-          <h1 className="font-playfair text-xl font-semibold text-brand-text">Personal Shopper</h1>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="w-full">
+      {/* Top Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2.5 mb-1">
+          <Gift size={22} className="text-brand-gold" />
+          <h1 className="font-playfair text-xl sm:text-2xl font-bold text-neutral-900 uppercase tracking-tight">
+            Personal Shopper
+          </h1>
         </div>
-        <p className="text-brand-grey text-sm mb-6">
+        <p className="text-xs sm:text-sm text-neutral-500 mt-1">
           Our personal stylists will curate a luxury collection tailored specifically for you based on your preferences, occasion, and budget.
         </p>
+      </div>
+
+      {/* Feature Highlights Row — matching stats row in My Reviews & Loyalty */}
+      {/* <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4 mb-6">
+        <div className="bg-white border border-neutral-200/80 rounded-lg p-3.5 sm:p-4 text-center shadow-xs flex flex-col items-center justify-center">
+          <Sparkles size={18} className="text-brand-gold mb-1" />
+          <p className="text-xs sm:text-sm font-bold text-neutral-900">Bespoke Curation</p>
+          <p className="text-[11px] text-neutral-500 mt-0.5">Handpicked luxury styling</p>
+        </div>
+        <div className="bg-white border border-neutral-200/80 rounded-lg p-3.5 sm:p-4 text-center shadow-xs flex flex-col items-center justify-center">
+          <Clock size={18} className="text-blue-600 mb-1" />
+          <p className="text-xs sm:text-sm font-bold text-neutral-900">24-Hour Outreach</p>
+          <p className="text-[11px] text-neutral-500 mt-0.5">Dedicated stylist contact</p>
+        </div>
+        <div className="bg-white border border-neutral-200/80 rounded-lg p-3.5 sm:p-4 text-center shadow-xs flex flex-col items-center justify-center">
+          <ShieldCheck size={18} className="text-emerald-600 mb-1" />
+          <p className="text-xs sm:text-sm font-bold text-neutral-900">Complimentary</p>
+          <p className="text-[11px] text-neutral-500 mt-0.5">Free service for members</p>
+        </div>
+      </div> */}
+
+      {/* Form Container */}
+      <div className="bg-white border border-neutral-200/80 rounded-lg p-5 sm:p-7 shadow-xs">
+        <div className="border-b border-neutral-100 pb-3 mb-5">
+          <h2 className="font-playfair text-sm sm:text-base font-bold text-neutral-900 uppercase tracking-tight">
+            Consultation Preferences
+          </h2>
+          <p className="text-xs text-neutral-500 mt-0.5">
+            Share your style preferences, budget, and occasion so our stylists can prepare your personalized selection.
+          </p>
+        </div>
+
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium mb-1.5 text-brand-text" htmlFor="shopper-name">
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5" htmlFor="shopper-name">
                 Your Name <span className="text-brand-gold">*</span>
               </label>
               <input
@@ -113,11 +161,11 @@ const PersonalShopperPage = () => {
                 placeholder="Full Name"
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                className="w-full border border-brand-light px-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold"
+                className="w-full border border-neutral-200/80 px-3.5 py-2.5 text-sm rounded-lg focus:outline-none focus:border-brand-gold bg-neutral-50/20"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5 text-brand-text" htmlFor="shopper-email">
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5" htmlFor="shopper-email">
                 Email Address <span className="text-brand-gold">*</span>
               </label>
               <input
@@ -127,7 +175,7 @@ const PersonalShopperPage = () => {
                 placeholder="Email Address"
                 value={form.email}
                 onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                className="w-full border border-brand-light px-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold"
+                className="w-full border border-neutral-200/80 px-3.5 py-2.5 text-sm rounded-lg focus:outline-none focus:border-brand-gold bg-neutral-50/20"
               />
             </div>
           </div>
@@ -145,7 +193,7 @@ const PersonalShopperPage = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5 text-brand-text" htmlFor="shopper-occasion">
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5" htmlFor="shopper-occasion">
                 Occasion <span className="text-brand-gold">*</span>
               </label>
               <input
@@ -155,14 +203,14 @@ const PersonalShopperPage = () => {
                 placeholder="Wedding, Birthday, Gala, Festival..."
                 value={form.occasion}
                 onChange={(e) => setForm((f) => ({ ...f, occasion: e.target.value }))}
-                className="w-full border border-brand-light px-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold"
+                className="w-full border border-neutral-200/80 px-3.5 py-2.5 text-sm rounded-lg focus:outline-none focus:border-brand-gold bg-neutral-50/20"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium mb-1.5 text-brand-text" htmlFor="shopper-budget">
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5" htmlFor="shopper-budget">
                 Budget (₹) <span className="text-brand-gold">*</span>
               </label>
               <input
@@ -172,11 +220,11 @@ const PersonalShopperPage = () => {
                 placeholder="e.g. 10,000 – 50,000"
                 value={form.budget}
                 onChange={(e) => setForm((f) => ({ ...f, budget: e.target.value }))}
-                className="w-full border border-brand-light px-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold"
+                className="w-full border border-neutral-200/80 px-3.5 py-2.5 text-sm rounded-lg focus:outline-none focus:border-brand-gold bg-neutral-50/20"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium mb-1.5 text-brand-text" htmlFor="shopper-style">
+              <label className="block text-xs font-semibold text-neutral-700 mb-1.5" htmlFor="shopper-style">
                 Style Preference
               </label>
               <input
@@ -185,13 +233,13 @@ const PersonalShopperPage = () => {
                 placeholder="Traditional, Royal Bridal, Fusion, Contemporary..."
                 value={form.style}
                 onChange={(e) => setForm((f) => ({ ...f, style: e.target.value }))}
-                className="w-full border border-brand-light px-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold"
+                className="w-full border border-neutral-200/80 px-3.5 py-2.5 text-sm rounded-lg focus:outline-none focus:border-brand-gold bg-neutral-50/20"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium mb-1.5 text-brand-text" htmlFor="shopper-notes">
+            <label className="block text-xs font-semibold text-neutral-700 mb-1.5" htmlFor="shopper-notes">
               Additional Details / Specific Requirements
             </label>
             <textarea
@@ -200,14 +248,14 @@ const PersonalShopperPage = () => {
               placeholder="Preferred colors, fabric choices, date of event, or anything else your personal stylist should know..."
               value={form.notes}
               onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              className="w-full border border-brand-light px-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold resize-none"
+              className="w-full border border-neutral-200/80 px-3.5 py-2.5 text-sm rounded-lg focus:outline-none focus:border-brand-gold resize-none bg-neutral-50/20"
             />
           </div>
 
           <button
             type="submit"
             disabled={submitting}
-            className="btn-primary w-full flex items-center justify-center gap-2"
+            className="btn-primary w-full py-3 rounded-lg flex items-center justify-center gap-2 font-semibold text-sm transition-transform active:scale-[0.99] shadow-2xs"
             id="shopper-submit"
           >
             {submitting ? (

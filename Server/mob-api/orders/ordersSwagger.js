@@ -474,16 +474,46 @@ module.exports = {
                     "productId",
                     "quantity"
                   ]
+                },
+                "shippingAddressId": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "billingAddressId": {
+                  "type": "integer",
+                  "minimum": 1
                 }
               },
               "required": [
-                "shippingAddress",
                 "paymentMethod"
+              ],
+              "oneOf": [
+                {
+                  "required": [
+                    "shippingAddress"
+                  ],
+                  "not": {
+                    "required": [
+                      "shippingAddressId"
+                    ]
+                  }
+                },
+                {
+                  "required": [
+                    "shippingAddressId"
+                  ],
+                  "not": {
+                    "required": [
+                      "shippingAddress"
+                    ]
+                  }
+                }
               ]
             }
           }
         }
-      }
+      },
+      "description": "Place an order with inline shippingAddress/billingAddress or owned shippingAddressId/billingAddressId. Do not supply both forms for the same address. Saved address details are copied into the order; later edits do not affect past orders. Omitting billing uses shipping. A default address is not selected implicitly."
     }
   },
   "/mob-api/orders/track/{identifier}": {

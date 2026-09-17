@@ -141,7 +141,7 @@ const RegisterPopup = () => {
                 <button
                   onClick={handleRegister}
                   id="reg-popup-register-btn"
-                  className="w-full py-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98] rounded-sm mb-3"
+                  className="w-full py-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98] rounded-lg mb-3"
                   style={{ background: '#8B1A1A' }}
                 >
                   Register Now

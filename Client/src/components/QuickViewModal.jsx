@@ -455,7 +455,7 @@ const QuickViewModal = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.94, y: 25 }}
               transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-              className="bg-white rounded-3xl w-full max-w-4xl h-[88vh] md:h-[620px] max-h-[680px] overflow-hidden flex flex-col md:flex-row relative shadow-[0_30px_70px_-15px_rgba(0,0,0,0.45)] border border-amber-500/20"
+              className="bg-white rounded-lg w-full max-w-4xl h-[88vh] md:h-[620px] max-h-[680px] overflow-hidden flex flex-col md:flex-row relative shadow-[0_30px_70px_-15px_rgba(0,0,0,0.45)] border border-amber-500/20"
               onClick={e => e.stopPropagation()}
               role="dialog"
               aria-label={`Quick view: ${product.name}`}
@@ -523,10 +523,10 @@ const QuickViewModal = () => {
               <div className="flex-1 h-full min-h-0 flex flex-col p-5 sm:p-7 overflow-y-auto bg-white custom-scrollbar">
                 {/* Category & Stock Tag Row */}
                 <div className="flex flex-wrap items-center gap-2.5 mb-2 pr-12">
-                  <span className="text-[11px] font-bold text-amber-800 tracking-widest uppercase bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200/60">
+                  <span className="text-[11px] font-bold text-amber-800 tracking-widest uppercase bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200/60">
                     {product.category?.name || 'Collection'}
                   </span>
-                  <span className={`text-[11px] font-bold flex items-center gap-1.5 px-2.5 py-1 rounded-md ${inStock ? 'text-emerald-700 bg-emerald-50 border border-emerald-200/60' : 'text-rose-600 bg-rose-50 border border-rose-200/60'}`}>
+                  <span className={`text-[11px] font-bold flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${inStock ? 'text-emerald-700 bg-emerald-50 border border-emerald-200/60' : 'text-rose-600 bg-rose-50 border border-rose-200/60'}`}>
                     <span className={`w-2 h-2 rounded-full ${inStock ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
                     {inStock ? 'In Stock' : 'Out of Stock'}
                   </span>
@@ -550,7 +550,7 @@ const QuickViewModal = () => {
                 )}
 
                 {/* Price Display Block */}
-                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-3 px-4 bg-neutral-50 rounded-2xl border border-neutral-200/80 mb-4">
+                <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-4">
                   <span className="font-playfair text-2xl sm:text-3xl font-extrabold text-neutral-950">
                     {fmt(displayPrice, displayPriceAED)}
                   </span>
@@ -560,7 +560,7 @@ const QuickViewModal = () => {
                     </span>
                   )}
                   {discount > 0 && (
-                    <span className="text-amber-900 font-bold text-xs bg-amber-100/90 px-2.5 py-1 rounded-full border border-amber-300/60 ml-auto">
+                    <span className="text-amber-900 font-bold text-xs bg-amber-100/90 px-2.5 py-1 rounded-full border border-amber-300/60">
                       Save {discount}%
                     </span>
                   )}
@@ -573,7 +573,7 @@ const QuickViewModal = () => {
 
                 {/* Interactive Variant Selection Block */}
                 {Object.keys(variantAttributeValues).length > 0 && (
-                  <div className="bg-gradient-to-br from-amber-50/40 via-neutral-50 to-neutral-100/50 border border-amber-200/70 rounded-2xl p-4 mb-4 shadow-2xs space-y-3.5">
+                  <div className="bg-gradient-to-br from-amber-50/40 via-neutral-50 to-neutral-100/50 border border-amber-200/70 rounded-lg p-4 mb-4 shadow-2xs space-y-3.5">
                     <div className="flex items-center justify-between border-b border-amber-200/50 pb-2">
                       <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-900 flex items-center gap-1.5">
                         <Sparkles size={13} className="text-amber-600" /> Select Options
@@ -709,7 +709,7 @@ const QuickViewModal = () => {
                 <div className="flex flex-col gap-3 mt-auto pt-2">
                   {/* Quantity Selector & Wishlist Button Row */}
                   <div className="flex items-center gap-2.5">
-                    <div className="flex-1 flex items-center justify-between py-2 px-3.5 bg-neutral-50 rounded-xl border border-neutral-200 h-11">
+                    <div className="flex-1 flex items-center justify-between py-2 px-3.5 bg-neutral-50 rounded-lg border border-neutral-200 h-11">
                       <span className="text-xs font-bold uppercase tracking-wider text-neutral-700">
                         Quantity
                       </span>
@@ -746,7 +746,7 @@ const QuickViewModal = () => {
                     {/* Wishlist Button beside Quantity */}
                     <button
                       onClick={handleToggleWishlist}
-                      className={`h-11 w-11 rounded-xl border transition-all cursor-pointer flex items-center justify-center shrink-0 ${
+                      className={`h-11 w-11 rounded-lg border transition-all cursor-pointer flex items-center justify-center shrink-0 ${
                         isWishlisted
                           ? 'bg-rose-600 text-white border-rose-600 shadow-md'
                           : 'bg-neutral-50 hover:bg-neutral-100 text-neutral-800 border-neutral-200 hover:border-amber-400'
@@ -762,7 +762,7 @@ const QuickViewModal = () => {
                     <div className="grid grid-cols-1 min-[340px]:grid-cols-2 gap-2.5">
                       <button
                         onClick={handleAddToCart}
-                        className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-700 hover:to-amber-600 text-white text-[11px] sm:text-xs font-bold tracking-wider sm:tracking-widest uppercase py-3.5 px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap transition-all duration-200 shadow-md hover:shadow-amber-500/20 active:scale-[0.99] cursor-pointer overflow-hidden min-w-0"
+                        className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 hover:from-amber-700 hover:to-amber-600 text-white text-[11px] sm:text-xs font-bold tracking-wider sm:tracking-widest uppercase py-3.5 px-3 sm:px-4 rounded-lg flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap transition-all duration-200 shadow-md hover:shadow-amber-500/20 active:scale-[0.99] cursor-pointer overflow-hidden min-w-0"
                         id={`quickview-add-cart-${product.id}`}
                       >
                         <ShoppingBag size={15} className="shrink-0" />
@@ -770,7 +770,7 @@ const QuickViewModal = () => {
                       </button>
                       <button
                         onClick={handleBuyNow}
-                        className="bg-neutral-950 hover:bg-neutral-800 text-white text-[11px] sm:text-xs font-bold tracking-wider sm:tracking-widest uppercase py-3.5 px-3 sm:px-4 rounded-xl flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap transition-all duration-200 shadow-md active:scale-[0.99] cursor-pointer overflow-hidden min-w-0"
+                        className="bg-neutral-950 hover:bg-neutral-800 text-white text-[11px] sm:text-xs font-bold tracking-wider sm:tracking-widest uppercase py-3.5 px-3 sm:px-4 rounded-lg flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap transition-all duration-200 shadow-md active:scale-[0.99] cursor-pointer overflow-hidden min-w-0"
                         id={`quickview-buy-now-${product.id}`}
                       >
                         <Zap size={15} className="shrink-0 text-amber-400" />
@@ -778,7 +778,7 @@ const QuickViewModal = () => {
                       </button>
                     </div>
                   ) : (
-                    <div className="bg-amber-50/60 p-3 rounded-xl border border-amber-200/80 space-y-2">
+                    <div className="bg-amber-50/60 p-3 rounded-lg border border-amber-200/80 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-neutral-900 flex items-center gap-1.5">
                           <Mail size={14} className="text-amber-600" /> Out of Stock
@@ -822,7 +822,7 @@ const QuickViewModal = () => {
                   <Link
                     to={`/products/${product.slug}`}
                     onClick={() => dispatch(closeQuickView())}
-                    className="border-2 border-neutral-900 text-neutral-900 hover:bg-neutral-950 hover:text-white text-xs font-bold tracking-widest uppercase py-2.5 px-4 rounded-xl w-full flex items-center justify-center gap-2 transition-all duration-200 shadow-2xs overflow-hidden"
+                    className="border-2 border-neutral-900 text-neutral-900 hover:bg-neutral-950 hover:text-white text-xs font-bold tracking-widest uppercase py-2.5 px-4 rounded-lg w-full flex items-center justify-center gap-2 transition-all duration-200 shadow-2xs overflow-hidden"
                     id={`quickview-view-full-${product.id}`}
                   >
                     <Eye size={15} className="shrink-0" />

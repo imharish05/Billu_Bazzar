@@ -72,7 +72,6 @@ app.use('/api/variants',   require('./routes/variantRoutes'));
 app.use('/api/warehouses', require('./routes/warehouseRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
 app.use('/api/subcategories', require('./routes/subCategoryRoutes'));
-app.use('/api/subsubcategories', require('./routes/subSubCategoryRoutes'));
 app.use('/api/vendors',     require('./routes/vendorRoutes'));
 app.use('/api/orders',     require('./routes/orderRoutes'));
 app.use('/api/cart',       require('./routes/cartRoutes'));

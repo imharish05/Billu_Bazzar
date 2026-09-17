@@ -250,7 +250,7 @@ const ReturnDetailPage = () => {
       </Link>
 
       {/* 1. Main Return Metadata Header */}
-      <div className="bg-white shadow-sm p-5 sm:p-7 mb-6 border border-neutral-200/80 rounded-2xl flex justify-between items-start flex-wrap gap-4">
+      <div className="bg-white shadow-sm p-5 sm:p-7 mb-6 border border-neutral-200/80 rounded-lg flex justify-between items-start flex-wrap gap-4">
         <div className="space-y-2 max-w-xl">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="font-playfair text-xl sm:text-2xl font-bold text-neutral-900 leading-tight">
@@ -276,7 +276,7 @@ const ReturnDetailPage = () => {
         {orderId && (
           <Link
             to={`/account/orders/${orderId}`}
-            className="group inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-700 bg-white border border-neutral-300 rounded-xl shadow-xs hover:border-brand-gold hover:text-brand-gold hover:bg-amber-50/50 hover:shadow active:scale-95 transition-all duration-200 cursor-pointer"
+            className="group inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-700 bg-white border border-neutral-300 rounded-lg shadow-xs hover:border-brand-gold hover:text-brand-gold hover:bg-amber-50/50 hover:shadow active:scale-95 transition-all duration-200 cursor-pointer"
           >
             <Package size={15} className="text-neutral-500 group-hover:text-brand-gold transition-colors" />
             <span>View Full Order</span>
@@ -286,9 +286,9 @@ const ReturnDetailPage = () => {
 
       {/* Scheduled Courier Pickup Banner */}
       {returnItem.pickupDate && returnItem.status !== 'REJECTED' && (
-        <div className="bg-purple-50/70 border border-purple-200/90 p-5 sm:p-6 mb-6 rounded-2xl shadow-xs flex items-center justify-between flex-wrap gap-4">
+        <div className="bg-purple-50/70 border border-purple-200/90 p-5 sm:p-6 mb-6 rounded-lg shadow-xs flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-start sm:items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-purple-100/90 text-purple-700 flex items-center justify-center flex-shrink-0 shadow-2xs border border-purple-200/60">
+            <div className="w-12 h-12 rounded-lg bg-purple-100/90 text-purple-700 flex items-center justify-center flex-shrink-0 shadow-2xs border border-purple-200/60">
               <Truck size={24} />
             </div>
             <div className="space-y-1">
@@ -309,7 +309,7 @@ const ReturnDetailPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 self-center">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white border border-purple-200 text-purple-900 rounded-xl text-xs font-bold shadow-xs">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-white border border-purple-200 text-purple-900 rounded-lg text-xs font-bold shadow-xs">
               <span className="w-2 h-2 rounded-full bg-purple-600 animate-pulse"></span>
               Pickup In Progress
             </span>
@@ -319,7 +319,7 @@ const ReturnDetailPage = () => {
 
       {/* 2. Tracking Stepper Card */}
       {returnItem.status === 'REJECTED' ? (
-        <div className="bg-white shadow-sm p-5 sm:p-7 mb-6 border border-red-200 rounded-2xl">
+        <div className="bg-white shadow-sm p-5 sm:p-7 mb-6 border border-red-200 rounded-lg">
           <div className="flex items-center gap-2.5 mb-2">
             <XCircle size={20} className="text-red-500" />
             <h2 className="font-playfair font-bold text-base text-red-900">Return Request Rejected</h2>
@@ -329,7 +329,7 @@ const ReturnDetailPage = () => {
           </p>
         </div>
       ) : (
-        <div className="bg-white shadow-sm p-5 sm:p-7 mb-6 border border-neutral-200/80 rounded-2xl">
+        <div className="bg-white shadow-sm p-5 sm:p-7 mb-6 border border-neutral-200/80 rounded-lg">
           <div className="flex items-center justify-between gap-3 mb-6 pb-4 border-b border-neutral-100">
             <h2 className="font-playfair text-base sm:text-lg font-bold text-neutral-950 flex items-center gap-2">
               <RotateCcw size={18} className="text-brand-gold" /> Return Progress
@@ -453,7 +453,7 @@ const ReturnDetailPage = () => {
       {/* 3. Grid: Returned Item Details (Left) & Unboxing Video Proof (Right) */}
       <div className="grid md:grid-cols-2 gap-5 mb-5 items-stretch">
         {/* Returned Item Snapshot Card */}
-        <div className="bg-white shadow-sm p-4 sm:p-6 border border-neutral-200/80 rounded-2xl flex flex-col justify-between space-y-4">
+        <div className="bg-white shadow-sm p-4 sm:p-6 border border-neutral-200/80 rounded-lg flex flex-col justify-between space-y-4">
           <div>
             <div className="flex items-center gap-2 mb-4 pb-3 border-b border-neutral-100">
               <div className="p-1.5 bg-amber-50 text-brand-gold rounded-lg">
@@ -468,7 +468,7 @@ const ReturnDetailPage = () => {
               <img
                 src={itemImage}
                 alt={returnItem.productName || 'Product'}
-                className="w-20 h-24 sm:w-22 sm:h-28 object-cover rounded-xl border border-neutral-200 shrink-0 bg-neutral-50 shadow-2xs"
+                className="w-20 h-24 sm:w-22 sm:h-28 object-cover rounded-lg border border-neutral-200 shrink-0 bg-neutral-50 shadow-2xs"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src = getPlaceholderSvg(returnItem.productName || 'Product');
@@ -483,7 +483,7 @@ const ReturnDetailPage = () => {
                     {variantEntries.map(([k, v]) => (
                       <span
                         key={k}
-                        className="inline-flex items-center px-2 py-0.5 rounded-md bg-neutral-100 text-neutral-700 text-[11px] font-medium border border-neutral-200/80"
+                        className="inline-flex items-center px-2 py-0.5 rounded-lg bg-neutral-100 text-neutral-700 text-[11px] font-medium border border-neutral-200/80"
                       >
                         <span className="text-neutral-400 mr-1 capitalize">{k}:</span>
                         <span className="font-bold text-neutral-800">{String(v)}</span>
@@ -498,10 +498,10 @@ const ReturnDetailPage = () => {
             </div>
 
             {/* Qty & Refund Pricing Box */}
-            <div className="mt-3.5 p-3 bg-amber-50/60 border border-amber-200/70 rounded-xl flex items-center justify-between text-xs">
+            <div className="mt-3.5 p-3 bg-amber-50/60 border border-amber-200/70 rounded-lg flex items-center justify-between text-xs">
               <div className="flex items-center gap-1.5">
                 <span className="text-neutral-500 font-medium">Return Quantity:</span>
-                <span className="font-bold text-neutral-900 bg-white px-2 py-0.5 rounded border border-amber-200">
+                <span className="font-bold text-neutral-900 bg-white px-2 py-0.5 rounded-lg border border-amber-200">
                   {returnItem.quantity} {returnItem.quantity === 1 ? 'item' : 'items'}
                 </span>
               </div>
@@ -515,7 +515,7 @@ const ReturnDetailPage = () => {
           </div>
 
           {/* Reason Section */}
-          <div className="p-3.5 bg-neutral-50/80 rounded-xl border border-neutral-200/70 space-y-2">
+          <div className="p-3.5 bg-neutral-50/80 rounded-lg border border-neutral-200/70 space-y-2">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <span className="text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">
                 Reason for Return:
@@ -535,7 +535,7 @@ const ReturnDetailPage = () => {
         </div>
 
         {/* Unboxing Video Proof Box with Direct Video Player */}
-        <div className="bg-white shadow-sm p-4 sm:p-6 border border-neutral-200/80 rounded-2xl flex flex-col justify-between space-y-4">
+        <div className="bg-white shadow-sm p-4 sm:p-6 border border-neutral-200/80 rounded-lg flex flex-col justify-between space-y-4">
           <div>
             <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-neutral-100">
               <div className="flex items-center gap-2">
@@ -561,7 +561,7 @@ const ReturnDetailPage = () => {
             {/* Direct Embedded Video Player */}
             {returnItem.unboxingVideoUrl ? (
               <div className="space-y-2">
-                <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black shadow-inner border border-neutral-800 flex items-center justify-center">
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-black shadow-inner border border-neutral-800 flex items-center justify-center">
                   {renderEmbeddedVideo(returnItem.unboxingVideoUrl)}
                 </div>
                 <div className="flex items-center justify-between text-xs pt-1">
@@ -581,7 +581,7 @@ const ReturnDetailPage = () => {
                 </div>
               </div>
             ) : (
-              <div className="p-6 bg-neutral-50 rounded-xl text-center text-xs text-neutral-400 border border-dashed border-neutral-200">
+              <div className="p-6 bg-neutral-50 rounded-lg text-center text-xs text-neutral-400 border border-dashed border-neutral-200">
                 No unboxing video proof attached.
               </div>
             )}
@@ -613,7 +613,7 @@ const ReturnDetailPage = () => {
 
       {/* 4. Admin Update / Notes if present */}
       {returnItem.adminNotes && (
-        <div className="bg-blue-50/80 shadow-xs p-5 sm:p-6 mb-6 border border-blue-200/80 rounded-2xl">
+        <div className="bg-blue-50/80 shadow-xs p-5 sm:p-6 mb-6 border border-blue-200/80 rounded-lg">
           <span className="text-xs font-bold text-blue-900 uppercase tracking-wider block mb-1.5 flex items-center gap-1.5">
             <MessageSquare size={14} className="text-blue-700" /> Admin Update / Review Note:
           </span>
@@ -622,9 +622,9 @@ const ReturnDetailPage = () => {
       )}
 
       {/* 5. Customer Concierge Support Bar */}
-      <div className="bg-white shadow-sm p-5 sm:p-6 border border-neutral-200/80 rounded-2xl flex justify-between items-center gap-4 flex-wrap">
+      <div className="bg-white shadow-sm p-5 sm:p-6 border border-neutral-200/80 rounded-lg flex justify-between items-center gap-4 flex-wrap">
         <div className="flex items-center gap-3 text-neutral-600 text-xs sm:text-sm">
-          <div className="w-10 h-10 rounded-xl bg-amber-50 text-brand-gold flex items-center justify-center shrink-0">
+          <div className="w-10 h-10 rounded-lg bg-amber-50 text-brand-gold flex items-center justify-center shrink-0">
             <Phone size={18} />
           </div>
           <span>Need help with this return claim? Contact our concierge team.</span>
@@ -632,7 +632,7 @@ const ReturnDetailPage = () => {
         <div className="flex gap-3">
           <Link
             to="/returns"
-            className="group inline-flex items-center gap-2 px-4 py-2.5 border border-neutral-300 text-neutral-700 text-xs font-bold uppercase tracking-wider rounded-xl bg-white shadow-xs hover:border-brand-gold hover:text-brand-gold hover:bg-amber-50/50 hover:shadow active:scale-95 transition-all duration-200"
+            className="group inline-flex items-center gap-2 px-4 py-2.5 border border-neutral-300 text-neutral-700 text-xs font-bold uppercase tracking-wider rounded-lg bg-white shadow-xs hover:border-brand-gold hover:text-brand-gold hover:bg-amber-50/50 hover:shadow active:scale-95 transition-all duration-200"
           >
             <FileText size={14} className="text-neutral-500 group-hover:text-brand-gold transition-colors" />
             <span>Return Policy</span>
@@ -641,7 +641,7 @@ const ReturnDetailPage = () => {
             href="https://wa.me/919876500000"
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center gap-2 px-4 py-2.5 border border-neutral-300 text-neutral-700 text-xs font-bold uppercase tracking-wider rounded-xl bg-white shadow-xs hover:border-brand-gold hover:text-brand-gold hover:bg-amber-50/50 hover:shadow active:scale-95 transition-all duration-200"
+            className="group inline-flex items-center gap-2 px-4 py-2.5 border border-neutral-300 text-neutral-700 text-xs font-bold uppercase tracking-wider rounded-lg bg-white shadow-xs hover:border-brand-gold hover:text-brand-gold hover:bg-amber-50/50 hover:shadow active:scale-95 transition-all duration-200"
           >
             <MessageSquare size={14} className="text-neutral-500 group-hover:text-brand-gold transition-colors" />
             <span>Support Chat</span>
@@ -660,7 +660,7 @@ const ReturnDetailPage = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-neutral-900 rounded-2xl overflow-hidden max-w-2xl w-full shadow-2xl relative border border-neutral-800"
+              className="bg-neutral-900 rounded-lg overflow-hidden max-w-2xl w-full shadow-2xl relative border border-neutral-800"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between p-4 border-b border-neutral-800 text-white">

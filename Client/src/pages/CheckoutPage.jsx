@@ -15,6 +15,7 @@ import { formatVariantName } from '../utils/variantFormatter';
 import { validatePhoneNumber } from '../utils/validation';
 import PhoneInput from '../components/PhoneInput';
 import { getImageUrl } from '../utils/imageUrl';
+import SavedAddressPicker from '../components/SavedAddressPicker';
 
 const STEPS = [
   { id: 1, label: 'Delivery', icon: MapPin },
@@ -261,6 +262,42 @@ const CheckoutPage = () => {
     } catch {}
     return { ...emptyAddr, country: 'India' };
   });
+
+  const [billingMode, setBillingMode] = useState({
+    isSaved: false,
+    isEditing: false,
+    hasSaved: false,
+    selectedAddress: null,
+    loaded: !isAuthenticated || !customer,
+  });
+
+  const [deliveryMode, setDeliveryMode] = useState({
+    isSaved: false,
+    isEditing: false,
+    hasSaved: false,
+    selectedAddress: null,
+    loaded: !isAuthenticated || !customer,
+  });
+
+  const hasBillingErrors = Object.keys(fieldErrors).some(k =>
+    ['fullName', 'phone', 'email', 'flatHouse', 'city', 'state', 'pincode', 'country'].includes(k) && fieldErrors[k]
+  );
+  const showBillingInputs =
+    (!isAuthenticated || !customer)
+      ? true
+      : !billingMode.loaded
+        ? false
+        : (!billingMode.hasSaved || !billingMode.isSaved || billingMode.isEditing || Boolean(hasBillingErrors));
+
+  const hasDeliveryErrors = Object.keys(fieldErrors).some(k =>
+    ['del_fullName', 'del_phone', 'del_email', 'del_flatHouse', 'del_city', 'del_state', 'del_pincode'].includes(k) && fieldErrors[k]
+  );
+  const showDeliveryInputs =
+    (!isAuthenticated || !customer)
+      ? true
+      : !deliveryMode.loaded
+        ? false
+        : (!deliveryMode.hasSaved || !deliveryMode.isSaved || deliveryMode.isEditing || Boolean(hasDeliveryErrors));
 
   // Populate customer profile defaults if address fields are empty
   useEffect(() => {
@@ -1169,202 +1206,235 @@ const CheckoutPage = () => {
                   transition={{ duration: 0.25 }}
                   className="space-y-5"
                 >
-                  <div className="bg-white border border-neutral-200 rounded-lg p-5 md:p-6">
-                    <h2 className="font-playfair text-xl font-semibold mb-1">Billing Address</h2>
-                    <p className="text-xs text-neutral-400 mb-5">All fields marked * are required</p>
+                  <div className="bg-white border border-neutral-200 rounded-xl p-4 sm:p-6">
+                    <h2 className="text-base sm:text-lg font-semibold mb-3 text-brand-text">Billing Address</h2>
+                    {isAuthenticated && customer && (
+                      <SavedAddressPicker
+                        key={'billing-' + customer.id}
+                        customer={customer}
+                        value={billingAddress}
+                        onModeChange={setBillingMode}
+                        onChange={value => {
+                          setBillingAddress(value);
+                          setFieldErrors({});
+                          setIsVerified(false);
+                          setOtpSent(false);
+                          if (deliverySameAsBilling) {
+                            if (['india', 'in'].includes((value.country || '').toLowerCase()) && !value.phone?.startsWith('+971')) {
+                              setAddress({ ...value, country: 'India' });
+                            } else {
+                              setDeliverySameAsBilling(false);
+                            }
+                            setSameDeliveryError('');
+                          }
+                        }}
+                      />
+                    )}
 
+                    <AnimatePresence initial={false}>
+                      {showBillingInputs && (
+                        <motion.div
+                          key="billing-inputs"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.25 }}
+                          className="overflow-hidden"
+                        >
+                          <p className="text-xs text-neutral-400 mb-5">All fields marked * are required</p>
 
+                          <div className="grid sm:grid-cols-2 gap-4">
+                            {/* Full Name */}
+                            <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <label className={labelCls} htmlFor="fullName">Full Name <span className="text-red-400">*</span></label>
+                                <input id="fullName" type="text" value={billingAddress.fullName}
+                                  onChange={e => {
+                                    const val = e.target.value;
+                                    setBillingAddress(p => ({ ...p, fullName: val }));
+                                    if (fieldErrors.fullName) setFieldErrors(p => ({ ...p, fullName: null }));
+                                  }}
+                                  placeholder="Enter your full name"
+                                  className={`${inputCls} ${fieldErrors.fullName ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
+                                {fieldErrors.fullName && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.fullName}</p>}
+                              </div>
+                              <div>
+                                <PhoneInput
+                                  id="phone"
+                                  name="phone"
+                                  label="Mobile Number"
+                                  value={billingAddress.phone}
+                                  onChange={(val, meta) => {
+                                    setBillingAddress(p => ({ ...p, phone: val }));
+                                    if (fieldErrors.phone) {
+                                      setFieldErrors(p => ({ ...p, phone: meta.isValid ? null : meta.error }));
+                                    }
+                                    const digitsOnly = (val || '').replace(/\D/g, '');
+                                    const isDubaiPhone = (val || '').startsWith('+971') || (digitsOnly.startsWith('971') && digitsOnly.length >= 11) || (digitsOnly.length === 9 && digitsOnly.startsWith('5'));
+                                    if (deliverySameAsBilling && isDubaiPhone) {
+                                      setDeliverySameAsBilling(false);
+                                      const msg = 'Delivery requires an Indian (+91) mobile number. Since your billing phone is a Dubai/UAE (+971) number, delivery address has been separated.';
+                                      setSameDeliveryError(msg);
+                                      toast.error(msg);
+                                    } else if (sameDeliveryError && !isDubaiPhone) {
+                                      setSameDeliveryError('');
+                                    }
+                                  }}
+                                  error={fieldErrors.phone}
+                                  required
+                                  inputClassName="min-w-0 py-2.5"
+                                />
+                              </div>
+                            </div>
 
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      {/* Full Name */}
-                      <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className={labelCls} htmlFor="fullName">Full Name <span className="text-red-400">*</span></label>
-                          <input id="fullName" type="text" value={billingAddress.fullName}
-                            onChange={e => {
-                              const val = e.target.value;
-                              setBillingAddress(p => ({ ...p, fullName: val }));
-                              if (fieldErrors.fullName) setFieldErrors(p => ({ ...p, fullName: null }));
-                            }}
-                            placeholder="Enter your full name"
-                            className={`${inputCls} ${fieldErrors.fullName ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
-                          {fieldErrors.fullName && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.fullName}</p>}
-                        </div>
-                        <div>
-                          <PhoneInput
-                            id="phone"
-                            name="phone"
-                            label="Mobile Number"
-                            value={billingAddress.phone}
-                            onChange={(val, meta) => {
-                              setBillingAddress(p => ({ ...p, phone: val }));
-                              if (fieldErrors.phone) {
-                                setFieldErrors(p => ({ ...p, phone: meta.isValid ? null : meta.error }));
-                              }
-                              const digitsOnly = (val || '').replace(/\D/g, '');
-                              const isDubaiPhone = (val || '').startsWith('+971') || (digitsOnly.startsWith('971') && digitsOnly.length >= 11) || (digitsOnly.length === 9 && digitsOnly.startsWith('5'));
-                              if (deliverySameAsBilling && isDubaiPhone) {
-                                setDeliverySameAsBilling(false);
-                                const msg = 'Delivery requires an Indian (+91) mobile number. Since your billing phone is a Dubai/UAE (+971) number, delivery address has been separated.';
-                                setSameDeliveryError(msg);
-                                toast.error(msg);
-                              } else if (sameDeliveryError && !isDubaiPhone) {
-                                setSameDeliveryError('');
-                              }
-                            }}
-                            error={fieldErrors.phone}
-                            required
-                            inputClassName="py-2.5"
-                          />
-                        </div>
-                      </div>
+                            {/* Email */}
+                            <div className="sm:col-span-2">
+                              <label className={labelCls} htmlFor="email">Email Address <span className="text-red-400">*</span></label>
+                              <input id="email" type="email" value={billingAddress.email}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setBillingAddress(p => ({ ...p, email: val }));
+                                  if (fieldErrors.email) setFieldErrors(p => ({ ...p, email: null }));
+                                }}
+                                placeholder="your@email.com"
+                                className={`${inputCls} ${fieldErrors.email ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
+                              {fieldErrors.email && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.email}</p>}
+                            </div>
 
-                      {/* Email */}
-                      <div className="sm:col-span-2">
-                        <label className={labelCls} htmlFor="email">Email Address <span className="text-red-400">*</span></label>
-                        <input id="email" type="email" value={billingAddress.email}
-                          onChange={e => {
-                            const val = e.target.value;
-                            setBillingAddress(p => ({ ...p, email: val }));
-                            if (fieldErrors.email) setFieldErrors(p => ({ ...p, email: null }));
-                          }}
-                          placeholder="your@email.com"
-                          className={`${inputCls} ${fieldErrors.email ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
-                        {fieldErrors.email && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.email}</p>}
-                      </div>
+                            {/* Street */}
+                            <div className="sm:col-span-2">
+                              <label className={labelCls} htmlFor="flatHouse">Street / House No. <span className="text-red-400">*</span></label>
+                              <input id="flatHouse" type="text" value={billingAddress.flatHouse}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setBillingAddress(p => ({ ...p, flatHouse: val }));
+                                  if (fieldErrors.flatHouse) setFieldErrors(p => ({ ...p, flatHouse: null }));
+                                }}
+                                placeholder="House / flat no., road name"
+                                className={`${inputCls} ${fieldErrors.flatHouse ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
+                              {fieldErrors.flatHouse && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.flatHouse}</p>}
+                            </div>
 
-                      {/* Street */}
-                      <div className="sm:col-span-2">
-                        <label className={labelCls} htmlFor="flatHouse">Street / House No. <span className="text-red-400">*</span></label>
-                        <input id="flatHouse" type="text" value={billingAddress.flatHouse}
-                          onChange={e => {
-                            const val = e.target.value;
-                            setBillingAddress(p => ({ ...p, flatHouse: val }));
-                            if (fieldErrors.flatHouse) setFieldErrors(p => ({ ...p, flatHouse: null }));
-                          }}
-                          placeholder="House / flat no., road name"
-                          className={`${inputCls} ${fieldErrors.flatHouse ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
-                        {fieldErrors.flatHouse && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.flatHouse}</p>}
-                      </div>
+                            {/* Landmark (optional) */}
+                            <div className="sm:col-span-2">
+                              <label className={labelCls} htmlFor="landmark">Apartment / Landmark <span className="text-neutral-300">(optional)</span></label>
+                              <input id="landmark" type="text" value={billingAddress.landmark}
+                                onChange={e => setBillingAddress(p => ({ ...p, landmark: e.target.value }))}
+                                placeholder="Building name, floor, landmark" className={inputCls} />
+                            </div>
 
-                      {/* Landmark (optional) */}
-                      <div className="sm:col-span-2">
-                        <label className={labelCls} htmlFor="landmark">Apartment / Landmark <span className="text-neutral-300">(optional)</span></label>
-                        <input id="landmark" type="text" value={billingAddress.landmark}
-                          onChange={e => setBillingAddress(p => ({ ...p, landmark: e.target.value }))}
-                          placeholder="Building name, floor, landmark" className={inputCls} />
-                      </div>
+                            {/* City */}
+                            <div>
+                              <label className={labelCls} htmlFor="city">City <span className="text-red-400">*</span></label>
+                              <input id="city" type="text" value={billingAddress.city}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setBillingAddress(p => ({ ...p, city: val }));
+                                  if (fieldErrors.city) setFieldErrors(p => ({ ...p, city: null }));
+                                }}
+                                placeholder="City"
+                                className={`${inputCls} ${fieldErrors.city ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
+                              {fieldErrors.city && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.city}</p>}
+                            </div>
 
-                      {/* City */}
-                      <div>
-                        <label className={labelCls} htmlFor="city">City <span className="text-red-400">*</span></label>
-                        <input id="city" type="text" value={billingAddress.city}
-                          onChange={e => {
-                            const val = e.target.value;
-                            setBillingAddress(p => ({ ...p, city: val }));
-                            if (fieldErrors.city) setFieldErrors(p => ({ ...p, city: null }));
-                          }}
-                          placeholder="City"
-                          className={`${inputCls} ${fieldErrors.city ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
-                        {fieldErrors.city && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.city}</p>}
-                      </div>
+                            {/* State Input */}
+                            <div>
+                              <label className={labelCls} htmlFor="state">State / Province / Region <span className="text-red-400">*</span></label>
+                              <input id="state" type="text" value={billingAddress.state}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setBillingAddress(p => ({ ...p, state: val }));
+                                  if (fieldErrors.state) setFieldErrors(p => ({ ...p, state: null }));
+                                }}
+                                placeholder="State / Province / Region"
+                                className={`${inputCls} ${fieldErrors.state ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
+                              {fieldErrors.state && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.state}</p>}
+                            </div>
 
-                      {/* State Input */}
-                      <div>
-                        <label className={labelCls} htmlFor="state">State / Province / Region <span className="text-red-400">*</span></label>
-                        <input id="state" type="text" value={billingAddress.state}
-                          onChange={e => {
-                            const val = e.target.value;
-                            setBillingAddress(p => ({ ...p, state: val }));
-                            if (fieldErrors.state) setFieldErrors(p => ({ ...p, state: null }));
-                          }}
-                          placeholder="State / Province / Region"
-                          className={`${inputCls} ${fieldErrors.state ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
-                        {fieldErrors.state && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.state}</p>}
-                      </div>
+                            {/* Pincode / Zipcode */}
+                            <div>
+                              <label className={labelCls} htmlFor="pincode">Pincode / Zipcode <span className="text-red-400">*</span></label>
+                              <input id="pincode" type="text" value={billingAddress.pincode}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setBillingAddress(p => ({ ...p, pincode: val }));
+                                  if (fieldErrors.pincode) setFieldErrors(p => ({ ...p, pincode: null }));
+                                }}
+                                placeholder="Postal / Zip code"
+                                className={`${inputCls} ${fieldErrors.pincode ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
+                              {fieldErrors.pincode && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.pincode}</p>}
+                              {(!billingAddress.pincode || billingAddress.pincode.trim().length < 3) && deliverySameAsBilling && !fieldErrors.pincode && (
+                                <p className="text-[11px] text-neutral-400 mt-1 italic">
+                                  Enter pincode to calculate shipping charge
+                                </p>
+                              )}
+                            </div>
 
-                      {/* Pincode / Zipcode */}
-                      <div>
-                        <label className={labelCls} htmlFor="pincode">Pincode / Zipcode <span className="text-red-400">*</span></label>
-                        <input id="pincode" type="text" value={billingAddress.pincode}
-                          onChange={e => {
-                            const val = e.target.value;
-                            setBillingAddress(p => ({ ...p, pincode: val }));
-                            if (fieldErrors.pincode) setFieldErrors(p => ({ ...p, pincode: null }));
-                          }}
-                          placeholder="Postal / Zip code"
-                          className={`${inputCls} ${fieldErrors.pincode ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
-                        {fieldErrors.pincode && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.pincode}</p>}
-                        {(!billingAddress.pincode || billingAddress.pincode.trim().length < 3) && deliverySameAsBilling && !fieldErrors.pincode && (
-                          <p className="text-[11px] text-neutral-400 mt-1 italic">
-                            Enter pincode to calculate shipping charge
+                            {/* Country */}
+                            <div>
+                              <label className={labelCls} htmlFor="country">Country <span className="text-red-400">*</span></label>
+                              <input id="country" type="text" value={billingAddress.country}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setBillingAddress(p => ({ ...p, country: val }));
+                                  if (fieldErrors.country) setFieldErrors(p => ({ ...p, country: null }));
+                                  const valLower = (val || '').trim().toLowerCase();
+                                  const isIndia = ['india', 'in', 'ind'].includes(valLower);
+                                  if (deliverySameAsBilling && !isIndia && valLower !== '') {
+                                    setDeliverySameAsBilling(false);
+                                    const msg = 'Delivery is strictly available within India only. Delivery address has been separated.';
+                                    setSameDeliveryError(msg);
+                                    toast.error(msg);
+                                  } else if (sameDeliveryError && isIndia) {
+                                    setSameDeliveryError('');
+                                  }
+                                }}
+                                placeholder="Country"
+                                className={`${inputCls} ${fieldErrors.country ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
+                              {fieldErrors.country && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.country}</p>}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Delivery Availability Status banner when same delivery is active */}
+                    {pincodeZoneData && deliverySameAsBilling && (billingAddress.pincode || '').trim().length >= 3 && (
+                      <div className="mt-3 flex items-center gap-2 text-xs text-emerald-700 font-medium">
+                        {pincodeZoneData.deliverable ? (
+                          <>
+                            <MapPin size={14} className="shrink-0 text-emerald-600" />
+                            <span>
+                              <strong className="font-semibold text-emerald-900">Delivery Available ({pincodeZoneData.zoneName})</strong>
+                              {' — '}
+                              {shipping === 0 ? (
+                                pincodeZoneData.minOrderAmountForFreeDelivery !== null
+                                  ? `FREE Delivery (Order above ₹${pincodeZoneData.minOrderAmountForFreeDelivery})`
+                                  : 'FREE Delivery'
+                              ) : (
+                                `Shipping Fee: ₹${shipping}${pincodeZoneData.minOrderAmountForFreeDelivery !== null ? ` (Free on orders above ₹${pincodeZoneData.minOrderAmountForFreeDelivery})` : ''}`
+                              )}
+                            </span>
+                          </>
+                        ) : (
+                          <p className="text-xs text-red-600 font-semibold flex items-center gap-1.5">
+                            <AlertTriangle size={14} className="shrink-0 text-red-500" />
+                            {pincodeZoneData.message || 'Delivery not available for this pincode'}
                           </p>
                         )}
                       </div>
-
-                      {/* Country */}
-                      <div>
-                        <label className={labelCls} htmlFor="country">Country <span className="text-red-400">*</span></label>
-                        <input id="country" type="text" value={billingAddress.country}
-                          onChange={e => {
-                            const val = e.target.value;
-                            setBillingAddress(p => ({ ...p, country: val }));
-                            if (fieldErrors.country) setFieldErrors(p => ({ ...p, country: null }));
-                            const valLower = (val || '').trim().toLowerCase();
-                            const isIndia = ['india', 'in', 'ind'].includes(valLower);
-                            if (deliverySameAsBilling && !isIndia && valLower !== '') {
-                              setDeliverySameAsBilling(false);
-                              const msg = 'Delivery is strictly available within India only. Delivery address has been separated.';
-                              setSameDeliveryError(msg);
-                              toast.error(msg);
-                            } else if (sameDeliveryError && isIndia) {
-                              setSameDeliveryError('');
-                            }
-                          }}
-                          placeholder="Country"
-                          className={`${inputCls} ${fieldErrors.country ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
-                        {fieldErrors.country && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.country}</p>}
-                      </div>
-
-                      {/* Delivery Availability Status (Single line, full width) */}
-                      {pincodeZoneData && deliverySameAsBilling && billingAddress.pincode.trim().length >= 3 && (
-                        <div className="sm:col-span-2 -mt-2">
-                          {pincodeZoneData.deliverable ? (
-                            <p className="text-[12px] text-emerald-600 font-semibold flex items-center gap-1.5 whitespace-nowrap">
-                              <MapPin size={13} className="shrink-0" />
-                              <span>
-                                Delivery Available ({pincodeZoneData.zoneName}) — {
-                                  shipping === 0 ? (
-                                    pincodeZoneData.minOrderAmountForFreeDelivery !== null
-                                      ? `FREE Delivery (Order above ₹${pincodeZoneData.minOrderAmountForFreeDelivery})`
-                                      : 'FREE Delivery'
-                                  ) : (
-                                    `Shipping Fee: ₹${shipping}${pincodeZoneData.minOrderAmountForFreeDelivery !== null ? ` (Free on orders above ₹${pincodeZoneData.minOrderAmountForFreeDelivery})` : ''}`
-                                  )
-                                }
-                              </span>
-                            </p>
-                          ) : (
-                            <p className="text-[12px] text-red-500 font-semibold flex items-center gap-1.5">
-                              <AlertTriangle size={13} className="shrink-0" /> {pincodeZoneData.message || 'Delivery not available for this pincode'}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    )}
 
                     {/* Same delivery toggle */}
-                    <div className="mt-5">
-                      <div className="flex items-center gap-3">
+                    <div className="mt-5 pt-4 border-t border-neutral-100">
+                      <label htmlFor="same-delivery" className="flex items-center gap-2.5 cursor-pointer select-none text-sm font-medium text-brand-text">
                         <input id="same-delivery" type="checkbox" checked={deliverySameAsBilling}
                           onChange={e => handleToggleDeliverySame(e.target.checked)}
-                          className="w-4 h-4 accent-brand-gold cursor-pointer" />
-                        <label htmlFor="same-delivery" className="text-sm font-medium text-brand-text cursor-pointer select-none">
-                          Delivery address is same as billing address
-                        </label>
-                      </div>
+                          className="w-4 h-4 accent-brand-gold cursor-pointer rounded" />
+                        Delivery address is same as billing address
+                      </label>
                       {(sameDeliveryError || fieldErrors.sameDelivery) && (
-                        <div className="mt-2.5 p-3 bg-red-50/90 border border-red-200 rounded text-xs text-red-600 font-medium flex items-start gap-2 animate-in fade-in">
+                        <div className="mt-2.5 p-2.5 bg-red-50 text-xs text-red-600 font-medium flex items-start gap-2 rounded-lg">
                           <AlertTriangle size={15} className="shrink-0 text-red-500 mt-0.5" />
                           <span>{sameDeliveryError || fieldErrors.sameDelivery}</span>
                         </div>
@@ -1379,101 +1449,127 @@ const CheckoutPage = () => {
                           initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.3 }} className="overflow-hidden"
                         >
-                          <h3 className="font-playfair text-lg font-semibold mt-6 mb-4 border-t border-neutral-100 pt-5">Delivery Address</h3>
-                          <div className="grid sm:grid-cols-2 gap-4">
-                            <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div>
-                                <label className={labelCls} htmlFor="d-fullname">Full Name *</label>
-                                <input id="d-fullname" type="text" value={address.fullName} onChange={e => setAddress(p => ({...p, fullName: e.target.value}))} placeholder="Full name" className={inputCls} />
-                              </div>
-                              <div>
-                                <PhoneInput
-                                  id="d-phone"
-                                  name="del_phone"
-                                  label="Mobile (India +91 only)"
-                                  value={address.phone}
-                                  allowedCountries={['IN']}
-                                  defaultCountry="IN"
-                                  onChange={(val, meta) => {
-                                    setAddress(p => ({ ...p, phone: val }));
-                                    if (fieldErrors.del_phone) {
-                                      setFieldErrors(p => ({ ...p, del_phone: meta.isValid ? null : meta.error }));
-                                    }
-                                  }}
-                                  error={fieldErrors.del_phone}
-                                  required
-                                  inputClassName="py-2.5"
-                                />
-                              </div>
-                            </div>
-                            <div className="sm:col-span-2">
-                              <label className={labelCls} htmlFor="d-email">Email *</label>
-                              <input id="d-email" type="email" value={address.email} onChange={e => setAddress(p => ({...p, email: e.target.value}))} placeholder="your@email.com" className={inputCls} />
-                            </div>
-                            <div className="sm:col-span-2">
-                              <label className={labelCls} htmlFor="d-flat">Street / House No. *</label>
-                              <input id="d-flat" type="text" value={address.flatHouse} onChange={e => setAddress(p => ({...p, flatHouse: e.target.value}))} placeholder="House / flat no., road name" className={inputCls} />
-                            </div>
-                            <div className="sm:col-span-2">
-                              <label className={labelCls} htmlFor="d-landmark">Apartment / Landmark</label>
-                              <input id="d-landmark" type="text" value={address.landmark} onChange={e => setAddress(p => ({...p, landmark: e.target.value}))} placeholder="Building name, floor, landmark" className={inputCls} />
-                            </div>
-                            <div>
-                              <label className={labelCls} htmlFor="d-city">City *</label>
-                              <input id="d-city" type="text" value={address.city} onChange={e => setAddress(p => ({...p, city: e.target.value}))} placeholder="City" className={inputCls} />
-                            </div>
-                            <div>
-                              <label className={labelCls} htmlFor="d-state">State / Province / Region *</label>
-                              <input id="d-state" type="text" value={address.state} onChange={e => setAddress(p => ({...p, state: e.target.value}))} placeholder="State / Province / Region" className={inputCls} />
-                            </div>
-                            <div>
-                              <label className={labelCls} htmlFor="d-pincode">Pincode / Zipcode (6 digits) *</label>
-                              <input id="d-pincode" type="text" value={address.pincode}
-                                onChange={e => setAddress(p => ({...p, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)}))}
-                                placeholder="e.g. 600001" maxLength={6} className={inputCls} />
-                              {(!address.pincode || address.pincode.trim().length < 6) && !deliverySameAsBilling && (
-                                <p className="text-[11px] text-neutral-400 mt-1 italic">
-                                  Enter 6-digit Indian pincode to calculate shipping charge
+                          <h3 className="text-base sm:text-lg font-semibold mt-5 mb-3 border-t border-neutral-100 pt-5 text-brand-text">Delivery Address</h3>
+                          {isAuthenticated && customer && (
+                            <SavedAddressPicker
+                              key={'delivery-' + customer.id}
+                              customer={customer}
+                              value={address}
+                              delivery
+                              onModeChange={setDeliveryMode}
+                              onChange={value => {
+                                setAddress(value);
+                                setFieldErrors({});
+                              }}
+                            />
+                          )}
+
+                          <AnimatePresence initial={false}>
+                            {showDeliveryInputs && (
+                              <motion.div
+                                key="delivery-inputs"
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.25 }}
+                                className="overflow-hidden"
+                              >
+                                <p className="text-xs text-neutral-400 mb-4">Delivery address fields (India only)</p>
+                                <div className="grid sm:grid-cols-2 gap-4">
+                                  <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                      <label className={labelCls} htmlFor="d-fullname">Full Name *</label>
+                                      <input id="d-fullname" type="text" value={address.fullName} onChange={e => setAddress(p => ({...p, fullName: e.target.value}))} placeholder="Full name" className={inputCls} />
+                                    </div>
+                                    <div>
+                                      <PhoneInput
+                                        id="d-phone"
+                                        name="del_phone"
+                                        label="Mobile (India +91 only)"
+                                        value={address.phone}
+                                        allowedCountries={['IN']}
+                                        defaultCountry="IN"
+                                        onChange={(val, meta) => {
+                                          setAddress(p => ({ ...p, phone: val }));
+                                          if (fieldErrors.del_phone) {
+                                            setFieldErrors(p => ({ ...p, del_phone: meta.isValid ? null : meta.error }));
+                                          }
+                                        }}
+                                        error={fieldErrors.del_phone}
+                                        required
+                                        inputClassName="min-w-0 py-2.5"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="sm:col-span-2">
+                                    <label className={labelCls} htmlFor="d-email">Email *</label>
+                                    <input id="d-email" type="email" value={address.email} onChange={e => setAddress(p => ({...p, email: e.target.value}))} placeholder="your@email.com" className={inputCls} />
+                                  </div>
+                                  <div className="sm:col-span-2">
+                                    <label className={labelCls} htmlFor="d-flat">Street / House No. *</label>
+                                    <input id="d-flat" type="text" value={address.flatHouse} onChange={e => setAddress(p => ({...p, flatHouse: e.target.value}))} placeholder="House / flat no., road name" className={inputCls} />
+                                  </div>
+                                  <div className="sm:col-span-2">
+                                    <label className={labelCls} htmlFor="d-landmark">Apartment / Landmark</label>
+                                    <input id="d-landmark" type="text" value={address.landmark} onChange={e => setAddress(p => ({...p, landmark: e.target.value}))} placeholder="Building name, floor, landmark" className={inputCls} />
+                                  </div>
+                                  <div>
+                                    <label className={labelCls} htmlFor="d-city">City *</label>
+                                    <input id="d-city" type="text" value={address.city} onChange={e => setAddress(p => ({...p, city: e.target.value}))} placeholder="City" className={inputCls} />
+                                  </div>
+                                  <div>
+                                    <label className={labelCls} htmlFor="d-state">State / Province / Region *</label>
+                                    <input id="d-state" type="text" value={address.state} onChange={e => setAddress(p => ({...p, state: e.target.value}))} placeholder="State / Province / Region" className={inputCls} />
+                                  </div>
+                                  <div>
+                                    <label className={labelCls} htmlFor="d-pincode">Pincode / Zipcode (6 digits) *</label>
+                                    <input id="d-pincode" type="text" value={address.pincode}
+                                      onChange={e => setAddress(p => ({...p, pincode: e.target.value.replace(/\D/g, '').slice(0, 6)}))}
+                                      placeholder="e.g. 600001" maxLength={6} className={inputCls} />
+                                    {(!address.pincode || address.pincode.trim().length < 6) && !deliverySameAsBilling && (
+                                      <p className="text-[11px] text-neutral-400 mt-1 italic">
+                                        Enter 6-digit Indian pincode to calculate shipping charge
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div>
+                                    <label className={labelCls} htmlFor="d-country">Delivery Country *</label>
+                                    <div className="relative">
+                                      <input id="d-country" type="text" value="India" readOnly
+                                        className={`${inputCls} bg-neutral-100 font-semibold cursor-not-allowed text-neutral-700`} />
+                                    </div>
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
+                          {/* Delivery Availability Status for Delivery Address */}
+                          {pincodeZoneData && !deliverySameAsBilling && (address.pincode || '').trim().length === 6 && (
+                            <div className="mt-3 flex items-center gap-2 text-xs text-emerald-700 font-medium">
+                              {pincodeZoneData.deliverable ? (
+                                <>
+                                  <MapPin size={14} className="shrink-0 text-emerald-600" />
+                                  <span>
+                                    <strong className="font-semibold text-emerald-900">Delivery Available ({pincodeZoneData.zoneName})</strong>
+                                    {' — '}
+                                    {shipping === 0 ? (
+                                      pincodeZoneData.minOrderAmountForFreeDelivery !== null
+                                        ? `FREE Delivery (Order above ₹${pincodeZoneData.minOrderAmountForFreeDelivery})!`
+                                        : 'FREE Delivery!'
+                                    ) : (
+                                      `Shipping Fee: ₹${shipping}${pincodeZoneData.minOrderAmountForFreeDelivery !== null ? ` (Free on orders above ₹${pincodeZoneData.minOrderAmountForFreeDelivery})` : ''}`
+                                    )}
+                                  </span>
+                                </>
+                              ) : (
+                                <p className="text-xs text-red-600 font-semibold flex items-center gap-1.5">
+                                  <AlertTriangle size={14} className="shrink-0 text-red-500" />
+                                  {pincodeZoneData.message || 'Delivery not available for this pincode'}
                                 </p>
                               )}
                             </div>
-                            <div>
-                              <label className={labelCls} htmlFor="d-country">Delivery Country *</label>
-                              <div className="relative">
-                                <input id="d-country" type="text" value="India" readOnly
-                                  className={`${inputCls} bg-neutral-100 font-semibold cursor-not-allowed text-neutral-700`} />
-                                {/* <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">
-                                  Delivery Only in India
-                                </span> */}
-                              </div>
-                            </div>
-
-                            {/* Delivery Availability Status (Single line, full width) */}
-                            {pincodeZoneData && !deliverySameAsBilling && address.pincode.trim().length === 6 && (
-                              <div className="sm:col-span-2 -mt-2">
-                                {pincodeZoneData.deliverable ? (
-                                  <p className="text-[12px] text-emerald-600 font-semibold flex items-center gap-1.5 whitespace-nowrap">
-                                    <MapPin size={13} className="shrink-0" />
-                                    <span>
-                                      Delivery Available ({pincodeZoneData.zoneName}) — {
-                                        shipping === 0 ? (
-                                          pincodeZoneData.minOrderAmountForFreeDelivery !== null
-                                            ? `FREE Delivery (Order above ₹${pincodeZoneData.minOrderAmountForFreeDelivery})!`
-                                            : 'FREE Delivery!'
-                                        ) : (
-                                          `Shipping Fee: ₹${shipping}${pincodeZoneData.minOrderAmountForFreeDelivery !== null ? ` (Free on orders above ₹${pincodeZoneData.minOrderAmountForFreeDelivery})` : ''}`
-                                        )
-                                      }
-                                    </span>
-                                  </p>
-                                ) : (
-                                  <p className="text-[12px] text-red-500 font-semibold flex items-center gap-1.5">
-                                    <AlertTriangle size={13} className="shrink-0" /> {pincodeZoneData.message || 'Delivery not available for this pincode'}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                          )}
 
                         </motion.div>
                       )}

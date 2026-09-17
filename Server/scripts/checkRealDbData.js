@@ -1,5 +1,5 @@
 'use strict';
-const { Product, ProductVariant, Category, SubCategory, SubSubCategory, Vendor, Warehouse } = require('../models');
+const { Product, ProductVariant, Category, SubCategory, Vendor, Warehouse } = require('../models');
 const sequelize = require('../config/db');
 
 async function dumpFullData() {
@@ -8,7 +8,6 @@ async function dumpFullData() {
     include: [
       { model: Category, as: 'category' },
       { model: SubCategory, as: 'subcategory' },
-      { model: SubSubCategory, as: 'subsubcategory' },
       { model: Vendor, as: 'vendor' },
       { model: Warehouse, as: 'warehouse' },
       { model: ProductVariant, as: 'variants' }

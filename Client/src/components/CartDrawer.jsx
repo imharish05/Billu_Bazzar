@@ -114,7 +114,7 @@ const CartDrawer = () => {
                       return (
                         <>
                           {/* Product image */}
-                          <div className="w-20 h-24 flex-shrink-0 bg-neutral-50 rounded border border-neutral-200 overflow-hidden">
+                          <div className="w-20 h-24 flex-shrink-0 bg-neutral-50 rounded-lg border border-neutral-200 overflow-hidden">
                             <img
                               src={img}
                               alt={name}

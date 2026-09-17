@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Heart, ShoppingBag, Eye, Star, RotateCcw } from 'lucide-react';
 import { openQuickView } from '../redux/slices/uiSlice';
 import { addLocal, openCart } from '../redux/slices/cartSlice';
-import { toggleItem } from '../redux/slices/wishlistSlice';
+import { toggleItem, toggleWishlistApi } from '../redux/slices/wishlistSlice';
 import { formatPrice } from '../utils/currency';
 import { getPlaceholderSvg } from '../utils/placeholder';
 import { getImageUrl } from '../utils/imageUrl';
@@ -182,7 +182,7 @@ const ProductCard = ({ product, index = 0, compactMobile = false }) => {
       variantId: resolvedDefault.variantId,
       selectedVariant: resolvedDefault.attributes
     };
-    dispatch(toggleItem(wishlistPayload));
+    dispatch(toggleWishlistApi(wishlistPayload));
   };
 
   return (
@@ -195,7 +195,7 @@ const ProductCard = ({ product, index = 0, compactMobile = false }) => {
       aria-label={product.name}
     >
       {/* Image */}
-      <Link to={`/products/${product.slug}`} className={`group block relative shrink-0 overflow-hidden ${compactMobile ? 'aspect-square sm:aspect-[3/4]' : 'aspect-[3/4]'} bg-brand-light`} target="_blank" rel="noopener noreferrer">
+      <Link to={`/products/${product.slug}`} className="group block relative shrink-0 overflow-hidden aspect-square bg-brand-light" target="_blank" rel="noopener noreferrer">
         {/* Skeleton while image loads */}
         {!imgLoaded && <div className="skeleton absolute inset-0" aria-hidden="true" />}
         <img
@@ -211,32 +211,33 @@ const ProductCard = ({ product, index = 0, compactMobile = false }) => {
         />
 
         {/* Badges — prioritized & clean */}
-        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10 pointer-events-none">
+        <div className="absolute top-2 left-2 flex flex-col gap-1 z-10 pointer-events-none">
           {discount !== null && discount > 0 ? (
-            <span className="bg-brand-gold text-white text-[10px] font-bold px-2 py-0.5 tracking-wider uppercase rounded-sm shadow-sm">
+            <span className="bg-brand-gold text-white text-[9px] font-bold px-1.5 py-0.5 tracking-wider uppercase rounded-sm shadow-sm">
               −{discount}%
             </span>
           ) : product.isNewArrival ? (
-            <span className="bg-neutral-900 text-white text-[9px] font-bold px-2 py-0.5 tracking-wider uppercase rounded-sm shadow-sm">
+            <span className="bg-neutral-900 text-white text-[9px] font-bold px-1.5 py-0.5 tracking-wider uppercase rounded-sm shadow-sm">
               New
             </span>
           ) : product.isBestSeller ? (
-            <span className="bg-white/95 backdrop-blur-sm text-neutral-900 text-[9px] font-bold px-2 py-0.5 tracking-wider uppercase border border-neutral-200 rounded-sm shadow-sm">
+            <span className="bg-white/95 backdrop-blur-sm text-neutral-900 text-[9px] font-bold px-1.5 py-0.5 tracking-wider uppercase border border-neutral-200 rounded-sm shadow-sm">
               Best Seller
             </span>
           ) : null}
           {product.spin_images?.length > 1 && (
-            <span className="bg-black/75 backdrop-blur-sm text-white text-[9px] font-semibold px-1.5 py-0.5 tracking-wider uppercase flex items-center gap-1 border border-white/10 rounded-sm shadow-sm">
-              <RotateCcw size={9} /> 360°
+            <span className="bg-black/75 backdrop-blur-sm text-white text-[8px] sm:text-[9px] font-semibold px-1.5 py-0.5 tracking-wider uppercase flex items-center gap-1 border border-white/10 rounded-sm shadow-sm">
+              <RotateCcw size={8} /> 360°
             </span>
           )}
           {Number(product.reviewCount) > 0 && Number(product.rating) > 0 && (
             <span
-              className="self-start inline-flex items-center gap-1 rounded-sm bg-white/95 px-1.5 py-1 text-[10px] sm:text-[11px] font-medium leading-none text-neutral-700 shadow-sm"
+              className="self-start inline-flex items-center gap-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 text-[10px] sm:text-[11px] font-bold leading-none text-amber-900 shadow-sm"
               aria-label={`Rated ${Number(product.rating).toFixed(1)} out of 5 from ${product.reviewCount} reviews`}
             >
-              <Star size={11} className="shrink-0 fill-brand-gold text-brand-gold" aria-hidden="true" />
-              <span>{Number(product.rating).toFixed(1)} ({product.reviewCount})</span>
+              <Star size={10} className="shrink-0 fill-amber-500 text-amber-500" aria-hidden="true" />
+              <span>{parseFloat(product.rating).toFixed(1)}</span>
+              <span className="text-amber-800/80 font-medium text-[9px] sm:text-[10px]">({product.reviewCount})</span>
             </span>
           )}
         </div>
@@ -244,95 +245,132 @@ const ProductCard = ({ product, index = 0, compactMobile = false }) => {
         {/* Wishlist */}
         <button
           onClick={handleWishlistToggle}
-          className={`absolute top-2.5 right-2.5 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center backdrop-blur-md shadow-sm transition-all duration-200 z-10 ${
+          className={`absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center backdrop-blur-md shadow-sm transition-all duration-200 z-10 ${
             isWishlisted ? 'bg-red-50 text-red-500' : 'bg-white/85 text-neutral-600 hover:text-red-500 hover:bg-white'
           } focus-visible:outline-brand-gold active:scale-90`}
           aria-label={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
           id={`wishlist-${product.id}`}
         >
-          <Heart size={15} className={isWishlisted ? 'fill-current' : ''} />
+          <Heart size={14} className={isWishlisted ? 'fill-current' : ''} />
         </button>
 
         {/* Hover overlay — quick-view + add to cart */}
         <div className="absolute bottom-0 left-0 right-0 bg-black/90 flex translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out z-10">
           <button
             onClick={(e) => { e.preventDefault(); dispatch(openQuickView(product)); }}
-            className="flex-1 flex items-center justify-center gap-1.5 lg:gap-2 py-3 text-white text-xs font-medium hover:bg-white/10 transition-colors border-r border-white/20 focus-visible:outline-white"
+            className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 text-white text-[11px] font-medium hover:bg-white/10 transition-colors border-r border-white/20 focus-visible:outline-white"
             aria-label={`Quick view ${product.name}`}
             id={`qv-${product.id}`}
           >
-            <Eye size={14} /> <span className="hidden lg:inline">Quick View</span>
+            <Eye size={13} /> <span className="hidden sm:inline">Quick View</span>
           </button>
           <button
             onClick={handleAddToCart}
-            className="flex-1 flex items-center justify-center gap-1.5 lg:gap-2 py-3 text-white text-xs font-medium hover:bg-white/10 transition-colors focus-visible:outline-white"
+            className="flex-1 flex items-center justify-center gap-1 sm:gap-1.5 py-2 sm:py-2.5 text-white text-[11px] font-medium hover:bg-white/10 transition-colors focus-visible:outline-white"
             aria-label={inCart ? `View ${product.name} in cart` : `Add ${product.name} to cart`}
             id={`add-cart-${product.id}`}
           >
-            <ShoppingBag size={14} /> <span className="hidden lg:inline">{inCart ? 'View Cart' : 'Add to Cart'}</span>
+            <ShoppingBag size={13} /> <span className="hidden sm:inline">{inCart ? 'View Cart' : 'Add to Cart'}</span>
           </button>
         </div>
       </Link>
 
       {/* Info */}
-      <div className={`${compactMobile ? 'p-2.5' : 'p-3'} sm:p-4 min-w-0 flex-1 flex flex-col`}>
-        {product.category && (
-          <p className="text-[10px] sm:text-[11px] text-brand-gold font-semibold tracking-widest uppercase mb-1 truncate">
-            {product.category?.name || ''}
-          </p>
-        )}
-        <Link to={`/products/${product.slug}`} className="hover:text-brand-gold transition-colors" target="_blank" rel="noopener noreferrer">
-          <h3 className={`font-inter font-medium text-xs sm:text-sm leading-snug text-neutral-900 ${compactMobile ? 'line-clamp-1 sm:line-clamp-2 mb-1 sm:mb-1.5' : 'line-clamp-2 mb-1.5'}`} title={product.name}>
-            {product.name}
-          </h3>
-        </Link>
-        {(() => {
-          const entries = Object.entries(resolvedDefault.attributes || {}).filter(([k, v]) => {
-            if (!v || v === 'undefined' || v === 'null') return false;
-            if (k === 'variant' && v === 'Standard') return false;
-            const kLower = k.toLowerCase();
-            return kLower !== 'color' && kLower !== 'colour';
-          });
-          if (entries.length === 0) return null;
-          const attrString = entries.map(([k, v]) => `${k}: ${v}`).join(' · ');
-          return (
-            <p className="text-xs text-brand-gold font-medium mt-0.5 mb-1 line-clamp-1" title={attrString}>
-              {attrString}
+      <div className="p-2.5 sm:p-3 min-w-0 flex-1 flex flex-col justify-between">
+        <div>
+          {product.category && (
+            <p className="text-[10px] text-brand-gold font-semibold tracking-wider uppercase mb-0.5 truncate">
+              {product.category?.name || ''}
             </p>
-          );
-        })()}
-
-        {/* Color swatches — available variant indicators */}
-        {(() => {
-          const variants = product.variants || [];
-          const colorKey = variants.length > 0
-            ? Object.keys(
-                (typeof variants[0]?.attributes === 'string'
-                  ? JSON.parse(variants[0]?.attributes || '{}')
-                  : variants[0]?.attributes) || {}
-              ).find(k => k.toLowerCase() === 'color' || k.toLowerCase() === 'colour')
-            : null;
-
-          if (!colorKey) {
-            const prodAttrs = typeof product.attributes === 'string'
-              ? JSON.parse(product.attributes || '{}')
-              : (product.attributes || {});
-            const colorAttrKey = Object.keys(prodAttrs).find(k => k.toLowerCase() === 'color' || k.toLowerCase() === 'colour' || k.toLowerCase() === 'colors' || k.toLowerCase() === 'colours');
-            if (!colorAttrKey) return null;
-            const colorList = Array.isArray(prodAttrs[colorAttrKey])
-              ? prodAttrs[colorAttrKey]
-              : [prodAttrs[colorAttrKey]];
-            const SHOW = 5;
-            const visible = colorList.slice(0, SHOW);
-            const extra = colorList.length - SHOW;
+          )}
+          <Link to={`/products/${product.slug}`} className="hover:text-brand-gold transition-colors block" target="_blank" rel="noopener noreferrer">
+            <h3 className="font-inter font-medium text-xs sm:text-sm leading-tight text-neutral-900 line-clamp-1 sm:line-clamp-2 mb-1" title={product.name}>
+              {product.name}
+            </h3>
+          </Link>
+          {(() => {
+            const entries = Object.entries(resolvedDefault.attributes || {}).filter(([k, v]) => {
+              if (!v || v === 'undefined' || v === 'null') return false;
+              if (k === 'variant' && v === 'Standard') return false;
+              const kLower = k.toLowerCase();
+              return kLower !== 'color' && kLower !== 'colour';
+            });
+            if (entries.length === 0) return null;
+            const attrString = entries.map(([k, v]) => `${k}: ${v}`).join(' · ');
             return (
-              <div className="flex items-center gap-1.5 mb-1.5">
-                {visible.map((c, i) => (
+              <p className="text-[11px] text-brand-gold font-medium mb-1 line-clamp-1" title={attrString}>
+                {attrString}
+              </p>
+            );
+          })()}
+
+          {/* Color swatches — available variant indicators */}
+          {(() => {
+            const variants = product.variants || [];
+            const colorKey = variants.length > 0
+              ? Object.keys(
+                  (typeof variants[0]?.attributes === 'string'
+                    ? JSON.parse(variants[0]?.attributes || '{}')
+                    : variants[0]?.attributes) || {}
+                ).find(k => k.toLowerCase() === 'color' || k.toLowerCase() === 'colour')
+              : null;
+
+            if (!colorKey) {
+              const prodAttrs = typeof product.attributes === 'string'
+                ? JSON.parse(product.attributes || '{}')
+                : (product.attributes || {});
+              const colorAttrKey = Object.keys(prodAttrs).find(k => k.toLowerCase() === 'color' || k.toLowerCase() === 'colour' || k.toLowerCase() === 'colors' || k.toLowerCase() === 'colours');
+              if (!colorAttrKey) return null;
+              const colorList = Array.isArray(prodAttrs[colorAttrKey])
+                ? prodAttrs[colorAttrKey]
+                : [prodAttrs[colorAttrKey]];
+              const SHOW = 5;
+              const visible = colorList.slice(0, SHOW);
+              const extra = colorList.length - SHOW;
+              return (
+                <div className="flex items-center gap-1 mb-1">
+                  {visible.map((c, i) => (
+                    <span
+                      key={i}
+                      title={c}
+                      className="w-3.5 h-3.5 rounded-full border border-neutral-300 shadow-sm flex-shrink-0"
+                      style={{ background: resolveColor(c) }}
+                    />
+                  ))}
+                  {extra > 0 && (
+                    <span className="text-[10px] text-brand-grey font-medium" aria-label={`${extra} more colors`}>+{extra}</span>
+                  )}
+                </div>
+              );
+            }
+
+            // Collect unique colors & associated variant info
+            const colorVariants = [];
+            const seen = new Set();
+            variants.forEach(v => {
+              const attrs = typeof v.attributes === 'string' ? JSON.parse(v.attributes || '{}') : (v.attributes || {});
+              const c = attrs[colorKey];
+              if (c && !seen.has(c)) {
+                seen.add(c);
+                colorVariants.push({ color: c, variant: v });
+              }
+            });
+            if (colorVariants.length === 0) return null;
+
+            const SHOW = 5;
+            const visible = colorVariants.slice(0, SHOW);
+            const extra = colorVariants.length - SHOW;
+
+            return (
+              <div className="flex items-center gap-1 mb-1">
+                {visible.map(({ color: c, variant: v }) => (
                   <span
-                    key={i}
-                    title={c}
-                    className="w-4 h-4 rounded-full border border-neutral-300 shadow-sm flex-shrink-0"
-                    style={{ background: resolveColor(c) }}
+                    key={c}
+                    role="img"
+                    aria-label={`Available ${colorKey}: ${c}`}
+                    title={`${colorKey}: ${c}`}
+                    className="w-3.5 h-3.5 rounded-full border border-neutral-300 shadow-sm flex-shrink-0"
+                    style={{ background: v.colorHex || resolveColor(c) }}
                   />
                 ))}
                 {extra > 0 && (
@@ -340,48 +378,13 @@ const ProductCard = ({ product, index = 0, compactMobile = false }) => {
                 )}
               </div>
             );
-          }
+          })()}
+        </div>
 
-          // Collect unique colors & associated variant info
-          const colorVariants = [];
-          const seen = new Set();
-          variants.forEach(v => {
-            const attrs = typeof v.attributes === 'string' ? JSON.parse(v.attributes || '{}') : (v.attributes || {});
-            const c = attrs[colorKey];
-            if (c && !seen.has(c)) {
-              seen.add(c);
-              colorVariants.push({ color: c, variant: v });
-            }
-          });
-          if (colorVariants.length === 0) return null;
-
-          const SHOW = 5;
-          const visible = colorVariants.slice(0, SHOW);
-          const extra = colorVariants.length - SHOW;
-
-          return (
-            <div className="flex items-center gap-1.5 mb-1.5">
-              {visible.map(({ color: c, variant: v }) => (
-                <span
-                  key={c}
-                  role="img"
-                  aria-label={`Available ${colorKey}: ${c}`}
-                  title={`${colorKey}: ${c}`}
-                  className="w-4 h-4 rounded-full border border-neutral-300 shadow-sm flex-shrink-0"
-                  style={{ background: v.colorHex || resolveColor(c) }}
-                />
-              ))}
-              {extra > 0 && (
-                <span className="text-[10px] text-brand-grey font-medium" aria-label={`${extra} more colors`}>+{extra}</span>
-              )}
-            </div>
-          );
-        })()}
-
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pt-1">
-          <span className="font-bold text-sm sm:text-base text-neutral-900 whitespace-nowrap tracking-tight">{fmt(displayPrice)}</span>
+        <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 mt-auto pt-1">
+          <span className="font-bold text-xs sm:text-sm text-neutral-900 whitespace-nowrap tracking-tight">{fmt(displayPrice)}</span>
           {displayComparePrice && Number(displayComparePrice) > Number(displayPrice) && (
-            <span className="text-neutral-400 text-xs line-through whitespace-nowrap font-normal">{fmt(displayComparePrice)}</span>
+            <span className="text-neutral-400 text-[11px] line-through whitespace-nowrap font-normal">{fmt(displayComparePrice)}</span>
           )}
         </div>
       </div>

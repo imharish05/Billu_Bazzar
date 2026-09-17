@@ -275,7 +275,7 @@ const OptionTypeSelect = ({ value, onChange, usedOptions = [] }) => {
 
 const EMPTY_FORM = {
   name: '', slug: '', shortDescription: '', description: '', price: '', priceAED: '', comparePrice: '', comparePriceAED: '',
-  stock: '', sku: '', categoryId: '', subCategoryId: '', subSubCategoryId: '', vendorId: '', warehouseId: '',
+  stock: '', sku: '', categoryId: '', subCategoryId: '', vendorId: '', warehouseId: '',
   gstRate: '0%',
   isFeatured: false, isNewArrival: false, isBestSeller: false, hasAuthenticityBadge: false, isActive: true,
   has360View: false, hasVideo: false, videoUrl: '', defaultProductImage: null,
@@ -644,7 +644,6 @@ const ProductModal = ({ product, onClose, onSave }) => {
     stock: product.stock !== undefined ? product.stock : '0',
     categoryId: product.categoryId || '',
     subCategoryId: product.subCategoryId || '',
-    subSubCategoryId: product.subSubCategoryId || '',
     vendorId: product.vendorId || '',
     warehouseId: product.warehouseId || '',
     gstRate: product.gstRate || '0%',
@@ -671,7 +670,6 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
-  const [subSubCategories, setSubSubCategories] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
 
@@ -985,16 +983,14 @@ const ProductModal = ({ product, onClose, onSave }) => {
   useEffect(() => {
     const loadMetadata = async () => {
       try {
-        const [catRes, subRes, subSubRes, venRes, whRes] = await Promise.all([
+        const [catRes, subRes, venRes, whRes] = await Promise.all([
           api.get('/categories?all=true'),
           api.get('/subcategories?all=true'),
-          api.get('/subsubcategories?all=true'),
           api.get('/vendors'),
           api.get('/warehouses')
         ]);
         setCategories(catRes.data.categories || []);
         setSubCategories(subRes.data.subCategories || []);
-        setSubSubCategories(subSubRes.data.subSubCategories || []);
         setVendors(venRes.data.vendors || (venRes.data.success ? venRes.data.vendors : []));
         const whList = whRes.data.warehouses || [];
         setWarehouses(whList);
@@ -1019,21 +1015,17 @@ const ProductModal = ({ product, onClose, onSave }) => {
     setForm(p => ({ ...p, name: nameVal }));
   };
 
-  // Filtered Subcategories & SubSubcategories
+  // Filtered Subcategories
   const filteredSubCategories = subCategories.filter(
     sub => Number(sub.categoryId) === Number(form.categoryId)
   );
 
-  const filteredSubSubCategories = subSubCategories.filter(
-    ss => Number(ss.subCategoryId) === Number(form.subCategoryId)
-  );
-
   const handleCategoryChange = (val) => {
-    setForm(p => ({ ...p, categoryId: val, subCategoryId: '', subSubCategoryId: '' }));
+    setForm(p => ({ ...p, categoryId: val, subCategoryId: '' }));
   };
 
   const handleSubCategoryChange = (val) => {
-    setForm(p => ({ ...p, subCategoryId: val, subSubCategoryId: '' }));
+    setForm(p => ({ ...p, subCategoryId: val }));
   };
 
   // Rich Text Editor Ref & Helpers
@@ -1175,9 +1167,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
       return;
     }
     setDefaultProductImageFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => setDefaultProductImagePreview(reader.result);
-    reader.readAsDataURL(file);
+    setDefaultProductImagePreview(URL.createObjectURL(file));
   };
 
   const handleVariantImagesSelect = async (e) => {
@@ -1356,7 +1346,6 @@ const ProductModal = ({ product, onClose, onSave }) => {
     }
 
     const finalSubCategoryId = form.subCategoryId;
-    const finalSubSubCategoryId = form.subSubCategoryId;
 
     const generatedSlug = form.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
@@ -1379,7 +1368,6 @@ const ProductModal = ({ product, onClose, onSave }) => {
     fd.append('description', form.description || '');
     fd.append('categoryId', form.categoryId || '');
     fd.append('subCategoryId', finalSubCategoryId || '');
-    fd.append('subSubCategoryId', finalSubSubCategoryId || '');
     fd.append('vendorId', form.vendorId || '');
     fd.append('warehouseId', form.warehouseId || '');
     fd.append('gstRate', form.gstRate || '0%');
@@ -1396,9 +1384,15 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
     fd.append('variantOptions', JSON.stringify(validOptions));
 
+    const isLocalPreviewUrl = (url) => {
+      if (!url || typeof url !== 'string') return true;
+      const lower = url.trim().toLowerCase();
+      return lower.startsWith('blob:') || lower.startsWith('data:');
+    };
+
     if (defaultProductImageFile) {
       fd.append('defaultProductImage', defaultProductImageFile);
-    } else if (defaultProductImagePreview && typeof defaultProductImagePreview === 'string' && !defaultProductImagePreview.startsWith('blob:')) {
+    } else if (defaultProductImagePreview && !isLocalPreviewUrl(defaultProductImagePreview)) {
       fd.append('defaultProductImage', defaultProductImagePreview);
     }
     if (videoFile) {
@@ -1425,8 +1419,8 @@ const ProductModal = ({ product, onClose, onSave }) => {
           gstRate: v.gstRate || form.gstRate || '0%',
           attributes: v.attributes,
           colorHex: v.colorHex || null,
-          image: (v.mainImagePreview && typeof v.mainImagePreview === 'string' && !v.mainImagePreview.startsWith('blob:')) ? v.mainImagePreview : (v.existingImages?.[0] || null),
-          existingImages: (v.existingImages || []).filter(img => img && img !== v.mainImagePreview),
+          image: (v.mainImagePreview && !isLocalPreviewUrl(v.mainImagePreview)) ? v.mainImagePreview : (v.existingImages?.[0] || null),
+          existingImages: (v.existingImages || []).filter(img => img && !isLocalPreviewUrl(img) && img !== v.mainImagePreview),
           warehouseId: v.warehouseId || form.warehouseId || null,
         };
       })));
@@ -1445,8 +1439,8 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
     fd.append('isSingleVariantEdit', 'true');
     const preservedImages = [
-      ...existingVariantImages,
-      ...(defaultProductImagePreview && typeof defaultProductImagePreview === 'string' && !defaultProductImagePreview.startsWith('blob:') && !existingVariantImages.includes(defaultProductImagePreview) ? [defaultProductImagePreview] : [])
+      ...existingVariantImages.filter(img => !isLocalPreviewUrl(img)),
+      ...(defaultProductImagePreview && !isLocalPreviewUrl(defaultProductImagePreview) && !existingVariantImages.includes(defaultProductImagePreview) ? [defaultProductImagePreview] : [])
     ];
     fd.append('existingImages', JSON.stringify(preservedImages));
     newVariantImageFiles.forEach(file => {
@@ -1454,7 +1448,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
     });
 
     if (form.has360View) {
-      fd.append('existingSpinImages', JSON.stringify(existingSpinImages));
+      fd.append('existingSpinImages', JSON.stringify(existingSpinImages.filter(img => !isLocalPreviewUrl(img))));
       newSpinImageFiles.forEach(file => {
         fd.append('spin_images', file);
       });
@@ -1587,26 +1581,26 @@ const ProductModal = ({ product, onClose, onSave }) => {
                 </select>
               </div>
 
-              {/* Root Category */}
+              {/* Category */}
               <div>
-                <label className="block text-xs font-semibold text-neutral-700 mb-1">Root Category *</label>
+                <label className="block text-xs font-semibold text-neutral-700 mb-1">Category *</label>
                 <select
                   value={form.categoryId}
                   onChange={e => handleCategoryChange(e.target.value)}
                   required
                   className="w-full border border-brand-light bg-white px-3 py-2 text-sm focus:outline-none focus:border-brand-gold rounded-sm"
                 >
-                  <option value="">Select Root Category</option>
+                  <option value="">Select Category</option>
                   {categories.map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
               </div>
 
-              {/* Parent Category */}
+              {/* Sub-Category */}
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                  Parent Category {filteredSubCategories.length > 0 ? '*' : ''}
+                  Sub-Category {filteredSubCategories.length > 0 ? '*' : ''}
                 </label>
                 <select
                   value={form.subCategoryId}
@@ -1616,30 +1610,10 @@ const ProductModal = ({ product, onClose, onSave }) => {
                   className="w-full border border-brand-light bg-white px-3 py-2 text-sm focus:outline-none focus:border-brand-gold rounded-sm disabled:bg-neutral-100 disabled:text-neutral-400 font-medium text-neutral-800"
                 >
                   <option value="">
-                    {!form.categoryId ? '— Select Root Category First —' : 'Select Parent Category'}
+                    {!form.categoryId ? '— Select Category First —' : 'Select Sub-Category'}
                   </option>
                   {filteredSubCategories.map(s => (
                     <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Child Category */}
-              <div>
-                <label className="block text-xs font-semibold text-neutral-700 mb-1">
-                  Child Category (Optional)
-                </label>
-                <select
-                  value={form.subSubCategoryId}
-                  onChange={e => set('subSubCategoryId', e.target.value)}
-                  disabled={!form.subCategoryId}
-                  className="w-full border border-brand-light bg-white px-3 py-2 text-sm focus:outline-none focus:border-brand-gold rounded-sm disabled:bg-neutral-100 disabled:text-neutral-400 font-medium text-neutral-800"
-                >
-                  <option value="">
-                    {!form.subCategoryId ? '— Select Parent Category First —' : 'Select Child Category'}
-                  </option>
-                  {filteredSubSubCategories.map(ss => (
-                    <option key={ss.id} value={ss.id}>{ss.name}</option>
                   ))}
                 </select>
               </div>
@@ -1766,7 +1740,7 @@ const ProductModal = ({ product, onClose, onSave }) => {
 
               {defaultProductImagePreview ? (
                 <div className="relative w-32 h-32 border border-neutral-300 rounded-2xl overflow-hidden shadow-md group bg-neutral-900">
-                  <img src={defaultProductImagePreview} alt="Default Thumbnail" className="w-full h-full object-cover" />
+                  <img src={getImageUrl(defaultProductImagePreview)} alt="Default Thumbnail" className="w-full h-full object-cover" />
                   <button
                     type="button"
                     onClick={() => { setDefaultProductImageFile(null); setDefaultProductImagePreview(null); }}

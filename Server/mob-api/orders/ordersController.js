@@ -7,7 +7,8 @@ exports.getMyOrderById = (req, res, next) => order.getMyOrderById(req, res, next
 
 exports.cancelMyOrder = (req, res, next) => order.cancelMyOrder(req, res, next);
 
-exports.placeOrder = (req, res, next) => order.placeOrder(req, res, next);
+const { resolveOrderAddresses } = require('../addresses/addressesController');
+exports.placeOrder = (req, res, next) => resolveOrderAddresses(req, res, error => error ? next(error) : order.placeOrder(req, res, next));
 
 const { Order } = require('../../models');
 const { Op } = require('sequelize');

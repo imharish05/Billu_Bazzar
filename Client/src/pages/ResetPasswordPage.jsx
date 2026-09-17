@@ -75,7 +75,7 @@ const ResetPasswordPage = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-md bg-white border border-neutral-100 p-8 md:p-10 shadow-sm rounded-xl text-center"
+            className="w-full max-w-md bg-white border border-neutral-100 p-8 md:p-10 shadow-sm rounded-lg text-center"
           >
             <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
               <XCircle size={28} className="text-red-400" strokeWidth={1.5} />
@@ -107,7 +107,7 @@ const ResetPasswordPage = () => {
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="w-full max-w-md bg-white border border-neutral-100 p-8 md:p-10 shadow-sm rounded-xl text-center"
+            className="w-full max-w-md bg-white border border-neutral-100 p-8 md:p-10 shadow-sm rounded-lg text-center"
           >
             <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
               <CheckCircle size={28} className="text-green-500" strokeWidth={1.5} />
@@ -134,7 +134,7 @@ const ResetPasswordPage = () => {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="w-full max-w-md bg-white border border-neutral-100 p-8 md:p-10 shadow-sm rounded-xl"
+          className="w-full max-w-md bg-white border border-neutral-100 p-8 md:p-10 shadow-sm rounded-lg"
         >
           {/* Header */}
           <div className="text-center mb-8">

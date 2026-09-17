@@ -14,7 +14,7 @@ module.exports = {
       "parameters": [],
       "responses": {
         "200": {
-          "description": "Successful response using the existing customer API response format"
+          "description": "Shopping operation completed successfully"
         },
         "400": {
           "description": "Invalid request",
@@ -76,7 +76,8 @@ module.exports = {
             }
           }
         }
-      }
+      },
+      "description": "Read live prices and stock status without changing quantities. Subtotal includes all requested quantities; unavailable items are flagged. Checkout validates stock again."
     }
   },
   "/mob-api/cart/add": {
@@ -93,7 +94,7 @@ module.exports = {
       "parameters": [],
       "responses": {
         "200": {
-          "description": "Successful response using the existing customer API response format"
+          "description": "Shopping operation completed successfully"
         },
         "400": {
           "description": "Invalid request",
@@ -169,21 +170,23 @@ module.exports = {
                 },
                 "variantId": {
                   "type": "integer",
-                  "minimum": 1
+                  "minimum": 1,
+                  "nullable": true
                 },
                 "quantity": {
                   "type": "integer",
-                  "minimum": 1
+                  "minimum": 1,
+                  "default": 1
                 }
               },
               "required": [
-                "productId",
-                "quantity"
+                "productId"
               ]
             }
           }
         }
-      }
+      },
+      "description": "Add to my cart. Applies only to the authenticated customer."
     }
   },
   "/mob-api/cart/sync": {
@@ -200,7 +203,7 @@ module.exports = {
       "parameters": [],
       "responses": {
         "200": {
-          "description": "Successful response using the existing customer API response format"
+          "description": "Shopping operation completed successfully"
         },
         "400": {
           "description": "Invalid request",
@@ -281,18 +284,20 @@ module.exports = {
                       },
                       "variantId": {
                         "type": "integer",
-                        "minimum": 1
+                        "minimum": 1,
+                        "nullable": true
                       },
                       "quantity": {
                         "type": "integer",
-                        "minimum": 1
+                        "minimum": 1,
+                        "default": 1
                       }
                     },
                     "required": [
-                      "productId",
-                      "quantity"
+                      "productId"
                     ]
-                  }
+                  },
+                  "maxItems": 100
                 }
               },
               "required": [
@@ -301,7 +306,8 @@ module.exports = {
             }
           }
         }
-      }
+      },
+      "description": "Atomically replace the cart. Empty items clears it. Invalid products, variants, duplicate selections, mixed currencies, or insufficient stock reject the entire request without changing the cart."
     }
   },
   "/mob-api/cart/item/{itemId}": {
@@ -321,13 +327,14 @@ module.exports = {
           "in": "path",
           "required": true,
           "schema": {
-            "type": "string"
+            "type": "integer",
+            "minimum": 1
           }
         }
       ],
       "responses": {
         "200": {
-          "description": "Successful response using the existing customer API response format"
+          "description": "Shopping operation completed successfully"
         },
         "400": {
           "description": "Invalid request",
@@ -399,7 +406,7 @@ module.exports = {
               "properties": {
                 "quantity": {
                   "type": "integer",
-                  "minimum": 1
+                  "minimum": 0
                 }
               },
               "required": [
@@ -408,7 +415,8 @@ module.exports = {
             }
           }
         }
-      }
+      },
+      "description": "Set quantity; zero removes the item. Insufficient stock returns 409 without changing the cart."
     },
     "delete": {
       "tags": [
@@ -426,13 +434,14 @@ module.exports = {
           "in": "path",
           "required": true,
           "schema": {
-            "type": "string"
+            "type": "integer",
+            "minimum": 1
           }
         }
       ],
       "responses": {
         "200": {
-          "description": "Successful response using the existing customer API response format"
+          "description": "Shopping operation completed successfully"
         },
         "400": {
           "description": "Invalid request",
@@ -494,7 +503,8 @@ module.exports = {
             }
           }
         }
-      }
+      },
+      "description": "Remove my cart item. Applies only to the authenticated customer."
     }
   },
   "/mob-api/cart/clear": {
@@ -511,7 +521,7 @@ module.exports = {
       "parameters": [],
       "responses": {
         "200": {
-          "description": "Successful response using the existing customer API response format"
+          "description": "Shopping operation completed successfully"
         },
         "400": {
           "description": "Invalid request",
@@ -573,7 +583,8 @@ module.exports = {
             }
           }
         }
-      }
+      },
+      "description": "Clear my cart. Applies only to the authenticated customer."
     }
   }
 };

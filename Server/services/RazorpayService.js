@@ -12,10 +12,13 @@ class RazorpayService extends PaymentGatewayInterface {
    * @returns {Razorpay}
    */
   _getInstance() {
-    const instance = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_mockkey',
-      key_secret: process.env.RAZORPAY_KEY_SECRET || 'rzp_mocksecret',
-    });
+    const key_id = process.env.RAZORPAY_KEY_ID?.trim();
+    const key_secret = process.env.RAZORPAY_KEY_SECRET?.trim();
+    if (!/^rzp_(test|live)_[A-Za-z0-9]+$/.test(key_id || '') || !key_secret || /mock|REPLACE|your_/i.test(key_id + key_secret)) {
+      throw Object.assign(new Error('Razorpay is not configured. Set valid Razorpay API credentials on the server.'), { status: 503, code: 'PAYMENT_GATEWAY_NOT_CONFIGURED' });
+    }
+    const instance = new Razorpay({ key_id, key_secret });
+    if (instance.api?.rq?.defaults) instance.api.rq.defaults.timeout = 15000;
 
     if (instance.api && instance.api.rq && instance.api.rq.interceptors) {
       instance.api.rq.interceptors.response.use(
@@ -50,23 +53,8 @@ class RazorpayService extends PaymentGatewayInterface {
    */
   async createOrder({ amount, currency = 'INR', receipt }) {
     try {
-      const hasRealKeys = process.env.RAZORPAY_KEY_ID && 
-                          !process.env.RAZORPAY_KEY_ID.includes('mock') && 
-                          process.env.RAZORPAY_KEY_SECRET &&
-                          !process.env.RAZORPAY_KEY_SECRET.includes('mock');
-
-      if (!hasRealKeys) {
-        console.log('[RazorpayService] Live Razorpay credentials not configured. Running in simulation mode.');
-        return {
-          success: true,
-          gatewayRef: `order_sim_${Date.now()}`,
-          amount: parseFloat(amount),
-          currency,
-          status: 'CREATED',
-          raw: { isSimulation: true },
-        };
-      }
-
+      const paise = Math.round(Number(amount) * 100);
+      if (!Number.isSafeInteger(paise) || paise < 100) throw Object.assign(new Error('Razorpay order amount must be at least INR 1.'), { status: 400 });
       const instance = this._getInstance();
 
       const options = {
@@ -86,19 +74,15 @@ class RazorpayService extends PaymentGatewayInterface {
         raw: order,
       };
     } catch (err) {
-      console.error('[Razorpay createOrder] Error:', err.message);
-      if (process.env.NODE_ENV !== 'production') {
-        console.warn('[Razorpay createOrder] Fallback to simulated order in development mode.');
-        return {
-          success: true,
-          gatewayRef: `order_sim_${Date.now()}`,
-          amount: parseFloat(amount),
-          currency,
-          status: 'CREATED',
-          raw: { isSimulation: true, originalError: err.message },
-        };
-      }
-      throw err;
+      if (err.status) throw err;
+      console.error('[Razorpay createOrder]', err.statusCode || err.code || '', err.error?.description || err.message || 'Request failed');
+      const authentication = err.statusCode === 401;
+      throw Object.assign(new Error(authentication
+        ? 'Razorpay rejected the API credentials. Check the server payment configuration.'
+        : 'Unable to connect to Razorpay or create a payment order. Please retry.'), {
+        status: authentication ? 503 : 502,
+        code: authentication ? 'PAYMENT_GATEWAY_AUTH_FAILED' : 'PAYMENT_GATEWAY_ERROR',
+      });
     }
   }
 
@@ -130,17 +114,6 @@ class RazorpayService extends PaymentGatewayInterface {
    */
   async fetchPayment(paymentId) {
     try {
-      if (typeof paymentId === 'string' && paymentId.startsWith('order_sim_')) {
-        return {
-          success: true,
-          gatewayRef: paymentId,
-          amount: 0,
-          currency: 'INR',
-          status: 'CAPTURED',
-          raw: { isSimulation: true }
-        };
-      }
-
       const instance = this._getInstance();
       const payment = await instance.payments.fetch(paymentId);
       return {
@@ -153,16 +126,6 @@ class RazorpayService extends PaymentGatewayInterface {
       };
     } catch (err) {
       console.error('[Razorpay fetchPayment] Error:', err.message);
-      if (process.env.NODE_ENV !== 'production') {
-        return {
-          success: true,
-          gatewayRef: paymentId,
-          amount: 0,
-          currency: 'INR',
-          status: 'CAPTURED',
-          raw: { isSimulation: true }
-        };
-      }
       throw err;
     }
   }
@@ -174,22 +137,6 @@ class RazorpayService extends PaymentGatewayInterface {
    * @returns {Promise<import('./PaymentGatewayInterface').PaymentResult>}
    */
   async refund(paymentId, amount) {
-    const hasRealKeys = process.env.RAZORPAY_KEY_ID && 
-                        !process.env.RAZORPAY_KEY_ID.includes('mock') && 
-                        process.env.RAZORPAY_KEY_SECRET &&
-                        !process.env.RAZORPAY_KEY_SECRET.includes('mock');
-
-    if (!hasRealKeys || (typeof paymentId === 'string' && (paymentId.startsWith('order_sim_') || paymentId.startsWith('sim_')))) {
-      return {
-        success: true,
-        gatewayRef: `rfnd_sim_${Date.now()}`,
-        amount: parseFloat(amount || 0),
-        currency: 'INR',
-        status: 'REFUNDED',
-        raw: { isSimulation: true }
-      };
-    }
-
     try {
       const instance = this._getInstance();
       let resolvedPaymentId = paymentId;

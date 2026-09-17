@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Upload } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -22,6 +22,7 @@ import { PaginationTop, PaginationBottom } from '../components/Pagination';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 import { checkPermission } from '../utils/rbac';
+import { getImageUrl } from '../utils/imageUrl';
 
 const SubCategoriesAdminPage = () => {
   const { admin } = useSelector((s) => s.auth);
@@ -42,6 +43,10 @@ const SubCategoriesAdminPage = () => {
   const [editing, setEditing] = useState(null);
 
   const [form, setForm] = useState({ categoryId: '', name: '', slug: '', isActive: true });
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef(null);
   const [saving, setSaving] = useState(false);
   const [uploadError, setUploadError] = useState(null);
 
@@ -104,7 +109,10 @@ const SubCategoriesAdminPage = () => {
       slug: '',
       isActive: true
     });
+    setImagePreview(sub?.image || null);
+    setImageFile(null);
     setUploadError(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
     setModalOpen(true);
   };
 
@@ -114,12 +122,82 @@ const SubCategoriesAdminPage = () => {
     setForm(p => ({ ...p, name: val, slug: slugVal }));
   };
 
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    processFile(file);
+  };
 
+  const processFile = async (file) => {
+    setUploadError(null);
+    const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+    if (!ALLOWED_TYPES.includes(file.type.toLowerCase())) {
+      const msg = 'Invalid image format. Only JPEG, PNG, and WebP are allowed.';
+      setUploadError(msg);
+      toast.error(msg);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    if (file.size > MAX_SIZE) {
+      const msg = `File size exceeds 5MB limit (${(file.size / (1024 * 1024)).toFixed(2)}MB). Please select an image under 5MB.`;
+      setUploadError(msg);
+      toast.error(msg);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    // Validate image dimensions (Square 1:1 aspect ratio, min 300x300 px)
+    const dims = await new Promise((resolve) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(img.src);
+        resolve({ width: img.width, height: img.height });
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        resolve(null);
+      };
+    });
+
+    if (!dims) {
+      const msg = 'Could not read image file. Please upload a valid image.';
+      setUploadError(msg);
+      toast.error(msg);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    const aspectRatio = dims.width / dims.height;
+    if (aspectRatio < 0.95 || aspectRatio > 1.05) {
+      const msg = `Invalid image dimensions! Sub-category image must be square (1:1 aspect ratio). Uploaded dimensions: ${dims.width}×${dims.height} px.`;
+      setUploadError(msg);
+      toast.error(msg);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    if (dims.width < 300 || dims.height < 300) {
+      const msg = `Image resolution too small (${dims.width}×${dims.height} px). Minimum required resolution is 300×300 px.`;
+      setUploadError(msg);
+      toast.error(msg);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.categoryId) { setUploadError('Please select a root category'); return; }
-    if (!form.name.trim()) { setUploadError('Parent category name is required'); return; }
+    if (!form.categoryId) { setUploadError('Please select a category'); return; }
+    if (!form.name.trim()) { setUploadError('Sub-category name is required'); return; }
     if (!form.slug.trim()) { setUploadError('Slug is required'); return; }
     setSaving(true);
     setUploadError(null);
@@ -131,18 +209,30 @@ const SubCategoriesAdminPage = () => {
       fd.append('isActive', String(form.isActive));
       fd.append('categoryId', form.categoryId);
 
+      const file = imageFile || fileInputRef.current?.files?.[0];
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          const msg = 'Sub-category image size must not exceed 5MB.';
+          setUploadError(msg);
+          toast.error(msg);
+          setSaving(false);
+          return;
+        }
+        fd.append('image', file);
+      }
+
       if (editing) {
         await api.put(`/subcategories/${editing.id}`, fd);
-        toast.success('Parent Category updated successfully.');
+        toast.success('Sub-Category updated successfully.');
       } else {
         await api.post('/subcategories', fd);
-        toast.success('Parent Category created successfully.');
+        toast.success('Sub-Category created successfully.');
       }
 
       setModalOpen(false);
       loadData();
     } catch (err) {
-      setUploadError(err.response?.data?.message || err.message || 'Failed to save parent category');
+      setUploadError(err.response?.data?.message || err.message || 'Failed to save sub-category');
     } finally {
       setSaving(false);
     }
@@ -151,10 +241,10 @@ const SubCategoriesAdminPage = () => {
   const executeDelete = async (id) => {
     try {
       const deleteRes = await api.delete(`/subcategories/${id}`);
-      toast.success(deleteRes.data.message || 'Parent Category deleted successfully.');
+      toast.success(deleteRes.data.message || 'Sub-Category deleted successfully.');
       loadData();
     } catch (err) {
-      toast.error(err.response?.data?.message || err.message || 'Failed to delete parent category');
+      toast.error(err.response?.data?.message || err.message || 'Failed to delete sub-category');
     }
   };
 
@@ -162,8 +252,8 @@ const SubCategoriesAdminPage = () => {
     toast((t) => (
       <div className="flex flex-col items-center text-center gap-2 p-1">
         <p className="text-sm font-semibold text-neutral-800">Confirm Deletion</p>
-        <p className="text-xs text-neutral-600 max-w-xs">
-          Are you sure you want to permanently delete this parent category? This will delete all child categories under it and cannot be undone.
+        <p className="text-xs text-neutral-600 max-w-sm">
+          Are you sure you want to permanently delete this sub-category? This will delete all its linked products &amp; variants. This action cannot be undone.
         </p>
         <div className="flex justify-center items-center gap-3 mt-2 w-full">
           <button
@@ -189,19 +279,19 @@ const SubCategoriesAdminPage = () => {
   };
 
   return (
-    <AdminLayout title="Parent Categories">
+    <AdminLayout title="Sub-Categories">
       <div className="flex justify-between items-center mb-6">
-        <p className="text-sm text-brand-grey">{subCategories.length} parent categories · drag rows to reorder</p>
+        <p className="text-sm text-brand-grey">{subCategories.length} sub-categories · drag rows to reorder</p>
         {canAddSubCategory && (
           <button onClick={() => openModal()} className="btn-primary flex items-center gap-2" id="add-subcat-btn" disabled={parentCategories.length === 0}>
-            <Plus size={16} /> Add Parent Category
+            <Plus size={16} /> Add Sub-Category
           </button>
         )}
       </div>
 
       {parentCategories.length === 0 && !loading && (
         <div className="mb-6 p-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg">
-          Please add at least one Root Category before creating a parent category.
+          Please add at least one Category before creating a sub-category.
         </div>
       )}
 
@@ -209,7 +299,7 @@ const SubCategoriesAdminPage = () => {
         <PaginationTop
           search={search}
           onSearchChange={(s) => { setSearch(s); setPage(1); }}
-          searchPlaceholder="Search parent categories..."
+          searchPlaceholder="Search sub-categories..."
           currentPage={page}
           totalItems={total}
           limit={limit}
@@ -221,9 +311,9 @@ const SubCategoriesAdminPage = () => {
           </div>
         ) : subCategories.length === 0 ? (
           <div className="p-12 text-center">
-            <p className="font-playfair text-xl text-brand-grey">No parent categories yet</p>
+            <p className="font-playfair text-xl text-brand-grey">No sub-categories yet</p>
             {canAddSubCategory && (
-              <button onClick={() => openModal()} className="btn-primary mt-4" id="add-first-subcat" disabled={parentCategories.length === 0}>Add First Parent Category</button>
+              <button onClick={() => openModal()} className="btn-primary mt-4" id="add-first-subcat" disabled={parentCategories.length === 0}>Add First Sub-Category</button>
             )}
           </div>
         ) : (
@@ -239,9 +329,9 @@ const SubCategoriesAdminPage = () => {
                   <tr className="border-b border-brand-light bg-brand-light/20 text-brand-grey text-xs font-semibold uppercase tracking-wider">
                     <th className="pl-3 pr-1 py-3 w-8"></th>
                     <th className="px-5 py-3 w-16">NO</th>
-
-                    <th className="px-5 py-3">Root Category Name</th>
-                    <th className="px-5 py-3">Parent Category Name</th>
+                    <th className="px-5 py-3 w-24">Image</th>
+                    <th className="px-5 py-3">Category Name</th>
+                    <th className="px-5 py-3">Sub-Category Name</th>
                     <th className="px-5 py-3 w-32">Status</th>
                     {canShowActions && <th className="px-5 py-3 w-28 text-right">Actions</th>}
                   </tr>
@@ -254,7 +344,15 @@ const SubCategoriesAdminPage = () => {
                     {subCategories.map((sub, idx) => (
                       <SortableRow key={sub.id} id={sub.id}>
                         <td className="px-5 py-4 font-medium text-brand-grey">{idx + 1}</td>
-
+                        <td className="px-5 py-4">
+                          <div className="w-12 h-12 rounded-lg bg-neutral-100 overflow-hidden border border-neutral-200 flex items-center justify-center shrink-0 shadow-xs">
+                            {sub.image ? (
+                              <img src={getImageUrl(sub.image)} alt={sub.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-brand-grey text-xs font-bold uppercase">{sub.name.substring(0, 2)}</span>
+                            )}
+                          </div>
+                        </td>
                         <td className="px-5 py-4 font-medium text-brand-text">{getParentName(sub.categoryId)}</td>
                         <td className="px-5 py-4">
                           <p className="font-semibold text-brand-text">{sub.name}</p>
@@ -304,7 +402,7 @@ const SubCategoriesAdminPage = () => {
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={e => e.target === e.currentTarget && !saving && setModalOpen(false)}>
             <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} className="bg-white rounded-xl w-full max-w-md shadow-xl overflow-hidden">
               <div className="flex items-center justify-between px-6 py-4 border-b border-brand-light">
-                <h2 className="font-playfair text-lg font-semibold">{editing ? 'Edit Parent Category' : 'Add Parent Category'}</h2>
+                <h2 className="font-playfair text-lg font-semibold">{editing ? 'Edit Sub-Category' : 'Add Sub-Category'}</h2>
                 <button onClick={() => !saving && setModalOpen(false)} className="p-1.5 hover:text-brand-gold focus-visible:outline-brand-gold transition-colors"><X size={18} /></button>
               </div>
               <form onSubmit={handleSave} className="p-6 space-y-4">
@@ -312,11 +410,11 @@ const SubCategoriesAdminPage = () => {
                   <div className="text-xs text-red-500 bg-red-50 border border-red-200 p-3 rounded">{uploadError}</div>
                 )}
 
-                {/* Parent Category Selector */}
+                {/* Category Selector */}
                 <div>
-                  <label className="block text-xs font-medium text-brand-grey mb-1.5" htmlFor="sub-parent">Root Category *</label>
+                  <label className="block text-xs font-medium text-brand-grey mb-1.5" htmlFor="sub-parent">Category *</label>
                   <select id="sub-parent" value={form.categoryId} onChange={e => setForm(p => ({ ...p, categoryId: e.target.value }))} required className="w-full border border-brand-light px-3 py-2 text-sm focus:outline-none focus:border-brand-gold transition-colors bg-white">
-                    <option value="" disabled>Select root category...</option>
+                    <option value="" disabled>Select category...</option>
                     {parentCategories.map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
@@ -324,7 +422,7 @@ const SubCategoriesAdminPage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-brand-grey mb-1.5" htmlFor="sub-name">Parent Category Name *</label>
+                  <label className="block text-xs font-medium text-brand-grey mb-1.5" htmlFor="sub-name">Sub-Category Name *</label>
                   <input id="sub-name" type="text" value={form.name} onChange={handleNameChange} required className="w-full border border-brand-light px-3 py-2 text-sm focus:outline-none focus:border-brand-gold transition-colors" placeholder="e.g. Lehenga Sets" />
                 </div>
 
@@ -333,6 +431,43 @@ const SubCategoriesAdminPage = () => {
                   <input id="sub-slug" type="text" value={form.slug} onChange={e => setForm(p => ({ ...p, slug: e.target.value }))} required className="w-full border border-brand-light bg-neutral-50 px-3 py-2 text-sm focus:outline-none focus:border-brand-gold transition-colors" placeholder="lehenga-sets" />
                 </div>
 
+                {/* SubCategory Image upload zone */}
+                <div>
+                  <label className="block text-xs font-medium text-brand-grey mb-1.5">Sub-Category Image (Square 1:1 Aspect Ratio)</label>
+                  <div
+                    className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors cursor-pointer ${
+                      isDragging ? 'border-brand-gold bg-brand-gold/5' : 'border-brand-light hover:border-brand-gold'
+                    }`}
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                    onDragLeave={() => setIsDragging(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setIsDragging(false);
+                      const file = e.dataTransfer.files?.[0];
+                      if (file) processFile(file);
+                    }}
+                  >
+                    {imagePreview ? (
+                      <div className="relative inline-block">
+                        <div className="w-32 h-32 rounded-lg border border-brand-light overflow-hidden bg-neutral-50 shadow-sm mx-auto">
+                          <img src={getImageUrl(imagePreview)} alt="Sub-Category Preview" className="w-full h-full object-cover" />
+                        </div>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); setImagePreview(null); setImageFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }} className="absolute -top-2 -right-2 bg-white p-1 rounded-full hover:bg-neutral-100 border border-brand-light shadow-md transition-colors">
+                          <X size={14} className="text-brand-text" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="py-4">
+                        <Upload size={24} className="mx-auto text-brand-grey mb-1.5" />
+                        <p className="text-xs text-brand-grey font-medium">Drag & drop image here, or click to upload</p>
+                        <p className="text-[10px] text-brand-grey/70 mt-1 font-semibold">JPEG, PNG, WebP — max 5MB</p>
+                        <p className="text-[10px] text-brand-grey/50 mt-0.5">Recommended resolution: 300×300 px (1:1 square)</p>
+                      </div>
+                    )}
+                  </div>
+                  <input ref={fileInputRef} type="file" accept="image/jpeg,image/jpg,image/png,image/webp" className="hidden" onChange={handleFileSelect} />
+                </div>
 
                 <div className="flex items-center gap-2 pt-1">
                   <Switch checked={form.isActive} onChange={e => setForm(p => ({ ...p, isActive: typeof e === 'boolean' ? e : Boolean(e?.target?.checked) }))} id="sub-active" />

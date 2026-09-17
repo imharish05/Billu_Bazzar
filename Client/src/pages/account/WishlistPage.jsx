@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
 import { Heart, ShoppingBag, Eye, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { toggleItem } from '../../redux/slices/wishlistSlice';
+import { toggleItem, toggleWishlistApi } from '../../redux/slices/wishlistSlice';
 import { formatPrice } from '../../utils/currency';
 import { addLocal, openCart } from '../../redux/slices/cartSlice';
 import { getImageUrl } from '../../utils/imageUrl';
@@ -23,7 +23,7 @@ const WishlistPage = () => {
   const fmt = (v) => formatPrice(v, currencyCode, currencyRate);
 
   const remove = (item) => {
-    dispatch(toggleItem(item));
+    dispatch(toggleWishlistApi(item));
     toast.success('Removed from wishlist', {
       style: {
         border: '1px solid #C58837',
@@ -69,13 +69,13 @@ const WishlistPage = () => {
       transition={{ duration: 0.25 }}
       className="w-full"
     >
-      <div className="flex items-center justify-between mb-6 pb-2 border-b border-brand-light">
+      <div className="flex items-center justify-between mb-6 pb-2">
         <h1 className="font-playfair text-2xl font-semibold text-brand-text">My Wishlist</h1>
         <span className="text-xs text-brand-grey font-medium">({items.length} {items.length === 1 ? 'item' : 'items'})</span>
       </div>
 
       {items.length === 0 ? (
-        <div className="bg-white p-16 text-center">
+        <div className="bg-white p-16 text-center rounded-lg">
           <Heart size={48} className="text-brand-gold/40 mx-auto mb-4 animate-pulse" strokeWidth={1} />
           <p className="font-playfair text-xl text-brand-text mb-2">Your Wishlist is Empty</p>
           <p className="text-brand-grey text-xs md:text-sm mb-6 max-w-sm mx-auto">
@@ -91,8 +91,34 @@ const WishlistPage = () => {
               ? Math.round(((Number(item.comparePrice) - Number(item.price)) / Number(item.comparePrice)) * 100)
               : null;
 
-            const variantEntries = item.selectedVariant ? Object.entries(item.selectedVariant).filter(([k,v]) => v) : [];
-            const variantText = variantEntries.length > 0 ? variantEntries.map(([k,v]) => `${k}: ${v}`).join(' · ') : null;
+            const parseVariant = (val) => {
+              if (!val) return {};
+              if (typeof val === 'object' && val !== null) return val;
+              if (typeof val === 'string') {
+                try {
+                  const p = JSON.parse(val);
+                  return typeof p === 'object' && p !== null ? p : {};
+                } catch {
+                  return {};
+                }
+              }
+              return {};
+            };
+            const variantObj = parseVariant(item.selectedVariant);
+            const variantEntries = Object.entries(variantObj).filter(([k, v]) => v && typeof v !== 'object' && !['0', '1'].includes(k));
+            const variantText = variantEntries.length > 0 ? variantEntries.map(([k, v]) => `${k}: ${v}`).join(' · ') : null;
+
+            const detailUrl = (() => {
+              const params = new URLSearchParams();
+              if (item.variantId) {
+                params.set('variant', String(item.variantId));
+              }
+              variantEntries.forEach(([k, v]) => {
+                params.set(k.toLowerCase(), String(v));
+              });
+              const q = params.toString();
+              return `/products/${item.slug}${q ? `?${q}` : ''}`;
+            })();
 
             return (
               <motion.article
@@ -100,28 +126,30 @@ const WishlistPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="relative bg-white flex flex-col border border-brand-light shadow-sm hover:shadow-md transition-all duration-300"
+                className="relative bg-white flex flex-col border border-brand-light rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
                 aria-label={item.name}
               >
                 {/* Image Wrap - "group" class here so hover trigger is isolated to the image */}
-                <div className="group block relative overflow-hidden aspect-[3/4] bg-brand-light">
-                  <img
-                    src={getImageUrl(item.image) || getPlaceholderSvg(item.name || 'Product')}
-                    alt={item.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                    onError={(e) => { e.target.onerror = null; e.target.src = getPlaceholderSvg(item.name || 'Product'); }}
-                  />
+                <div className="group block relative overflow-hidden aspect-square bg-brand-light">
+                  <Link to={detailUrl} className="block w-full h-full" aria-label={`View details for ${item.name}`}>
+                    <img
+                      src={getImageUrl(item.image) || getPlaceholderSvg(item.name || 'Product')}
+                      alt={item.name}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      loading="lazy"
+                      onError={(e) => { e.target.onerror = null; e.target.src = getPlaceholderSvg(item.name || 'Product'); }}
+                    />
+                  </Link>
 
                   {/* Badges */}
-                  <div className="absolute top-3 left-3 flex flex-col gap-1.5 pointer-events-none">
+                  <div className="absolute top-2 left-2 flex flex-col gap-1 pointer-events-none">
                     {!item.inStock && (
-                      <span className="bg-red-600 text-white text-[9px] font-bold px-2 py-0.5 tracking-wider uppercase rounded-sm">
+                      <span className="bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 tracking-wider uppercase rounded-sm">
                         Sold Out
                       </span>
                     )}
                     {discount !== null && discount > 0 && (
-                      <span className="bg-brand-gold text-white text-[9px] font-bold px-2 py-0.5 rounded-sm">
+                      <span className="bg-brand-gold text-white text-[9px] font-bold px-1.5 py-0.5 rounded-sm">
                         -{discount}%
                       </span>
                     )}
@@ -130,7 +158,7 @@ const WishlistPage = () => {
                   {/* Remove Button (Red Heart on top right) */}
                   <button
                     onClick={(e) => { e.preventDefault(); remove(item); }}
-                    className="absolute top-3 right-3 p-2 rounded-full bg-white/95 text-red-500 shadow-sm hover:scale-110 hover:bg-white transition-all duration-200 focus-visible:outline-brand-gold z-20"
+                    className="absolute top-2 right-2 p-1.5 rounded-full bg-white/95 text-red-500 shadow-sm hover:scale-110 hover:bg-white transition-all duration-200 focus-visible:outline-brand-gold z-20"
                     aria-label={`Remove ${item.name} from wishlist`}
                     id={`wishlist-remove-${item.id}`}
                   >
@@ -140,8 +168,8 @@ const WishlistPage = () => {
                   {/* Hover Actions - Slide-up overlay (triggers ONLY on image group hover) */}
                   <div className="absolute bottom-0 left-0 right-0 bg-black/90 flex translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out z-10">
                     <Link
-                      to={`/products/${item.slug}`}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-3 text-white text-[10px] font-medium hover:bg-white/10 transition-colors border-r border-white/10 text-center"
+                      to={detailUrl}
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 text-white text-[10px] sm:text-[11px] font-medium hover:bg-white/10 transition-colors border-r border-white/10 text-center"
                       id={`qv-${item.id}`}
                     >
                       <Eye size={12} /> View Details
@@ -149,7 +177,7 @@ const WishlistPage = () => {
                     <button
                       onClick={() => addToCart(item)}
                       disabled={!item.inStock && !isItemInCart(item)}
-                      className="flex-1 flex items-center justify-center gap-1.5 py-3 text-white text-[10px] font-medium hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="flex-1 flex items-center justify-center gap-1.5 py-2 text-white text-[10px] sm:text-[11px] font-medium hover:bg-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       id={`add-cart-${item.id}`}
                     >
                       <ShoppingBag size={12} /> {isItemInCart(item) ? 'View Cart' : 'Add to Cart'}
@@ -158,30 +186,30 @@ const WishlistPage = () => {
                 </div>
 
                 {/* Info Area */}
-                <div className="p-3 flex-1 flex flex-col justify-between">
+                <div className="p-2.5 sm:p-3 flex-1 flex flex-col justify-between">
                   <div>
-                    <p className="text-[10px] text-brand-gold font-medium tracking-widest uppercase mb-1">
+                    <p className="text-[10px] text-brand-gold font-medium tracking-wider uppercase mb-0.5">
                       {item.categoryName}
                     </p>
                     <Link 
-                      to={`/products/${item.slug}`} 
-                      className="hover:text-brand-gold text-brand-text transition-colors line-clamp-2"
+                      to={detailUrl} 
+                      className="hover:text-brand-gold text-brand-text transition-colors block"
                     >
-                      <h3 className="font-inter font-medium text-xs md:text-sm leading-snug">
+                      <h3 className="font-inter font-medium text-xs sm:text-sm leading-tight line-clamp-1 sm:line-clamp-2">
                         {item.name}
                       </h3>
                     </Link>
                     {variantText && (
-                      <p className="text-[10px] text-brand-gold font-medium mt-1">
+                      <p className="text-[10px] text-brand-gold font-medium mt-0.5 line-clamp-1">
                         {variantText}
                       </p>
                     )}
                   </div>
 
-                  <div className="mt-3">
+                  <div className="mt-1.5 sm:mt-2">
                     {/* Star Rating */}
                     {Number(item.reviewCount) > 0 && Number(item.rating) > 0 && (
-                      <div className="flex items-center gap-0.5 mb-1.5">
+                      <div className="flex items-center gap-0.5 mb-1">
                         {[1, 2, 3, 4, 5].map(s => (
                           <Star 
                             key={s} 
@@ -194,12 +222,12 @@ const WishlistPage = () => {
                     )}
 
                     {/* Price Grid */}
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold text-xs md:text-sm text-brand-text">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold text-xs sm:text-sm text-brand-text">
                         {fmt(item.price)}
                       </span>
                       {item.comparePrice && Number(item.comparePrice) > Number(item.price) && (
-                        <span className="text-brand-grey text-[10px] md:text-xs line-through">
+                        <span className="text-brand-grey text-[10px] sm:text-xs line-through">
                           {fmt(item.comparePrice)}
                         </span>
                       )}

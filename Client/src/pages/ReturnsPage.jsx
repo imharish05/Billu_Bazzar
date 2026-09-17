@@ -43,9 +43,9 @@ const ReturnsPage = () => {
           </motion.div>
 
           {/* Mandatory Unboxing Video Highlight Alert */}
-          <div className="bg-amber-500/10 border-2 border-brand-gold/40 rounded-xl p-6 relative overflow-hidden">
+          <div className="bg-amber-500/10 border-2 border-brand-gold/40 rounded-lg p-6 relative overflow-hidden">
             <div className="flex items-start gap-4">
-              <div className="p-3 bg-brand-gold/20 text-brand-gold rounded-xl shrink-0">
+              <div className="p-3 bg-brand-gold/20 text-brand-gold rounded-lg shrink-0">
                 <FileText className="w-6 h-6" />
               </div>
               <div className="space-y-2">

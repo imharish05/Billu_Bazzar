@@ -2,7 +2,7 @@
 const ExcelJS = require('exceljs');
 const path = require('path');
 const fs = require('fs');
-const { Product, ProductVariant, Category, SubCategory, SubSubCategory, Vendor, Warehouse } = require('../models');
+const { Product, ProductVariant, Category, SubCategory, Vendor, Warehouse } = require('../models');
 const sequelize = require('../config/db');
 
 // Path to output Excel files
@@ -19,7 +19,6 @@ async function generateRealDbExcel() {
     include: [
       { model: Category, as: 'category', attributes: ['id', 'name', 'slug'] },
       { model: SubCategory, as: 'subcategory', attributes: ['id', 'name', 'slug'] },
-      { model: SubSubCategory, as: 'subsubcategory', attributes: ['id', 'name', 'slug'] },
       { model: Vendor, as: 'vendor', attributes: ['id', 'name', 'logo'] },
       { model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] },
       { model: ProductVariant, as: 'variants', attributes: ['id', 'sku', 'price', 'mrp', 'stock', 'attributes', 'image', 'images', 'warehouseId', 'lowStockThreshold', 'gstRate'], include: [{ model: Warehouse, as: 'warehouse', attributes: ['id', 'name'] }] }
@@ -219,7 +218,6 @@ cleanJSON({
 `dimensions: '${JSON.stringify(sonyProduct.dimensions)}'\n` +
 `categoryId: "${sonyProduct.categoryId || '1'}"\n` +
 `subCategoryId: "${sonyProduct.subCategoryId || '1'}"\n` +
-`subSubCategoryId: "${sonyProduct.subSubCategoryId || '1'}"\n` +
 `vendorId: "${sonyProduct.vendorId || '8'}"\n` +
 `warehouseId: "${sonyProduct.warehouseId || '1'}"\n` +
 `isFeatured: "${sonyProduct.isFeatured}"\n` +

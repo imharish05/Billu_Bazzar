@@ -1089,7 +1089,7 @@
         "tags": [
           "products"
         ],
-        "summary": "Browse active products",
+        "summary": "Browse products with filters",
         "security": [
           {
             "bearerAuth": []
@@ -1097,106 +1097,133 @@
         ],
         "parameters": [
           {
-            "name": "page",
+            "name": "q",
             "in": "query",
+            "required": false,
+            "description": "Product name search text. Required on /products/search; optional on /products.",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "example": "cotton shirt"
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "required": false,
+            "description": "Active category ID. Unknown IDs return 404; incompatible category/subcategory pairs return 400.",
             "schema": {
               "type": "integer",
               "minimum": 1
+            }
+          },
+          {
+            "name": "subCategoryId",
+            "in": "query",
+            "required": false,
+            "description": "Active subcategory ID. Unknown IDs return 404; incompatible category/subcategory pairs return 400.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "minPrice",
+            "in": "query",
+            "required": false,
+            "description": "Inclusive INR product price bound. Uses product price, not individual variant prices.",
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "required": false,
+            "description": "Inclusive INR product price bound. Uses product price, not individual variant prices.",
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "collection",
+            "in": "query",
+            "required": false,
+            "description": "new-arrivals, best-sellers, or featured. Comma-separated values match any selected collection; other filters still apply.",
+            "schema": {
+              "type": "string",
+              "example": "new-arrivals,best-sellers"
+            }
+          },
+          {
+            "name": "minDiscount",
+            "in": "query",
+            "required": false,
+            "description": "Inclusive discount percentage bound. Calculated from product price and comparePrice, rounded to a whole percentage. Products without a discount count as 0%.",
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "maxDiscount",
+            "in": "query",
+            "required": false,
+            "description": "Inclusive discount percentage bound. Calculated from product price and comparePrice, rounded to a whole percentage. Products without a discount count as 0%.",
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "description": "Price low to high, price high to low, newest first, or highest rating first.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "price_asc",
+                "price_desc",
+                "newest",
+                "rating"
+              ],
+              "default": "newest"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Results page, starting at 1.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
             },
             "example": 1
           },
           {
             "name": "limit",
             "in": "query",
+            "required": false,
+            "description": "Maximum products per page. The mobile request middleware caps larger limits at 100.",
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 100
+              "maximum": 100,
+              "default": 20
             },
             "example": 10
-          },
-          {
-            "name": "category",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "example": "cotton"
-          },
-          {
-            "name": "minPrice",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "maxPrice",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "order",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "featured",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "newArrival",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "bestSeller",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "minDiscount",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "maxDiscount",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response using the existing customer API response format",
+            "description": "Products and pagination, or an empty products array when no matches exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -1248,6 +1275,16 @@
                           },
                           "reviewCount": {
                             "type": "integer"
+                          },
+                          "categoryId": {
+                            "type": "integer"
+                          },
+                          "subCategoryId": {
+                            "nullable": true
+                          },
+                          "variants": {
+                            "type": "array",
+                            "items": {}
                           }
                         }
                       }
@@ -1258,8 +1295,14 @@
                     "page": {
                       "type": "integer"
                     },
+                    "limit": {
+                      "type": "integer"
+                    },
                     "totalPages": {
                       "type": "integer"
+                    },
+                    "hasMore": {
+                      "type": "boolean"
                     }
                   }
                 },
@@ -1280,32 +1323,45 @@
                       "gstRate": "0%",
                       "isActive": true,
                       "rating": "0.00",
-                      "reviewCount": 0
+                      "reviewCount": 0,
+                      "categoryId": 12,
+                      "subCategoryId": null,
+                      "variants": []
                     }
                   ],
                   "total": 1,
                   "page": 1,
-                  "totalPages": 1
+                  "limit": 20,
+                  "totalPages": 1,
+                  "hasMore": false
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid filter values, reversed ranges, missing search query, or a subcategory outside the selected category",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "success": false,
+                  "message": "minPrice must not exceed maxPrice"
                 }
               }
             }
           },
           "401": {
-            "description": "Missing, invalid, expired, or inactive customer token",
+            "description": "Missing or invalid customer access token",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Authentication required"
                 }
               }
             }
@@ -1321,11 +1377,15 @@
             }
           },
           "404": {
-            "description": "Resource not found or not owned by this customer",
+            "description": "Selected category or subcategory does not exist or is inactive",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Category not found"
                 }
               }
             }
@@ -1341,16 +1401,21 @@
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Unable to fetch products due to a server error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Unable to fetch products"
                 }
               }
             }
           }
-        }
+        },
+        "description": "Combine category, subcategory, product price, collection, discount percentage, and sorting filters. Returns full product records with variants and pagination. Valid requests with no matches return 200 and products: []. Requires a customer bearer token."
       }
     },
     "/mob-api/products/featured": {
@@ -1536,7 +1601,7 @@
         "tags": [
           "products"
         ],
-        "summary": "Search products",
+        "summary": "Search products with filters",
         "security": [
           {
             "bearerAuth": []
@@ -1546,15 +1611,131 @@
           {
             "name": "q",
             "in": "query",
+            "required": true,
+            "description": "Product name search text. Required on /products/search; optional on /products.",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 200
             },
             "example": "cotton shirt"
+          },
+          {
+            "name": "categoryId",
+            "in": "query",
+            "required": false,
+            "description": "Active category ID. Unknown IDs return 404; incompatible category/subcategory pairs return 400.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "subCategoryId",
+            "in": "query",
+            "required": false,
+            "description": "Active subcategory ID. Unknown IDs return 404; incompatible category/subcategory pairs return 400.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "minPrice",
+            "in": "query",
+            "required": false,
+            "description": "Inclusive INR product price bound. Uses product price, not individual variant prices.",
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "maxPrice",
+            "in": "query",
+            "required": false,
+            "description": "Inclusive INR product price bound. Uses product price, not individual variant prices.",
+            "schema": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "collection",
+            "in": "query",
+            "required": false,
+            "description": "new-arrivals, best-sellers, or featured. Comma-separated values match any selected collection; other filters still apply.",
+            "schema": {
+              "type": "string",
+              "example": "new-arrivals,best-sellers"
+            }
+          },
+          {
+            "name": "minDiscount",
+            "in": "query",
+            "required": false,
+            "description": "Inclusive discount percentage bound. Calculated from product price and comparePrice, rounded to a whole percentage. Products without a discount count as 0%.",
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "maxDiscount",
+            "in": "query",
+            "required": false,
+            "description": "Inclusive discount percentage bound. Calculated from product price and comparePrice, rounded to a whole percentage. Products without a discount count as 0%.",
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "description": "Price low to high, price high to low, newest first, or highest rating first.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "price_asc",
+                "price_desc",
+                "newest",
+                "rating"
+              ],
+              "default": "newest"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Results page, starting at 1.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Maximum products per page. The mobile request middleware caps larger limits at 100.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "example": 10
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response using the existing customer API response format",
+            "description": "Products and pagination, or an empty products array when no matches exist",
             "content": {
               "application/json": {
                 "schema": {
@@ -1580,17 +1761,60 @@
                           "price": {
                             "type": "string"
                           },
+                          "comparePrice": {
+                            "type": "string"
+                          },
+                          "currency": {
+                            "type": "string"
+                          },
+                          "stock": {
+                            "type": "integer"
+                          },
                           "images": {
                             "type": "array",
                             "items": {
                               "type": "string"
                             }
                           },
-                          "discountPercent": {
+                          "gstRate": {
+                            "type": "string"
+                          },
+                          "isActive": {
+                            "type": "boolean"
+                          },
+                          "rating": {
+                            "type": "string"
+                          },
+                          "reviewCount": {
                             "type": "integer"
+                          },
+                          "categoryId": {
+                            "type": "integer"
+                          },
+                          "subCategoryId": {
+                            "nullable": true
+                          },
+                          "variants": {
+                            "type": "array",
+                            "items": {}
                           }
                         }
                       }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "hasMore": {
+                      "type": "boolean"
                     }
                   }
                 },
@@ -1602,32 +1826,54 @@
                       "name": "Demo Cotton Shirt",
                       "slug": "demo-cotton-shirt",
                       "price": "999.00",
+                      "comparePrice": "1299.00",
+                      "currency": "INR",
+                      "stock": 25,
                       "images": [
                         "https://example.com/uploads/demo-shirt.jpg"
                       ],
-                      "discountPercent": 0
+                      "gstRate": "0%",
+                      "isActive": true,
+                      "rating": "0.00",
+                      "reviewCount": 0,
+                      "categoryId": 12,
+                      "subCategoryId": null,
+                      "variants": []
                     }
-                  ]
+                  ],
+                  "total": 1,
+                  "page": 1,
+                  "limit": 20,
+                  "totalPages": 1,
+                  "hasMore": false
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid filter values, reversed ranges, missing search query, or a subcategory outside the selected category",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "success": false,
+                  "message": "minPrice must not exceed maxPrice"
                 }
               }
             }
           },
           "401": {
-            "description": "Missing, invalid, expired, or inactive customer token",
+            "description": "Missing or invalid customer access token",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Authentication required"
                 }
               }
             }
@@ -1643,11 +1889,15 @@
             }
           },
           "404": {
-            "description": "Resource not found or not owned by this customer",
+            "description": "Selected category or subcategory does not exist or is inactive",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Category not found"
                 }
               }
             }
@@ -1663,16 +1913,21 @@
             }
           },
           "500": {
-            "description": "Internal server error",
+            "description": "Unable to fetch products due to a server error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Error"
+                },
+                "example": {
+                  "success": false,
+                  "message": "Unable to fetch products"
                 }
               }
             }
           }
-        }
+        },
+        "description": "Combine category, subcategory, product price, collection, discount percentage, and sorting filters. Returns full product records with variants and pagination. Valid requests with no matches return 200 and products: []. Requires a customer bearer token."
       }
     },
     "/mob-api/products/price-range": {
@@ -2180,28 +2435,9 @@
                                 "isActive": {
                                   "type": "boolean"
                                 },
-                                "subsubcategories": {
+                                "children": {
                                   "type": "array",
-                                  "items": {
-                                    "type": "object",
-                                    "properties": {
-                                      "id": {
-                                        "type": "integer"
-                                      },
-                                      "subCategoryId": {
-                                        "type": "integer"
-                                      },
-                                      "name": {
-                                        "type": "string"
-                                      },
-                                      "slug": {
-                                        "type": "string"
-                                      },
-                                      "isActive": {
-                                        "type": "boolean"
-                                      }
-                                    }
-                                  }
+                                  "items": {}
                                 }
                               }
                             }
@@ -2226,15 +2462,7 @@
                           "name": "Shirts",
                           "slug": "shirts",
                           "isActive": true,
-                          "subsubcategories": [
-                            {
-                              "id": 108,
-                              "subCategoryId": 30,
-                              "name": "Cotton Shirts",
-                              "slug": "cotton-shirts",
-                              "isActive": true
-                            }
-                          ]
+                          "children": []
                         }
                       ]
                     }
@@ -2312,40 +2540,13 @@
           "categories"
         ],
         "summary": "Active categories",
+        "description": "Return all active categories as a flat list. No query parameters are needed.",
         "security": [
           {
             "bearerAuth": []
           }
         ],
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "example": 1
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100
-            },
-            "example": 10
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "example": "cotton"
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "Successful response using the existing customer API response format",
@@ -2462,6 +2663,7 @@
           "categories"
         ],
         "summary": "Active subcategories",
+        "description": "Return active subcategories as a flat list. Optionally provide categoryId to return only subcategories of that category. A nonexistent or inactive category returns 404. An active category with no subcategories returns 200 with an empty subCategories array.",
         "security": [
           {
             "bearerAuth": []
@@ -2469,38 +2671,12 @@
         ],
         "parameters": [
           {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "example": 1
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100
-            },
-            "example": 10
-          },
-          {
             "name": "categoryId",
             "in": "query",
             "schema": {
               "type": "string"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "schema": {
-              "type": "string"
             },
-            "example": "cotton"
+            "description": "Optional parent category ID."
           }
         ],
         "responses": {
@@ -2547,167 +2723,6 @@
                       "categoryId": 12,
                       "name": "Shirts",
                       "slug": "shirts",
-                      "isActive": true
-                    }
-                  ]
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Missing, invalid, expired, or inactive customer token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Operation not permitted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found or not owned by this customer",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Operation conflicts with current state",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mob-api/subsubcategories": {
-      "get": {
-        "tags": [
-          "categories"
-        ],
-        "summary": "Active sub-subcategories",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 1
-            },
-            "example": 1
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100
-            },
-            "example": 10
-          },
-          {
-            "name": "subCategoryId",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "example": "cotton"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response using the existing customer API response format",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "subSubCategories": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer"
-                          },
-                          "subCategoryId": {
-                            "type": "integer"
-                          },
-                          "name": {
-                            "type": "string"
-                          },
-                          "slug": {
-                            "type": "string"
-                          },
-                          "isActive": {
-                            "type": "boolean"
-                          }
-                        }
-                      }
-                    }
-                  }
-                },
-                "example": {
-                  "success": true,
-                  "subSubCategories": [
-                    {
-                      "id": 108,
-                      "subCategoryId": 30,
-                      "name": "Cotton Shirts",
-                      "slug": "cotton-shirts",
                       "isActive": true
                     }
                   ]
@@ -3046,12 +3061,12 @@
         }
       }
     },
-    "/mob-api/search/autocomplete": {
+    "/mob-api/search/suggestions": {
       "get": {
         "tags": [
           "search"
         ],
-        "summary": "Search suggestions",
+        "summary": "Product name suggestions",
         "security": [
           {
             "bearerAuth": []
@@ -3061,10 +3076,26 @@
           {
             "name": "q",
             "in": "query",
+            "required": true,
+            "description": "Typed letters or product name fragment.",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
             },
             "example": "cotton shirt"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum suggestions; defaults to 6 and is capped at 100.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 6
+            },
+            "example": 10
           }
         ],
         "responses": {
@@ -3078,13 +3109,10 @@
                     "success": {
                       "type": "boolean"
                     },
-                    "suggestions": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
+                    "query": {
+                      "type": "string"
                     },
-                    "products": {
+                    "suggestions": {
                       "type": "array",
                       "items": {
                         "type": "object",
@@ -3094,21 +3122,6 @@
                           },
                           "name": {
                             "type": "string"
-                          },
-                          "price": {
-                            "type": "string"
-                          },
-                          "comparePrice": {
-                            "type": "string"
-                          },
-                          "image": {
-                            "type": "string"
-                          },
-                          "slug": {
-                            "type": "string"
-                          },
-                          "discountPercent": {
-                            "type": "integer"
                           }
                         }
                       }
@@ -3117,18 +3130,11 @@
                 },
                 "example": {
                   "success": true,
+                  "query": "shirt",
                   "suggestions": [
-                    "cotton shirt"
-                  ],
-                  "products": [
                     {
                       "id": 224,
-                      "name": "Demo Cotton Shirt",
-                      "price": "999.00",
-                      "comparePrice": "1299.00",
-                      "image": "https://example.com/uploads/demo-shirt.jpg",
-                      "slug": "demo-cotton-shirt",
-                      "discountPercent": 0
+                      "name": "Demo Cotton Shirt"
                     }
                   ]
                 }
@@ -3195,7 +3201,153 @@
               }
             }
           }
-        }
+        },
+        "description": "Send typed letters in q. Returns active products whose names contain the query, each mapped to its product id. The mobile app can debounce requests by 2 seconds and discard responses for older queries. This endpoint does not record searches. No matches return 200 with suggestions: []."
+      }
+    },
+    "/mob-api/search/autocomplete": {
+      "get": {
+        "tags": [
+          "search"
+        ],
+        "summary": "Product name suggestions",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "description": "Typed letters or product name fragment.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "example": "cotton shirt"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Maximum suggestions; defaults to 6 and is capped at 100.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 6
+            },
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response using the existing customer API response format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "query": {
+                      "type": "string"
+                    },
+                    "suggestions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "query": "shirt",
+                  "suggestions": [
+                    {
+                      "id": 224,
+                      "name": "Demo Cotton Shirt"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, expired, or inactive customer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not owned by this customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Compatibility alias for GET /mob-api/search/suggestions?q=... . Returns the same product id/name suggestions.",
+        "deprecated": true
       }
     },
     "/mob-api/search/trending": {
@@ -3421,6 +3573,831 @@
         }
       }
     },
+    "/mob-api/addresses": {
+      "get": {
+        "tags": [
+          "addresses"
+        ],
+        "summary": "My saved addresses",
+        "description": "List only your saved addresses, with the default first.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "addresses": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "customerId": {
+                            "type": "integer"
+                          },
+                          "label": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "email": {
+                            "type": "string"
+                          },
+                          "phone": {
+                            "type": "string"
+                          },
+                          "address": {
+                            "type": "string"
+                          },
+                          "city": {
+                            "type": "string"
+                          },
+                          "state": {
+                            "type": "string"
+                          },
+                          "pincode": {
+                            "type": "string"
+                          },
+                          "country": {
+                            "type": "string"
+                          },
+                          "addressLine2": {
+                            "type": "string"
+                          },
+                          "landmark": {
+                            "type": "string"
+                          },
+                          "isDefault": {
+                            "type": "boolean"
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          },
+                          "updatedAt": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "addresses": [
+                    {
+                      "id": 1,
+                      "customerId": 7,
+                      "label": "Home",
+                      "name": "Demo Customer",
+                      "email": "mobile.demo@example.com",
+                      "phone": "+919876543210",
+                      "address": "10 Demo Street",
+                      "city": "Chennai",
+                      "state": "Tamil Nadu",
+                      "pincode": "600001",
+                      "country": "India",
+                      "addressLine2": "",
+                      "landmark": "",
+                      "isDefault": true,
+                      "createdAt": "2026-09-11T09:00:00.000Z",
+                      "updatedAt": "2026-09-11T09:00:00.000Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid address input"
+          },
+          "401": {
+            "description": "Customer authentication required"
+          },
+          "404": {
+            "description": "Saved address not found or not owned by customer"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "addresses"
+        ],
+        "summary": "Save an address",
+        "description": "Create an address. The first address is automatically default. Customer ownership is taken from the token.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "address": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "customerId": {
+                          "type": "integer"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "phone": {
+                          "type": "string"
+                        },
+                        "address": {
+                          "type": "string"
+                        },
+                        "city": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string"
+                        },
+                        "pincode": {
+                          "type": "string"
+                        },
+                        "country": {
+                          "type": "string"
+                        },
+                        "addressLine2": {
+                          "type": "string"
+                        },
+                        "landmark": {
+                          "type": "string"
+                        },
+                        "isDefault": {
+                          "type": "boolean"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "address": {
+                    "id": 1,
+                    "customerId": 7,
+                    "label": "Home",
+                    "name": "Demo Customer",
+                    "email": "mobile.demo@example.com",
+                    "phone": "+919876543210",
+                    "address": "10 Demo Street",
+                    "city": "Chennai",
+                    "state": "Tamil Nadu",
+                    "pincode": "600001",
+                    "country": "India",
+                    "addressLine2": "",
+                    "landmark": "",
+                    "isDefault": true,
+                    "createdAt": "2026-09-11T09:00:00.000Z",
+                    "updatedAt": "2026-09-11T09:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid address input"
+          },
+          "401": {
+            "description": "Customer authentication required"
+          },
+          "404": {
+            "description": "Saved address not found or not owned by customer"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "maxLength": 40
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "phone": {
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "email": {
+                    "type": "string",
+                    "maxLength": 180
+                  },
+                  "address": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "addressLine2": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "landmark": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "city": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "state": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "pincode": {
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "country": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "isDefault": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "name",
+                  "phone",
+                  "address",
+                  "city",
+                  "state",
+                  "pincode",
+                  "country"
+                ]
+              },
+              "example": {
+                "label": "Home",
+                "name": "Demo Customer",
+                "email": "mobile.demo@example.com",
+                "phone": "+919876543210",
+                "address": "10 Demo Street",
+                "city": "Chennai",
+                "state": "Tamil Nadu",
+                "pincode": "600001",
+                "country": "India",
+                "isDefault": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mob-api/addresses/{addressId}": {
+      "get": {
+        "tags": [
+          "addresses"
+        ],
+        "summary": "Saved address details",
+        "description": "Get an address owned by the authenticated customer.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "addressId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "address": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "customerId": {
+                          "type": "integer"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "phone": {
+                          "type": "string"
+                        },
+                        "address": {
+                          "type": "string"
+                        },
+                        "city": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string"
+                        },
+                        "pincode": {
+                          "type": "string"
+                        },
+                        "country": {
+                          "type": "string"
+                        },
+                        "addressLine2": {
+                          "type": "string"
+                        },
+                        "landmark": {
+                          "type": "string"
+                        },
+                        "isDefault": {
+                          "type": "boolean"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "address": {
+                    "id": 1,
+                    "customerId": 7,
+                    "label": "Home",
+                    "name": "Demo Customer",
+                    "email": "mobile.demo@example.com",
+                    "phone": "+919876543210",
+                    "address": "10 Demo Street",
+                    "city": "Chennai",
+                    "state": "Tamil Nadu",
+                    "pincode": "600001",
+                    "country": "India",
+                    "addressLine2": "",
+                    "landmark": "",
+                    "isDefault": true,
+                    "createdAt": "2026-09-11T09:00:00.000Z",
+                    "updatedAt": "2026-09-11T09:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid address input"
+          },
+          "401": {
+            "description": "Customer authentication required"
+          },
+          "404": {
+            "description": "Saved address not found or not owned by customer"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "addresses"
+        ],
+        "summary": "Update saved address",
+        "description": "Partial update. Set isDefault=true to select this address. To unset the current default, select another address first.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "addressId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "address": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "customerId": {
+                          "type": "integer"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "phone": {
+                          "type": "string"
+                        },
+                        "address": {
+                          "type": "string"
+                        },
+                        "city": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string"
+                        },
+                        "pincode": {
+                          "type": "string"
+                        },
+                        "country": {
+                          "type": "string"
+                        },
+                        "addressLine2": {
+                          "type": "string"
+                        },
+                        "landmark": {
+                          "type": "string"
+                        },
+                        "isDefault": {
+                          "type": "boolean"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "address": {
+                    "id": 1,
+                    "customerId": 7,
+                    "label": "Work",
+                    "name": "Demo Customer",
+                    "email": "mobile.demo@example.com",
+                    "phone": "+919876543210",
+                    "address": "10 Demo Street",
+                    "city": "Chennai",
+                    "state": "Tamil Nadu",
+                    "pincode": "600001",
+                    "country": "India",
+                    "addressLine2": "",
+                    "landmark": "",
+                    "isDefault": true,
+                    "createdAt": "2026-09-11T09:00:00.000Z",
+                    "updatedAt": "2026-09-11T09:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid address input"
+          },
+          "401": {
+            "description": "Customer authentication required"
+          },
+          "404": {
+            "description": "Saved address not found or not owned by customer"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "maxLength": 40
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "phone": {
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "email": {
+                    "type": "string",
+                    "maxLength": 180
+                  },
+                  "address": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "addressLine2": {
+                    "type": "string",
+                    "maxLength": 255
+                  },
+                  "landmark": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "city": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "state": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "pincode": {
+                    "type": "string",
+                    "maxLength": 20
+                  },
+                  "country": {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  "isDefault": {
+                    "type": "boolean"
+                  }
+                },
+                "minProperties": 1
+              },
+              "example": {
+                "label": "Work"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "addresses"
+        ],
+        "summary": "Delete saved address",
+        "description": "Delete an owned address. If it was default, the oldest remaining address becomes default. Existing order snapshots are unchanged.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "addressId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "message": "Saved address deleted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid address input"
+          },
+          "401": {
+            "description": "Customer authentication required"
+          },
+          "404": {
+            "description": "Saved address not found or not owned by customer"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/mob-api/addresses/{addressId}/default": {
+      "put": {
+        "tags": [
+          "addresses"
+        ],
+        "summary": "Set default address",
+        "description": "Atomically select the default. Repeated calls are safe.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "addressId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "address": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "customerId": {
+                          "type": "integer"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "phone": {
+                          "type": "string"
+                        },
+                        "address": {
+                          "type": "string"
+                        },
+                        "city": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string"
+                        },
+                        "pincode": {
+                          "type": "string"
+                        },
+                        "country": {
+                          "type": "string"
+                        },
+                        "addressLine2": {
+                          "type": "string"
+                        },
+                        "landmark": {
+                          "type": "string"
+                        },
+                        "isDefault": {
+                          "type": "boolean"
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "address": {
+                    "id": 1,
+                    "customerId": 7,
+                    "label": "Home",
+                    "name": "Demo Customer",
+                    "email": "mobile.demo@example.com",
+                    "phone": "+919876543210",
+                    "address": "10 Demo Street",
+                    "city": "Chennai",
+                    "state": "Tamil Nadu",
+                    "pincode": "600001",
+                    "country": "India",
+                    "addressLine2": "",
+                    "landmark": "",
+                    "isDefault": true,
+                    "createdAt": "2026-09-11T09:00:00.000Z",
+                    "updatedAt": "2026-09-11T09:00:00.000Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid address input"
+          },
+          "401": {
+            "description": "Customer authentication required"
+          },
+          "404": {
+            "description": "Saved address not found or not owned by customer"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
     "/mob-api/cart": {
       "get": {
         "tags": [
@@ -3435,7 +4412,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successful response using the existing customer API response format",
+            "description": "Shopping operation completed successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -3449,12 +4426,6 @@
                       "properties": {
                         "id": {
                           "type": "integer"
-                        },
-                        "customerId": {
-                          "type": "integer"
-                        },
-                        "sessionId": {
-                          "nullable": true
                         },
                         "items": {
                           "type": "array",
@@ -3523,21 +4494,26 @@
                               },
                               "availableStock": {
                                 "type": "integer"
+                              },
+                              "unitPrice": {
+                                "type": "integer"
+                              },
+                              "lineTotal": {
+                                "type": "integer"
                               }
                             }
                           }
                         },
                         "subtotal": {
                           "type": "integer"
+                        },
+                        "itemCount": {
+                          "type": "integer"
+                        },
+                        "currency": {
+                          "type": "string"
                         }
                       }
-                    },
-                    "cartAdjusted": {
-                      "type": "boolean"
-                    },
-                    "adjustments": {
-                      "type": "array",
-                      "items": {}
                     }
                   }
                 },
@@ -3545,8 +4521,6 @@
                   "success": true,
                   "cart": {
                     "id": 1,
-                    "customerId": 7,
-                    "sessionId": null,
                     "items": [
                       {
                         "id": 1,
@@ -3570,13 +4544,15 @@
                         "variant": null,
                         "gstRate": "0%",
                         "stockStatus": "VALID",
-                        "availableStock": 25
+                        "availableStock": 25,
+                        "unitPrice": 999,
+                        "lineTotal": 999
                       }
                     ],
-                    "subtotal": 999
-                  },
-                  "cartAdjusted": false,
-                  "adjustments": []
+                    "subtotal": 999,
+                    "itemCount": 1,
+                    "currency": "INR"
+                  }
                 }
               }
             }
@@ -3641,7 +4617,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Read live prices and stock status without changing quantities. Subtotal includes all requested quantities; unavailable items are flagged. Checkout validates stock again."
       }
     },
     "/mob-api/cart/add": {
@@ -3658,7 +4635,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successful response using the existing customer API response format",
+            "description": "Shopping operation completed successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -3670,15 +4647,19 @@
                     "message": {
                       "type": "string"
                     },
-                    "sessionId": {
-                      "nullable": true
+                    "itemId": {
+                      "type": "integer"
+                    },
+                    "quantity": {
+                      "type": "integer"
                     }
                   }
                 },
                 "example": {
                   "success": true,
                   "message": "Added to cart",
-                  "sessionId": null
+                  "itemId": 1,
+                  "quantity": 1
                 }
               }
             }
@@ -3757,16 +4738,17 @@
                   },
                   "variantId": {
                     "type": "integer",
-                    "minimum": 1
+                    "minimum": 1,
+                    "nullable": true
                   },
                   "quantity": {
                     "type": "integer",
-                    "minimum": 1
+                    "minimum": 1,
+                    "default": 1
                   }
                 },
                 "required": [
-                  "productId",
-                  "quantity"
+                  "productId"
                 ]
               },
               "example": {
@@ -3775,7 +4757,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Add to my cart. Applies only to the authenticated customer."
       }
     },
     "/mob-api/cart/sync": {
@@ -3792,7 +4775,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successful response using the existing customer API response format",
+            "description": "Shopping operation completed successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -3801,135 +4784,18 @@
                     "success": {
                       "type": "boolean"
                     },
-                    "cart": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "integer"
-                        },
-                        "customerId": {
-                          "type": "integer"
-                        },
-                        "sessionId": {
-                          "nullable": true
-                        },
-                        "items": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "id": {
-                                "type": "integer"
-                              },
-                              "cartId": {
-                                "type": "integer"
-                              },
-                              "productId": {
-                                "type": "integer"
-                              },
-                              "variantId": {
-                                "nullable": true
-                              },
-                              "quantity": {
-                                "type": "integer"
-                              },
-                              "priceAtAdd": {
-                                "type": "string"
-                              },
-                              "selectedVariant": {
-                                "type": "object",
-                                "properties": {}
-                              },
-                              "product": {
-                                "type": "object",
-                                "properties": {
-                                  "id": {
-                                    "type": "integer"
-                                  },
-                                  "name": {
-                                    "type": "string"
-                                  },
-                                  "price": {
-                                    "type": "string"
-                                  },
-                                  "images": {
-                                    "type": "array",
-                                    "items": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "stock": {
-                                    "type": "integer"
-                                  },
-                                  "slug": {
-                                    "type": "string"
-                                  },
-                                  "gstRate": {
-                                    "type": "string"
-                                  }
-                                }
-                              },
-                              "variant": {
-                                "nullable": true
-                              },
-                              "gstRate": {
-                                "type": "string"
-                              },
-                              "stockStatus": {
-                                "type": "string"
-                              },
-                              "availableStock": {
-                                "type": "integer"
-                              }
-                            }
-                          }
-                        },
-                        "subtotal": {
-                          "type": "integer"
-                        }
-                      }
+                    "message": {
+                      "type": "string"
                     },
-                    "adjustments": {
-                      "type": "array",
-                      "items": {}
+                    "cartId": {
+                      "type": "integer"
                     }
                   }
                 },
                 "example": {
                   "success": true,
-                  "cart": {
-                    "id": 1,
-                    "customerId": 7,
-                    "sessionId": null,
-                    "items": [
-                      {
-                        "id": 1,
-                        "cartId": 1,
-                        "productId": 224,
-                        "variantId": null,
-                        "quantity": 1,
-                        "priceAtAdd": "999.00",
-                        "selectedVariant": {},
-                        "product": {
-                          "id": 224,
-                          "name": "Demo Cotton Shirt",
-                          "price": "999.00",
-                          "images": [
-                            "https://example.com/uploads/demo-shirt.jpg"
-                          ],
-                          "stock": 25,
-                          "slug": "demo-cotton-shirt",
-                          "gstRate": "0%"
-                        },
-                        "variant": null,
-                        "gstRate": "0%",
-                        "stockStatus": "VALID",
-                        "availableStock": 25
-                      }
-                    ],
-                    "subtotal": 999
-                  },
-                  "adjustments": []
+                  "message": "Cart synced successfully",
+                  "cartId": 1
                 }
               }
             }
@@ -4013,18 +4879,20 @@
                         },
                         "variantId": {
                           "type": "integer",
-                          "minimum": 1
+                          "minimum": 1,
+                          "nullable": true
                         },
                         "quantity": {
                           "type": "integer",
-                          "minimum": 1
+                          "minimum": 1,
+                          "default": 1
                         }
                       },
                       "required": [
-                        "productId",
-                        "quantity"
+                        "productId"
                       ]
-                    }
+                    },
+                    "maxItems": 100
                   }
                 },
                 "required": [
@@ -4041,7 +4909,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Atomically replace the cart. Empty items clears it. Invalid products, variants, duplicate selections, mixed currencies, or insufficient stock reject the entire request without changing the cart."
       }
     },
     "/mob-api/cart/item/{itemId}": {
@@ -4061,14 +4930,15 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "minimum": 1
             },
             "example": 1
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response using the existing customer API response format",
+            "description": "Shopping operation completed successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -4159,7 +5029,7 @@
                 "properties": {
                   "quantity": {
                     "type": "integer",
-                    "minimum": 1
+                    "minimum": 0
                   }
                 },
                 "required": [
@@ -4171,7 +5041,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Set quantity; zero removes the item. Insufficient stock returns 409 without changing the cart."
       },
       "delete": {
         "tags": [
@@ -4189,14 +5060,15 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "minimum": 1
             },
             "example": 1
           }
         ],
         "responses": {
           "200": {
-            "description": "Successful response using the existing customer API response format",
+            "description": "Shopping operation completed successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -4277,7 +5149,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Remove my cart item. Applies only to the authenticated customer."
       }
     },
     "/mob-api/cart/clear": {
@@ -4294,7 +5167,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successful response using the existing customer API response format",
+            "description": "Shopping operation completed successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -4375,7 +5248,675 @@
               }
             }
           }
-        }
+        },
+        "description": "Clear my cart. Applies only to the authenticated customer."
+      }
+    },
+    "/mob-api/wishlist": {
+      "get": {
+        "tags": [
+          "wishlist"
+        ],
+        "summary": "My wishlist",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Shopping operation completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "wishlist": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "customerId": {
+                            "type": "integer"
+                          },
+                          "productId": {
+                            "type": "integer"
+                          },
+                          "variantId": {
+                            "nullable": true
+                          },
+                          "selectedVariant": {
+                            "type": "object",
+                            "properties": {}
+                          },
+                          "product": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "slug": {
+                                "type": "string"
+                              },
+                              "price": {
+                                "type": "string"
+                              },
+                              "comparePrice": {
+                                "type": "string"
+                              },
+                              "currency": {
+                                "type": "string"
+                              },
+                              "stock": {
+                                "type": "integer"
+                              },
+                              "images": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "gstRate": {
+                                "type": "string"
+                              },
+                              "isActive": {
+                                "type": "boolean"
+                              },
+                              "rating": {
+                                "type": "string"
+                              },
+                              "reviewCount": {
+                                "type": "integer"
+                              }
+                            }
+                          },
+                          "variant": {
+                            "nullable": true
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "wishlist": [
+                    {
+                      "id": 1,
+                      "customerId": 7,
+                      "productId": 224,
+                      "variantId": null,
+                      "selectedVariant": {},
+                      "product": {
+                        "id": 224,
+                        "name": "Demo Cotton Shirt",
+                        "slug": "demo-cotton-shirt",
+                        "price": "999.00",
+                        "comparePrice": "1299.00",
+                        "currency": "INR",
+                        "stock": 25,
+                        "images": [
+                          "https://example.com/uploads/demo-shirt.jpg"
+                        ],
+                        "gstRate": "0%",
+                        "isActive": true,
+                        "rating": "0.00",
+                        "reviewCount": 0
+                      },
+                      "variant": null
+                    }
+                  ],
+                  "total": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, expired, or inactive customer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not owned by this customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "My wishlist. Applies only to the authenticated customer."
+      }
+    },
+    "/mob-api/wishlist/add": {
+      "post": {
+        "tags": [
+          "wishlist"
+        ],
+        "summary": "Add to wishlist",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Shopping operation completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "action": {
+                      "type": "string"
+                    },
+                    "itemId": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "action": "added",
+                  "itemId": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, expired, or inactive customer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not owned by this customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "productId"
+                ],
+                "properties": {
+                  "productId": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "variantId": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "nullable": true
+                  }
+                }
+              },
+              "example": {
+                "productId": 224,
+                "variantId": 10
+              }
+            }
+          }
+        },
+        "description": "Save an active product or variant. Repeated adds return the existing item. Out-of-stock products may be saved. Supply productId and variantId to save that exact variant. Omit variantId to save the product alone. Different variants are separate wishlist entries. Use GET /mob-api/variants/product/{productId} to discover valid variant IDs."
+      }
+    },
+    "/mob-api/wishlist/toggle": {
+      "post": {
+        "tags": [
+          "wishlist"
+        ],
+        "summary": "Toggle wishlist item",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Shopping operation completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "action": {
+                      "type": "string"
+                    },
+                    "itemId": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "action": "added",
+                  "itemId": 1
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, expired, or inactive customer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not owned by this customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "productId"
+                ],
+                "properties": {
+                  "productId": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "variantId": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "nullable": true
+                  }
+                }
+              },
+              "example": {
+                "productId": 224,
+                "variantId": 10
+              }
+            }
+          }
+        },
+        "description": "Toggle wishlist item. Applies only to the authenticated customer. Supply productId and variantId to save that exact variant. Omit variantId to save the product alone. Different variants are separate wishlist entries. Use GET /mob-api/variants/product/{productId} to discover valid variant IDs."
+      }
+    },
+    "/mob-api/wishlist/item/{itemId}": {
+      "delete": {
+        "tags": [
+          "wishlist"
+        ],
+        "summary": "Remove wishlist item",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "example": 1
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shopping operation completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "message": "Removed from wishlist"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, expired, or inactive customer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not owned by this customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Remove wishlist item. Applies only to the authenticated customer."
+      }
+    },
+    "/mob-api/wishlist/clear": {
+      "delete": {
+        "tags": [
+          "wishlist"
+        ],
+        "summary": "Clear wishlist",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Shopping operation completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "message": "Wishlist cleared"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, expired, or inactive customer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not owned by this customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Clear wishlist. Applies only to the authenticated customer."
       }
     },
     "/mob-api/orders/my": {
@@ -5647,11 +7188,40 @@
                       "productId",
                       "quantity"
                     ]
+                  },
+                  "shippingAddressId": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "billingAddressId": {
+                    "type": "integer",
+                    "minimum": 1
                   }
                 },
                 "required": [
-                  "shippingAddress",
                   "paymentMethod"
+                ],
+                "oneOf": [
+                  {
+                    "required": [
+                      "shippingAddress"
+                    ],
+                    "not": {
+                      "required": [
+                        "shippingAddressId"
+                      ]
+                    }
+                  },
+                  {
+                    "required": [
+                      "shippingAddressId"
+                    ],
+                    "not": {
+                      "required": [
+                        "shippingAddress"
+                      ]
+                    }
+                  }
                 ]
               },
               "example": {
@@ -5681,7 +7251,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Place an order with inline shippingAddress/billingAddress or owned shippingAddressId/billingAddressId. Do not supply both forms for the same address. Saved address details are copied into the order; later edits do not affect past orders. Omitting billing uses shipping. A default address is not selected implicitly."
       }
     },
     "/mob-api/orders/track/{identifier}": {
@@ -6358,6 +7929,13 @@
                           "productId": {
                             "type": "integer"
                           },
+                          "variantId": {
+                            "nullable": true
+                          },
+                          "selectedVariant": {
+                            "type": "object",
+                            "properties": {}
+                          },
                           "product": {
                             "type": "object",
                             "properties": {
@@ -6401,9 +7979,15 @@
                                 "type": "integer"
                               }
                             }
+                          },
+                          "variant": {
+                            "nullable": true
                           }
                         }
                       }
+                    },
+                    "total": {
+                      "type": "integer"
                     }
                   }
                 },
@@ -6414,6 +7998,8 @@
                       "id": 1,
                       "customerId": 7,
                       "productId": 224,
+                      "variantId": null,
+                      "selectedVariant": {},
                       "product": {
                         "id": 224,
                         "name": "Demo Cotton Shirt",
@@ -6429,9 +8015,11 @@
                         "isActive": true,
                         "rating": "0.00",
                         "reviewCount": 0
-                      }
+                      },
+                      "variant": null
                     }
-                  ]
+                  ],
+                  "total": 1
                 }
               }
             }
@@ -6522,12 +8110,16 @@
                     },
                     "action": {
                       "type": "string"
+                    },
+                    "itemId": {
+                      "type": "integer"
                     }
                   }
                 },
                 "example": {
                   "success": true,
-                  "action": "added"
+                  "action": "added",
+                  "itemId": 1
                 }
               }
             }
@@ -6618,7 +8210,8 @@
                 ]
               },
               "example": {
-                "productId": 224
+                "productId": 224,
+                "variantId": 10
               }
             }
           }
@@ -7505,6 +9098,13 @@
                           "productId": {
                             "type": "integer"
                           },
+                          "variantId": {
+                            "nullable": true
+                          },
+                          "selectedVariant": {
+                            "type": "object",
+                            "properties": {}
+                          },
                           "product": {
                             "type": "object",
                             "properties": {
@@ -7548,9 +9148,15 @@
                                 "type": "integer"
                               }
                             }
+                          },
+                          "variant": {
+                            "nullable": true
                           }
                         }
                       }
+                    },
+                    "total": {
+                      "type": "integer"
                     }
                   }
                 },
@@ -7561,6 +9167,8 @@
                       "id": 1,
                       "customerId": 7,
                       "productId": 224,
+                      "variantId": null,
+                      "selectedVariant": {},
                       "product": {
                         "id": 224,
                         "name": "Demo Cotton Shirt",
@@ -7576,9 +9184,11 @@
                         "isActive": true,
                         "rating": "0.00",
                         "reviewCount": 0
-                      }
+                      },
+                      "variant": null
                     }
-                  ]
+                  ],
+                  "total": 1
                 }
               }
             }
@@ -7669,12 +9279,16 @@
                     },
                     "action": {
                       "type": "string"
+                    },
+                    "itemId": {
+                      "type": "integer"
                     }
                   }
                 },
                 "example": {
                   "success": true,
-                  "action": "added"
+                  "action": "added",
+                  "itemId": 1
                 }
               }
             }
@@ -7765,7 +9379,8 @@
                 ]
               },
               "example": {
-                "productId": 224
+                "productId": 224,
+                "variantId": 10
               }
             }
           }
@@ -8618,7 +10233,7 @@
     "/mob-api/coupons": {
       "get": {
         "tags": [
-          "offers"
+          "coupons"
         ],
         "summary": "Active coupons",
         "security": [
@@ -8626,10 +10241,43 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "example": 10
+          },
+          {
+            "name": "subtotal",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 99999999.99,
+              "multipleOf": 0.01
+            },
+            "description": "Optional merchandise subtotal in the same currency as checkout, before delivery and tax."
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Successful response using the existing customer API response format",
+            "description": "Successful customer coupon response",
             "content": {
               "application/json": {
                 "schema": {
@@ -8669,9 +10317,30 @@
                           },
                           "validUntil": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "usageLimit": {
+                            "type": "integer"
                           }
                         }
                       }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "hasMore": {
+                      "type": "boolean"
                     }
                   }
                 },
@@ -8687,9 +10356,16 @@
                       "maxDiscount": "200.00",
                       "isActive": true,
                       "validFrom": "2026-09-11T09:00:00.000Z",
-                      "validUntil": "2026-12-31T23:59:59.000Z"
+                      "validUntil": "2026-12-31T23:59:59.000Z",
+                      "description": "Save 10%",
+                      "usageLimit": 1
                     }
-                  ]
+                  ],
+                  "total": 1,
+                  "page": 1,
+                  "limit": 20,
+                  "totalPages": 1,
+                  "hasMore": false
                 }
               }
             }
@@ -8754,13 +10430,14 @@
               }
             }
           }
-        }
+        },
+        "description": "List active, currently valid coupons that have remaining redemptions for the authenticated customer. Optional subtotal also filters the minimum spend and returns discount previews. Does not redeem or create coupons."
       }
     },
     "/mob-api/coupons/validate": {
       "post": {
         "tags": [
-          "offers"
+          "coupons"
         ],
         "summary": "Validate a coupon",
         "security": [
@@ -8771,7 +10448,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successful response using the existing customer API response format",
+            "description": "Successful customer coupon response",
             "content": {
               "application/json": {
                 "schema": {
@@ -8812,10 +10489,22 @@
                         },
                         "validUntil": {
                           "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "usageLimit": {
+                          "type": "integer"
                         }
                       }
                     },
+                    "subtotal": {
+                      "type": "integer"
+                    },
                     "discountAmount": {
+                      "type": "integer"
+                    },
+                    "discountedSubtotal": {
                       "type": "integer"
                     },
                     "freeShipping": {
@@ -8835,9 +10524,13 @@
                     "maxDiscount": "200.00",
                     "isActive": true,
                     "validFrom": "2026-09-11T09:00:00.000Z",
-                    "validUntil": "2026-12-31T23:59:59.000Z"
+                    "validUntil": "2026-12-31T23:59:59.000Z",
+                    "description": "Save 10%",
+                    "usageLimit": 1
                   },
+                  "subtotal": 1000,
                   "discountAmount": 100,
+                  "discountedSubtotal": 900,
                   "freeShipping": false
                 }
               }
@@ -8910,18 +10603,25 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "code": {
-                    "type": "string"
-                  },
-                  "subtotal": {
-                    "type": "number"
-                  }
-                },
                 "required": [
                   "code",
                   "subtotal"
-                ]
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 30,
+                    "example": "WELCOME10"
+                  },
+                  "subtotal": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 99999999.99,
+                    "multipleOf": 0.01,
+                    "example": 1000
+                  }
+                }
               },
               "example": {
                 "code": "DEMO10",
@@ -8929,7 +10629,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Preview a discount using code and subtotal. Customer identity comes from the bearer token. No coupon is redeemed here. Send couponCode when placing the order; final amounts are calculated from server-side product prices. Cancelled orders do not count toward the per-customer usage limit; other order statuses do."
       }
     },
     "/mob-api/offers": {
@@ -8943,10 +10644,43 @@
             "bearerAuth": []
           }
         ],
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "example": 10
+          },
+          {
+            "name": "subtotal",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 99999999.99,
+              "multipleOf": 0.01
+            },
+            "description": "Optional merchandise subtotal in the same currency as checkout, before delivery and tax."
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Successful response using the existing customer API response format",
+            "description": "Successful customer coupon response",
             "content": {
               "application/json": {
                 "schema": {
@@ -8986,9 +10720,30 @@
                           },
                           "validUntil": {
                             "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "usageLimit": {
+                            "type": "integer"
                           }
                         }
                       }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "hasMore": {
+                      "type": "boolean"
                     }
                   }
                 },
@@ -9004,9 +10759,16 @@
                       "maxDiscount": "200.00",
                       "isActive": true,
                       "validFrom": "2026-09-11T09:00:00.000Z",
-                      "validUntil": "2026-12-31T23:59:59.000Z"
+                      "validUntil": "2026-12-31T23:59:59.000Z",
+                      "description": "Save 10%",
+                      "usageLimit": 1
                     }
-                  ]
+                  ],
+                  "total": 1,
+                  "page": 1,
+                  "limit": 20,
+                  "totalPages": 1,
+                  "hasMore": false
                 }
               }
             }
@@ -9071,7 +10833,8 @@
               }
             }
           }
-        }
+        },
+        "description": "List active, currently valid coupons that have remaining redemptions for the authenticated customer. Optional subtotal also filters the minimum spend and returns discount previews. Does not redeem or create coupons."
       }
     },
     "/mob-api/offers/validate": {
@@ -9088,7 +10851,7 @@
         "parameters": [],
         "responses": {
           "200": {
-            "description": "Successful response using the existing customer API response format",
+            "description": "Successful customer coupon response",
             "content": {
               "application/json": {
                 "schema": {
@@ -9129,10 +10892,22 @@
                         },
                         "validUntil": {
                           "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "usageLimit": {
+                          "type": "integer"
                         }
                       }
                     },
+                    "subtotal": {
+                      "type": "integer"
+                    },
                     "discountAmount": {
+                      "type": "integer"
+                    },
+                    "discountedSubtotal": {
                       "type": "integer"
                     },
                     "freeShipping": {
@@ -9152,9 +10927,13 @@
                     "maxDiscount": "200.00",
                     "isActive": true,
                     "validFrom": "2026-09-11T09:00:00.000Z",
-                    "validUntil": "2026-12-31T23:59:59.000Z"
+                    "validUntil": "2026-12-31T23:59:59.000Z",
+                    "description": "Save 10%",
+                    "usageLimit": 1
                   },
+                  "subtotal": 1000,
                   "discountAmount": 100,
+                  "discountedSubtotal": 900,
                   "freeShipping": false
                 }
               }
@@ -9227,18 +11006,25 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "properties": {
-                  "code": {
-                    "type": "string"
-                  },
-                  "subtotal": {
-                    "type": "number"
-                  }
-                },
                 "required": [
                   "code",
                   "subtotal"
-                ]
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 30,
+                    "example": "WELCOME10"
+                  },
+                  "subtotal": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 99999999.99,
+                    "multipleOf": 0.01,
+                    "example": 1000
+                  }
+                }
               },
               "example": {
                 "code": "DEMO10",
@@ -9246,7 +11032,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Preview a discount using code and subtotal. Customer identity comes from the bearer token. No coupon is redeemed here. Send couponCode when placing the order; final amounts are calculated from server-side product prices. Cancelled orders do not count toward the per-customer usage limit; other order statuses do."
       }
     },
     "/mob-api/reviews/product/{productId}": {
@@ -10902,137 +12689,6 @@
         }
       }
     },
-    "/mob-api/delivery-zones/check": {
-      "get": {
-        "tags": [
-          "delivery"
-        ],
-        "summary": "Check delivery by region",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "pincode",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "example": "600001"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful response using the existing customer API response format",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "deliverable": {
-                      "type": "boolean"
-                    },
-                    "pincode": {
-                      "type": "string"
-                    },
-                    "zoneName": {
-                      "type": "string"
-                    },
-                    "city": {
-                      "type": "string"
-                    },
-                    "state": {
-                      "type": "string"
-                    },
-                    "deliveryCharge": {
-                      "type": "integer"
-                    },
-                    "minOrderAmountForFreeDelivery": {
-                      "type": "integer"
-                    }
-                  }
-                },
-                "example": {
-                  "success": true,
-                  "deliverable": true,
-                  "pincode": "600001",
-                  "zoneName": "Chennai",
-                  "city": "Chennai",
-                  "state": "Tamil Nadu",
-                  "deliveryCharge": 40,
-                  "minOrderAmountForFreeDelivery": 1500
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Missing, invalid, expired, or inactive customer token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Operation not permitted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found or not owned by this customer",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Operation conflicts with current state",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mob-api/stock-status": {
       "get": {
         "tags": [
@@ -12202,7 +13858,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Send checkout verification OTP. Customer authentication is required."
       }
     },
     "/mob-api/checkout/verify-otp": {
@@ -12275,7 +13932,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Verify checkout OTP. Customer authentication is required."
       }
     },
     "/mob-api/auth/send-checkout-otp": {
@@ -12347,7 +14005,8 @@
               }
             }
           }
-        }
+        },
+        "description": "Send checkout verification OTP. Customer authentication is required."
       }
     },
     "/mob-api/auth/verify-checkout-otp": {
@@ -12420,7 +14079,1006 @@
               }
             }
           }
+        },
+        "description": "Verify checkout OTP. Customer authentication is required."
+      }
+    },
+    "/mob-api/checkout": {
+      "get": {
+        "tags": [
+          "checkout"
+        ],
+        "summary": "Checkout details",
+        "description": "Return your cart with live stock flags and your saved addresses. defaultAddressId is a suggestion; send an explicit shippingAddressId when submitting. Cart subtotal is not the final order total: shipping, tax, coupons and loyalty are calculated when placing the order. No order is created by this request.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Checkout details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "checkout": {
+                      "type": "object",
+                      "properties": {
+                        "cart": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "integer"
+                            },
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "id": {
+                                    "type": "integer"
+                                  },
+                                  "cartId": {
+                                    "type": "integer"
+                                  },
+                                  "productId": {
+                                    "type": "integer"
+                                  },
+                                  "variantId": {
+                                    "nullable": true
+                                  },
+                                  "quantity": {
+                                    "type": "integer"
+                                  },
+                                  "priceAtAdd": {
+                                    "type": "string"
+                                  },
+                                  "selectedVariant": {
+                                    "type": "object",
+                                    "properties": {}
+                                  },
+                                  "product": {
+                                    "type": "object",
+                                    "properties": {
+                                      "id": {
+                                        "type": "integer"
+                                      },
+                                      "name": {
+                                        "type": "string"
+                                      },
+                                      "price": {
+                                        "type": "string"
+                                      },
+                                      "images": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "stock": {
+                                        "type": "integer"
+                                      },
+                                      "slug": {
+                                        "type": "string"
+                                      },
+                                      "gstRate": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  },
+                                  "variant": {
+                                    "nullable": true
+                                  },
+                                  "gstRate": {
+                                    "type": "string"
+                                  },
+                                  "stockStatus": {
+                                    "type": "string"
+                                  },
+                                  "availableStock": {
+                                    "type": "integer"
+                                  },
+                                  "unitPrice": {
+                                    "type": "integer"
+                                  },
+                                  "lineTotal": {
+                                    "type": "integer"
+                                  }
+                                }
+                              }
+                            },
+                            "subtotal": {
+                              "type": "integer"
+                            },
+                            "itemCount": {
+                              "type": "integer"
+                            },
+                            "currency": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "addresses": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "customerId": {
+                                "type": "integer"
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "email": {
+                                "type": "string"
+                              },
+                              "phone": {
+                                "type": "string"
+                              },
+                              "address": {
+                                "type": "string"
+                              },
+                              "city": {
+                                "type": "string"
+                              },
+                              "state": {
+                                "type": "string"
+                              },
+                              "pincode": {
+                                "type": "string"
+                              },
+                              "country": {
+                                "type": "string"
+                              },
+                              "addressLine2": {
+                                "type": "string"
+                              },
+                              "landmark": {
+                                "type": "string"
+                              },
+                              "isDefault": {
+                                "type": "boolean"
+                              },
+                              "createdAt": {
+                                "type": "string"
+                              },
+                              "updatedAt": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "defaultAddressId": {
+                          "type": "integer"
+                        },
+                        "stockIssues": {
+                          "type": "array",
+                          "items": {}
+                        },
+                        "totalsAreFinal": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "checkout": {
+                    "cart": {
+                      "id": 1,
+                      "items": [
+                        {
+                          "id": 1,
+                          "cartId": 1,
+                          "productId": 224,
+                          "variantId": null,
+                          "quantity": 1,
+                          "priceAtAdd": "999.00",
+                          "selectedVariant": {},
+                          "product": {
+                            "id": 224,
+                            "name": "Demo Cotton Shirt",
+                            "price": "999.00",
+                            "images": [
+                              "https://example.com/uploads/demo-shirt.jpg"
+                            ],
+                            "stock": 25,
+                            "slug": "demo-cotton-shirt",
+                            "gstRate": "0%"
+                          },
+                          "variant": null,
+                          "gstRate": "0%",
+                          "stockStatus": "VALID",
+                          "availableStock": 25,
+                          "unitPrice": 999,
+                          "lineTotal": 999
+                        }
+                      ],
+                      "subtotal": 999,
+                      "itemCount": 1,
+                      "currency": "INR"
+                    },
+                    "addresses": [
+                      {
+                        "id": 1,
+                        "customerId": 7,
+                        "label": "Home",
+                        "name": "Demo Customer",
+                        "email": "mobile.demo@example.com",
+                        "phone": "+919876543210",
+                        "address": "10 Demo Street",
+                        "city": "Chennai",
+                        "state": "Tamil Nadu",
+                        "pincode": "600001",
+                        "country": "India",
+                        "addressLine2": "",
+                        "landmark": "",
+                        "isDefault": true,
+                        "createdAt": "2026-09-11T09:00:00.000Z",
+                        "updatedAt": "2026-09-11T09:00:00.000Z"
+                      }
+                    ],
+                    "defaultAddressId": 1,
+                    "stockIssues": [],
+                    "totalsAreFinal": false
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Customer authentication required"
+          },
+          "500": {
+            "description": "Unable to load checkout"
+          }
         }
+      }
+    },
+    "/mob-api/checkout/place-order": {
+      "post": {
+        "tags": [
+          "checkout"
+        ],
+        "summary": "Place checkout order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "order": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "orderNumber": {
+                          "type": "string"
+                        },
+                        "customerId": {
+                          "type": "integer"
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "paymentStatus": {
+                          "type": "string"
+                        },
+                        "paymentMethod": {
+                          "type": "string"
+                        },
+                        "subtotal": {
+                          "type": "string"
+                        },
+                        "discountAmount": {
+                          "type": "string"
+                        },
+                        "shippingAmount": {
+                          "type": "string"
+                        },
+                        "taxAmount": {
+                          "type": "string"
+                        },
+                        "totalAmount": {
+                          "type": "string"
+                        },
+                        "currency": {
+                          "type": "string"
+                        },
+                        "shippingAddress": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "phone": {
+                              "type": "string"
+                            },
+                            "address": {
+                              "type": "string"
+                            },
+                            "city": {
+                              "type": "string"
+                            },
+                            "state": {
+                              "type": "string"
+                            },
+                            "pincode": {
+                              "type": "string"
+                            },
+                            "country": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "billingAddress": {
+                          "type": "object",
+                          "properties": {
+                            "name": {
+                              "type": "string"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "phone": {
+                              "type": "string"
+                            },
+                            "address": {
+                              "type": "string"
+                            },
+                            "city": {
+                              "type": "string"
+                            },
+                            "state": {
+                              "type": "string"
+                            },
+                            "pincode": {
+                              "type": "string"
+                            },
+                            "country": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "createdAt": {
+                          "type": "string"
+                        },
+                        "updatedAt": {
+                          "type": "string"
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "orderId": {
+                                "type": "integer"
+                              },
+                              "productId": {
+                                "type": "integer"
+                              },
+                              "productName": {
+                                "type": "string"
+                              },
+                              "quantity": {
+                                "type": "integer"
+                              },
+                              "unitPrice": {
+                                "type": "string"
+                              },
+                              "totalPrice": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "order": {
+                    "id": 57,
+                    "orderNumber": "BBDEMO0001",
+                    "customerId": 7,
+                    "status": "PENDING_PAYMENT",
+                    "paymentStatus": "UNPAID",
+                    "paymentMethod": "Razorpay Secure Online",
+                    "subtotal": "999.00",
+                    "discountAmount": "0.00",
+                    "shippingAmount": "40.00",
+                    "taxAmount": "0.00",
+                    "totalAmount": "1039.00",
+                    "currency": "INR",
+                    "shippingAddress": {
+                      "name": "Demo Customer",
+                      "email": "mobile.demo@example.com",
+                      "phone": "+919876543210",
+                      "address": "10 Demo Street",
+                      "city": "Chennai",
+                      "state": "Tamil Nadu",
+                      "pincode": "600001",
+                      "country": "India"
+                    },
+                    "billingAddress": {
+                      "name": "Demo Customer",
+                      "email": "mobile.demo@example.com",
+                      "phone": "+919876543210",
+                      "address": "10 Demo Street",
+                      "city": "Chennai",
+                      "state": "Tamil Nadu",
+                      "pincode": "600001",
+                      "country": "India"
+                    },
+                    "createdAt": "2026-09-11T09:00:00.000Z",
+                    "updatedAt": "2026-09-11T09:00:00.000Z",
+                    "items": [
+                      {
+                        "id": 1,
+                        "orderId": 57,
+                        "productId": 224,
+                        "productName": "Demo Cotton Shirt",
+                        "quantity": 1,
+                        "unitPrice": "999.00",
+                        "totalPrice": "999.00"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, expired, or inactive customer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not owned by this customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "shippingAddress": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": "string"
+                      },
+                      "address": {
+                        "type": "string"
+                      },
+                      "city": {
+                        "type": "string"
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "pincode": {
+                        "type": "string"
+                      },
+                      "country": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [],
+                    "description": "Inline address requires name (or fullName), phone, address (or flatHouse), city, state, pincode and country. Email defaults to the signed-in customer email."
+                  },
+                  "billingAddress": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": "string"
+                      },
+                      "address": {
+                        "type": "string"
+                      },
+                      "city": {
+                        "type": "string"
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "pincode": {
+                        "type": "string"
+                      },
+                      "country": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [],
+                    "description": "Inline address requires name (or fullName), phone, address (or flatHouse), city, state, pincode and country. Email defaults to the signed-in customer email."
+                  },
+                  "paymentMethod": {
+                    "type": "string",
+                    "enum": [
+                      "COD",
+                      "Cash on Delivery (COD)",
+                      "Razorpay Secure Online",
+                      "Telr Secure Online"
+                    ]
+                  },
+                  "couponCode": {
+                    "type": "string"
+                  },
+                  "referralCode": {
+                    "type": "string"
+                  },
+                  "redeemPoints": {
+                    "type": "number"
+                  },
+                  "isGiftWrap": {
+                    "type": "boolean"
+                  },
+                  "giftMessage": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string"
+                  },
+                  "requestedCurrency": {
+                    "type": "string",
+                    "enum": [
+                      "INR",
+                      "AED"
+                    ]
+                  },
+                  "geoCountry": {
+                    "type": "string"
+                  },
+                  "isBuyNow": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "buyNowItem": {
+                    "type": "object",
+                    "required": [
+                      "productId",
+                      "quantity"
+                    ],
+                    "properties": {
+                      "productId": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "variantId": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "nullable": true
+                      },
+                      "quantity": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  },
+                  "shippingAddressId": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "billingAddressId": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "paymentMethod"
+                ],
+                "oneOf": [
+                  {
+                    "required": [
+                      "shippingAddress"
+                    ],
+                    "not": {
+                      "required": [
+                        "shippingAddressId"
+                      ]
+                    }
+                  },
+                  {
+                    "required": [
+                      "shippingAddressId"
+                    ],
+                    "not": {
+                      "required": [
+                        "shippingAddress"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "example": {
+                "shippingAddressId": 1,
+                "billingAddressId": 1,
+                "paymentMethod": "Razorpay Secure Online",
+                "requestedCurrency": "INR"
+              }
+            }
+          }
+        },
+        "description": "Create an order from your saved cart, or an explicit buyNowItem. Use an owned shippingAddressId and optional billingAddressId, or inline addresses. Delivery requires an Indian address with a six-digit pincode. Prices, stock, discounts, shipping and tax are validated/calculated by the server. Saved addresses are copied into the order. Online orders require the initiate and verify payment steps; COD follows existing checkout rules."
+      }
+    },
+    "/mob-api/checkout/payments/initiate": {
+      "post": {
+        "tags": [
+          "checkout"
+        ],
+        "summary": "Initiate payment for my order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response using the existing customer API response format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "gateway": {
+                      "type": "string"
+                    },
+                    "key": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "integer"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "order_id": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "gateway": "razorpay",
+                  "key": "rzp_test_REPLACE_WITH_GATEWAY_KEY",
+                  "amount": 103900,
+                  "currency": "INR",
+                  "name": "Billu Bazzar",
+                  "description": "Payment for Order BBDEMO0001",
+                  "order_id": "order_REPLACE_WITH_GATEWAY_ORDER_ID"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, expired, or inactive customer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not owned by this customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "orderId": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "orderId"
+                ]
+              },
+              "example": {
+                "orderId": 57
+              }
+            }
+          }
+        },
+        "description": "Create payment gateway details for your pending order. Uses the same contract as /mob-api/payments/initiate."
+      }
+    },
+    "/mob-api/checkout/payments/verify": {
+      "post": {
+        "tags": [
+          "checkout"
+        ],
+        "summary": "Verify payment for my order",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful response using the existing customer API response format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "status": "PAID"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, expired, or inactive customer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not owned by this customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "orderId": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "razorpayPaymentId": {
+                    "type": "string"
+                  },
+                  "razorpayOrderId": {
+                    "type": "string"
+                  },
+                  "razorpaySignature": {
+                    "type": "string"
+                  },
+                  "orderRef": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "orderId"
+                ]
+              },
+              "example": {
+                "orderId": 57,
+                "razorpayPaymentId": "pay_REPLACE_WITH_GATEWAY_PAYMENT_ID",
+                "razorpayOrderId": "order_REPLACE_WITH_GATEWAY_ORDER_ID",
+                "razorpaySignature": "REPLACE_WITH_GATEWAY_SIGNATURE"
+              }
+            }
+          }
+        },
+        "description": "Verify your payment against your own order. Uses the same contract as /mob-api/payments/verify."
       }
     },
     "/mob-api/auth/me": {

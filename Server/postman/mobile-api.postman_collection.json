@@ -1084,28 +1084,6 @@
           ]
         },
         {
-          "name": "MOB-042 Delivery by pincode query",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/mob-api/delivery-zones/check?pincode={{pincode}}",
-            "description": "Delivery by pincode query. Expected HTTP 200. "
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Expected HTTP 200', () => pm.expect(pm.response.code).to.eql(200));",
-                  "pm.test('JSON response', () => pm.response.to.be.json);",
-                  "pm.test('Application success', () => pm.expect(pm.response.json().success).to.eql(true));"
-                ]
-              }
-            }
-          ]
-        },
-        {
           "name": "MOB-043 Stock of selected product",
           "request": {
             "method": "GET",
@@ -2496,27 +2474,6 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test('Expected HTTP 404', () => pm.expect(pm.response.code).to.eql(404));",
-                  "pm.test('JSON response', () => pm.response.to.be.json);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "MOB-086 Reject GET /delivery-zones/check",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/mob-api/delivery-zones/check",
-            "description": "Reject GET /delivery-zones/check. Expected HTTP 400. "
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Expected HTTP 400', () => pm.expect(pm.response.code).to.eql(400));",
                   "pm.test('JSON response', () => pm.response.to.be.json);"
                 ]
               }
@@ -5295,30 +5252,6 @@
             "header": [],
             "url": "{{baseUrl}}/mob-api/delivery-zones/check/1",
             "description": "No token GET /mob-api/delivery-zones/check/{pincode}. Expected HTTP 401. ",
-            "auth": {
-              "type": "noauth"
-            }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Expected HTTP 401', () => pm.expect(pm.response.code).to.eql(401));",
-                  "pm.test('JSON response', () => pm.response.to.be.json);"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "MOB-181 No token GET /mob-api/delivery-zones/check",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": "{{baseUrl}}/mob-api/delivery-zones/check",
-            "description": "No token GET /mob-api/delivery-zones/check. Expected HTTP 401. ",
             "auth": {
               "type": "noauth"
             }

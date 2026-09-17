@@ -15,7 +15,6 @@ const customer = { id: 7, name: 'Demo Customer', email, phone, loyaltyPoints: 0,
 const product = { id: 224, name: 'Demo Cotton Shirt', slug: 'demo-cotton-shirt', price: '999.00', comparePrice: '1299.00', currency: 'INR', stock: 25, images: ['https://example.com/uploads/demo-shirt.jpg'], gstRate: '0%', isActive: true, rating: '0.00', reviewCount: 0 };
 const category = { id: 12, name: 'Clothing', slug: 'clothing', isActive: true };
 const subCategory = { id: 30, categoryId: 12, name: 'Shirts', slug: 'shirts', isActive: true };
-const subSubCategory = { id: 108, subCategoryId: 30, name: 'Cotton Shirts', slug: 'cotton-shirts', isActive: true };
 const cartItem = { id: 1, cartId: 1, productId: 224, variantId: null, quantity: 1, priceAtAdd: '999.00', selectedVariant: {}, product: { id: product.id, name: product.name, price: product.price, images: product.images, stock: product.stock, slug: product.slug, gstRate: product.gstRate }, variant: null, gstRate: '0%', stockStatus: 'VALID', availableStock: 25 };
 const cart = { id: 1, customerId: 7, sessionId: null, items: [cartItem], subtotal: 999 };
 const order = { id: 57, orderNumber: 'BBDEMO0001', customerId: 7, status: 'PENDING_PAYMENT', paymentStatus: 'UNPAID', paymentMethod: 'Razorpay Secure Online', subtotal: '999.00', discountAmount: '0.00', shippingAmount: '40.00', taxAmount: '0.00', totalAmount: '1039.00', currency: 'INR', shippingAddress: address, billingAddress: address, createdAt: date, updatedAt: date, items: [{ id: 1, orderId: 57, productId: 224, productName: product.name, quantity: 1, unitPrice: '999.00', totalPrice: '999.00' }] };
@@ -34,19 +33,18 @@ add('GET', '/auth/getme', { success: true, customer: { id: 7, name: customer.nam
 add('GET', '/auth/profile', { success: true, customer });
 add('PUT', '/auth/profile', { success: true, customer }, { name: customer.name, phone, address, whatsappOptIn: false });
 add('PUT', '/auth/change-password', ok('Password updated successfully'), { currentPassword: 'DemoPassword123!', newPassword: 'NewDemoPassword123!' });
-add('GET', '/products', { success: true, products: [product], total: 1, page: 1, totalPages: 1 });
+add('GET', '/products', { success: true, products: [{ ...product, categoryId: category.id, subCategoryId: null, variants: [] }], total: 1, page: 1, limit: 20, totalPages: 1, hasMore: false });
 add('GET', '/products/featured', { success: true, products: [{ ...product, isFeatured: true, category: { name: category.name, slug: category.slug } }] });
-add('GET', '/products/search', { success: true, products: [{ id: product.id, name: product.name, slug: product.slug, price: product.price, images: product.images, discountPercent: 0 }] });
+add('GET', '/products/search', { success: true, products: [{ ...product, categoryId: category.id, subCategoryId: null, variants: [] }], total: 1, page: 1, limit: 20, totalPages: 1, hasMore: false });
 add('GET', '/products/price-range', { success: true, minPrice: 999, maxPrice: 999 });
 add('GET', '/products/{slug}', { success: true, product: { ...product, category, variants: [] } });
 add('GET', '/variants/product/{productId}', { success: true, variants: [{ id: 10, productId: 224, sku: 'DEMO-SHIRT-M', price: '999.00', stock: 25, attributes: { Size: 'M', Color: 'Blue' } }] });
 add('GET', '/categories', { success: true, categories: [category] });
 add('GET', '/subcategories', { success: true, subCategories: [subCategory] });
-add('GET', '/subsubcategories', { success: true, subSubCategories: [subSubCategory] });
-add('GET', '/categories/tree', { success: true, categories: [{ ...category, subcategories: [{ ...subCategory, subsubcategories: [subSubCategory] }] }] });
-add('GET', '/cart', { success: true, cart, cartAdjusted: false, adjustments: [] });
-add('POST', '/cart/add', { ...ok('Added to cart'), sessionId: null }, { productId: 224, quantity: 1 });
-add('POST', '/cart/sync', { success: true, cart, adjustments: [] }, { items: [{ productId: 224, quantity: 1 }] });
+add('GET', '/categories/tree', { success: true, categories: [{ ...category, subcategories: [{ ...subCategory, children: [] }] }] });
+add('GET', '/cart', { success: true, cart: { id: cart.id, items: cart.items.map(item => ({ ...item, unitPrice: 999, lineTotal: 999, availableStock: 25, stockStatus: 'VALID' })), subtotal: 999, itemCount: 1, currency: 'INR' } });
+add('POST', '/cart/add', { ...ok('Added to cart'), itemId: 1, quantity: 1 }, { productId: 224, quantity: 1 });
+add('POST', '/cart/sync', { ...ok('Cart synced successfully'), cartId: 1 }, { items: [{ productId: 224, quantity: 1 }] });
 add('PUT', '/cart/item/{itemId}', ok('Cart updated successfully'), { quantity: 2 });
 add('DELETE', '/cart/item/{itemId}', ok('Removed from cart'));
 add('DELETE', '/cart/clear', ok('Cart cleared'));
@@ -63,8 +61,8 @@ add('POST', '/myaccount/wishlist', { success: true, action: 'added' }, { product
 add('GET', '/myaccount/loyalty', { success: true, ledger: [], balance: 0 });
 add('GET', '/myaccount/tickets', { success: true, tickets: [ticket] });
 add('POST', '/myaccount/tickets', { success: true, ticket }, { subject: ticket.subject, description: ticket.description, category: 'GENERAL' }, 201);
-add('GET', '/coupons', { success: true, coupons: [coupon] });
-add('POST', '/coupons/validate', { success: true, valid: true, coupon, discountAmount: 100, freeShipping: false }, { code: 'DEMO10', subtotal: 1000 });
+add('GET', '/coupons', { success: true, coupons: [{ ...coupon, description: 'Save 10%', usageLimit: 1 }], total: 1, page: 1, limit: 20, totalPages: 1, hasMore: false });
+add('POST', '/coupons/validate', { success: true, valid: true, coupon: { ...coupon, description: 'Save 10%', usageLimit: 1 }, subtotal: 1000, discountAmount: 100, discountedSubtotal: 900, freeShipping: false }, { code: 'DEMO10', subtotal: 1000 });
 add('GET', '/delivery-zones/check/{pincode}', { success: true, deliverable: true, pincode: '600001', zoneName: 'Chennai', city: 'Chennai', state: 'Tamil Nadu', deliveryCharge: 40, minOrderAmountForFreeDelivery: 1500 });
 add('GET', '/stock-status', { success: true, productId: 224, variantId: null, stock: 25, cartQty: 1, availableStock: 24, stockStatus: 'IN_STOCK', stockLabel: 'In Stock', canAddToCart: true, canBuyNow: true });
 add('POST', '/stock-alerts', { ...ok('Restock alert set! We will email mobile.demo@example.com as soon as "Demo Cotton Shirt" is back in stock.'), alert: { id: 1, productId: 224, email, phone } }, { productId: 224, email, phone }, 201);
@@ -72,7 +70,8 @@ add('GET', '/settings/{key}', { success: true, key: 'otp_threshold', data: { inr
 add('POST', '/settings/newsletter-subscribe', { ...ok('Thank you!'), pointsAwarded: 0 }, { email });
 add('GET', '/banners', { success: true, banners: [{ id: 1, title: 'New collection', image: 'https://example.com/uploads/demo-banner.jpg', type: 'HERO', ctaText: 'Shop now', ctaLink: '/products', position: 0, isActive: true }] });
 add('GET', '/marketing-messages', { success: true, messages: [{ id: 1, message: 'Explore our new collection', position: 0, isActive: true }] });
-add('GET', '/search/autocomplete', { success: true, suggestions: ['cotton shirt'], products: [{ id: 224, name: product.name, price: product.price, comparePrice: product.comparePrice, image: product.images[0], slug: product.slug, discountPercent: 0 }] });
+add('GET', '/search/autocomplete', { success: true, query: 'shirt', suggestions: [{ id: product.id, name: product.name }] });
+add('GET', '/search/suggestions', { success: true, query: 'shirt', suggestions: [{ id: product.id, name: product.name }] });
 add('GET', '/search/trending', { success: true, trending: ['cotton shirt', 'saree'] });
 add('POST', '/search/track', ok('Search tracked successfully'), { q: 'cotton shirt' });
 add('GET', '/currency/rate', { success: true, base: 'AED', target: 'INR', rate: 23.5, note: 'Rate is cached and refreshed every 6 hours from open.er-api.com' });
@@ -94,10 +93,30 @@ add('GET', '/returns/my', { success: true, returns: [returnRequest] });
 add('GET', '/returns/my/{id}', { success: true, returnRequest });
 add('POST', '/returns/request', { ...ok('Return request submitted successfully with unboxing video proof.'), returnRequest }, { orderId: 57, orderItemId: 1, quantity: 1, reason: returnRequest.reason, reasonDetails: returnRequest.reasonDetails, unboxingVideoUrl: returnRequest.unboxingVideoUrl }, 201);
 
+add('GET', '/wishlist', { success: true, wishlist: [{ id: 1, customerId: 7, productId: 224, variantId: null, selectedVariant: {}, product, variant: null }], total: 1 });
+add('POST', '/wishlist/add', { success: true, action: 'added', itemId: 1 }, { productId: 224, variantId: 10 });
+add('POST', '/wishlist/toggle', { success: true, action: 'added', itemId: 1 }, { productId: 224, variantId: 10 });
+add('DELETE', '/wishlist/item/{itemId}', ok('Removed from wishlist'));
+add('DELETE', '/wishlist/clear', ok('Wishlist cleared'));
+examples['GET /mob-api/myaccount/wishlist'] = examples['GET /mob-api/wishlist'];
+examples['POST /mob-api/myaccount/wishlist'] = examples['POST /mob-api/wishlist/toggle'];
+
+const savedAddress = { id: 1, customerId: 7, label: 'Home', ...address, addressLine2: '', landmark: '', isDefault: true, createdAt: date, updatedAt: date };
+add('GET', '/addresses', { success: true, addresses: [savedAddress] });
+add('POST', '/addresses', { success: true, address: savedAddress }, { label: 'Home', ...address, isDefault: true }, 201);
+add('GET', '/addresses/{addressId}', { success: true, address: savedAddress });
+add('PUT', '/addresses/{addressId}', { success: true, address: { ...savedAddress, label: 'Work' } }, { label: 'Work' });
+add('PUT', '/addresses/{addressId}/default', { success: true, address: savedAddress });
+add('DELETE', '/addresses/{addressId}', ok('Saved address deleted'));
+
+add('GET', '/checkout', { success: true, checkout: { cart: examples['GET /mob-api/cart'].response.cart, addresses: [savedAddress], defaultAddressId: 1, stockIssues: [], totalsAreFinal: false } });
+examples['POST /mob-api/checkout/place-order'] = { ...examples['POST /mob-api/orders'], request: { shippingAddressId: 1, billingAddressId: 1, paymentMethod: 'Razorpay Secure Online', requestedCurrency: 'INR' } };
+examples['POST /mob-api/checkout/payments/initiate'] = examples['POST /mob-api/payments/initiate'];
+examples['POST /mob-api/checkout/payments/verify'] = examples['POST /mob-api/payments/verify'];
+
 const aliases = {
   '/auth/me': '/auth/getme', '/auth/reset-password': '/auth/new-password',
   '/site-settings/{key}': '/settings/{key}', '/offers': '/coupons', '/offers/validate': '/coupons/validate',
-  '/delivery-zones/check': '/delivery-zones/check/{pincode}',
   '/auth/send-checkout-otp': '/checkout/send-otp', '/auth/verify-checkout-otp': '/checkout/verify-otp',
   '/myaccount/profile': '/auth/profile', '/myaccount/change-password': '/auth/change-password',
   '/customers/wishlist': '/myaccount/wishlist', '/customers/loyalty': '/myaccount/loyalty', '/customers/tickets': '/myaccount/tickets'

@@ -55,7 +55,7 @@ const EditReviewModal = ({ item, onClose, onSave, submitting }) => {
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.96 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative"
+        className="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 relative"
         onClick={e => e.stopPropagation()}
       >
         <button onClick={onClose} className="absolute top-4 right-4 p-1 rounded-full hover:bg-neutral-100 text-neutral-400">
@@ -107,7 +107,7 @@ const EditReviewModal = ({ item, onClose, onSave, submitting }) => {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full py-3 bg-amber-400 hover:bg-amber-500 text-white font-semibold rounded-xl text-sm transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 bg-amber-400 hover:bg-amber-500 text-white font-semibold rounded-lg text-sm transition-colors flex items-center justify-center gap-2"
           >
             {submitting ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : (item.existingReview ? 'Save Review' : 'Submit Review')}
           </button>
@@ -195,7 +195,7 @@ const MyReviewsPage = () => {
           { label: 'Reviews Written', value: reviewedCount, icon: CheckCircle, color: 'text-green-600' },
           { label: 'Pending Reviews', value: pendingCount, icon: AlertCircle, color: 'text-amber-500' },
         ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-white border border-neutral-200/80 rounded-xl p-3.5 sm:p-4 text-center shadow-xs flex flex-col items-center justify-center">
+          <div key={label} className="bg-white border border-neutral-200/80 rounded-lg p-3.5 sm:p-4 text-center shadow-xs flex flex-col items-center justify-center">
             <Icon size={18} className={`${color} mb-1`} />
             <p className="text-lg sm:text-xl font-bold text-neutral-900">{value}</p>
             <p className="text-[11px] sm:text-xs text-neutral-500">{label}</p>
@@ -227,7 +227,7 @@ const MyReviewsPage = () => {
           <p className="text-sm text-neutral-500">Loading your purchases...</p>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white border border-neutral-200/80 rounded-2xl p-8 sm:p-12 text-center shadow-sm">
+        <div className="bg-white border border-neutral-200/80 rounded-lg p-8 sm:p-12 text-center shadow-sm">
           <MessageSquare size={40} className="text-neutral-300 mx-auto mb-3" strokeWidth={1.5} />
           <h3 className="font-semibold text-neutral-800 mb-1">
             {filter === 'pending' ? 'No Pending Reviews' : filter === 'reviewed' ? 'No Reviews Yet' : 'No Delivered Orders Yet'}
@@ -240,7 +240,7 @@ const MyReviewsPage = () => {
               : 'Start reviewing your delivered products to help other shoppers.'}
           </p>
           {filter === 'all' && (
-            <Link to="/account/orders" className="mt-5 inline-block px-5 py-2.5 bg-amber-400 text-white text-xs sm:text-sm font-semibold rounded-xl hover:bg-amber-500 transition-colors shadow-sm">
+            <Link to="/account/orders" className="mt-5 inline-block px-5 py-2.5 bg-amber-400 text-white text-xs sm:text-sm font-semibold rounded-lg hover:bg-amber-500 transition-colors shadow-sm">
               View My Orders
             </Link>
           )}
@@ -255,7 +255,7 @@ const MyReviewsPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ delay: idx * 0.04, duration: 0.2 }}
-                className="bg-white border border-neutral-200/80 rounded-2xl shadow-sm p-4 sm:p-5"
+                className="bg-white border border-neutral-200/80 rounded-lg shadow-sm p-4 sm:p-5"
               >
                 {/* Product Header Row: Image + Details + Status Badge */}
                 <div className="flex items-start gap-3.5 sm:gap-4">
@@ -263,7 +263,7 @@ const MyReviewsPage = () => {
                     <img
                       src={getImageUrl(item.variantImage || item.variant?.image || item.productImage) || getPlaceholderSvg(item.productName || 'Product')}
                       alt={item.productName}
-                      className="w-16 h-20 sm:w-20 sm:h-24 object-cover rounded-xl border border-neutral-100 flex-shrink-0 hover:opacity-90 transition-opacity shadow-xs"
+                      className="w-16 h-20 sm:w-20 sm:h-24 object-cover rounded-lg border border-neutral-100 flex-shrink-0 hover:opacity-90 transition-opacity shadow-xs"
                       onError={(e) => { e.target.onerror = null; e.target.src = getPlaceholderSvg(item.productName || 'Product'); }}
                     />
                   </Link>
@@ -303,16 +303,16 @@ const MyReviewsPage = () => {
                 <div className="mt-3.5 sm:mt-4 space-y-3">
                   {/* Existing Review Preview Box */}
                   {item.existingReview && (
-                    <div className="bg-neutral-50/80 rounded-xl p-3.5 sm:p-4 border border-neutral-200/60 w-full space-y-2">
+                    <div className="bg-neutral-50/80 rounded-lg p-3.5 sm:p-4 border border-neutral-200/60 w-full space-y-2">
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <div className="flex items-center gap-2">
                           <RatingStars rating={item.existingReview.rating} size={14} />
                           <span className="text-xs font-bold text-neutral-800">{item.existingReview.rating}.0</span>
                         </div>
                         {item.existingReview.isApproved ? (
-                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded border border-emerald-200/60">Published</span>
+                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100/60 px-2 py-0.5 rounded-lg border border-emerald-200/60">Published</span>
                         ) : (
-                          <span className="text-[10px] font-semibold text-amber-700 bg-amber-100/60 px-2 py-0.5 rounded border border-amber-200/60">Pending Approval</span>
+                          <span className="text-[10px] font-semibold text-amber-700 bg-amber-100/60 px-2 py-0.5 rounded-lg border border-amber-200/60">Pending Approval</span>
                         )}
                       </div>
                       {item.existingReview.title && (
@@ -359,13 +359,13 @@ const MyReviewsPage = () => {
                       <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                         <button
                           onClick={() => setEditingItem(item)}
-                          className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-5 py-2.5 text-xs font-semibold rounded-xl bg-amber-400 text-white hover:bg-amber-500 shadow-sm transition-colors cursor-pointer"
+                          className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-5 py-2.5 text-xs font-semibold rounded-lg bg-amber-400 text-white hover:bg-amber-500 shadow-sm transition-colors cursor-pointer"
                         >
                           <Star size={14} /> Write a Review
                         </button>
                         <Link
                           to={item.productSlug ? `/products/${item.productSlug}?writeReview=true` : '#'}
-                          className="inline-flex items-center justify-center gap-1 px-3.5 py-2.5 text-xs font-medium text-neutral-500 hover:text-neutral-900 border border-neutral-200 rounded-xl hover:bg-neutral-50 transition-colors"
+                          className="inline-flex items-center justify-center gap-1 px-3.5 py-2.5 text-xs font-medium text-neutral-500 hover:text-neutral-900 border border-neutral-200 rounded-lg hover:bg-neutral-50 transition-colors"
                         >
                           <ExternalLink size={13} /> View Product
                         </Link>

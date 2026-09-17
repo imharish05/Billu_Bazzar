@@ -124,7 +124,7 @@ const CartPage = () => {
                     <img
                       src={img}
                       alt={name}
-                      className="w-20 h-24 sm:w-24 sm:h-28 object-cover flex-shrink-0 rounded border border-neutral-200"
+                      className="w-20 h-24 sm:w-24 sm:h-28 object-cover flex-shrink-0 rounded-lg border border-neutral-200"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=200';
@@ -153,7 +153,7 @@ const CartPage = () => {
                           const availStock = item.variant?.stock ?? item.product?.stock ?? item.availableStock ?? 9999;
                           const isMax = item.quantity >= availStock;
                           return (
-                            <div className="flex items-center border border-brand-light w-fit rounded-sm overflow-hidden">
+                            <div className="flex items-center border border-brand-light w-fit rounded-lg overflow-hidden">
                               <button
                                 onClick={() => item.quantity <= 1 ? dispatch(removeLocal({ productId: item.productId || item.id, variantId: item.variantId, selectedVariant: item.selectedVariant })) : dispatch(addLocal({ ...item, quantity: -1 }))}
                                 className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center hover:bg-brand-light transition-colors focus-visible:outline-brand-gold text-sm"
@@ -234,7 +234,7 @@ const CartPage = () => {
                         value={giftMessage}
                         onChange={handleGiftMessageChange}
                         placeholder="Write your special message here... (e.g. Happy Anniversary! With love, Priya)"
-                        className="w-full border border-brand-light p-3 text-xs focus:outline-none focus:border-brand-gold bg-transparent resize-none rounded-sm placeholder-brand-grey/40"
+                        className="w-full border border-brand-light p-3 text-xs focus:outline-none focus:border-brand-gold bg-transparent resize-none rounded-lg placeholder-brand-grey/40"
                       />
                       <div className="flex justify-between items-center text-[10px] text-brand-grey">
                         <span>{countWords(giftMessage)} / 500 words</span>

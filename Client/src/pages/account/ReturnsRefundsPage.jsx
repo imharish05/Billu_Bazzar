@@ -171,7 +171,7 @@ const ReturnsRefundsPage = () => {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-white border border-neutral-200/80 rounded-xl p-6 shadow-xs">
+      <div className="bg-white border border-neutral-200/80 rounded-lg p-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -250,23 +250,23 @@ const ReturnsRefundsPage = () => {
 
       {/* Content List */}
       {loading && returns.length === 0 ? (
-        <div className="bg-white rounded-xl border border-neutral-200/80 p-12 text-center shadow-xs">
+        <div className="bg-white rounded-lg border border-neutral-200/80 p-12 text-center shadow-xs">
           <RefreshCw size={28} className="animate-spin text-brand-gold mx-auto mb-3" />
           <p className="text-neutral-500 text-sm">Loading your return records...</p>
         </div>
       ) : error ? (
-        <div className="bg-white rounded-xl border border-red-200 p-8 text-center shadow-xs">
+        <div className="bg-white rounded-lg border border-red-200 p-8 text-center shadow-xs">
           <AlertCircle size={32} className="text-red-500 mx-auto mb-2" />
           <p className="text-sm font-semibold text-red-700">{error}</p>
           <button
             onClick={() => dispatch(fetchMyReturns())}
-            className="mt-3 px-4 py-1.5 text-xs font-semibold bg-red-50 text-red-700 border border-red-200 rounded-md hover:bg-red-100"
+            className="mt-3 px-4 py-1.5 text-xs font-semibold bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100"
           >
             Try Again
           </button>
         </div>
       ) : filteredReturns.length === 0 ? (
-        <div className="bg-white rounded-xl border border-neutral-200/80 p-12 text-center shadow-xs">
+        <div className="bg-white rounded-lg border border-neutral-200/80 p-12 text-center shadow-xs">
           <div className="w-14 h-14 bg-amber-50 text-brand-gold rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-200/60">
             <RotateCcw size={26} />
           </div>
@@ -324,12 +324,12 @@ const ReturnsRefundsPage = () => {
                 key={item.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white border border-neutral-200/80 rounded-xl overflow-hidden shadow-xs hover:border-brand-gold/40 transition-colors"
+                className="bg-white border border-neutral-200/80 rounded-lg overflow-hidden shadow-xs hover:border-brand-gold/40 transition-colors"
               >
                 {/* Card Top Header */}
                 <div className="bg-neutral-50/70 border-b border-neutral-100 p-4 flex flex-wrap items-center justify-between gap-3 text-xs">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <span className="font-mono font-bold text-neutral-900 px-2 py-0.5 bg-white border border-neutral-200 rounded">
+                    <span className="font-mono font-bold text-neutral-900 px-2 py-0.5 bg-white border border-neutral-200 rounded-lg">
                       {item.returnNumber}
                     </span>
                     {item.order && (
@@ -382,7 +382,7 @@ const ReturnsRefundsPage = () => {
                               {variantEntries.map(([k, v]) => (
                                 <span
                                   key={k}
-                                  className="inline-flex items-center px-2 py-0.5 rounded bg-amber-50 text-amber-900 border border-amber-200/60 font-medium text-[11px]"
+                                  className="inline-flex items-center px-2 py-0.5 rounded-lg bg-amber-50 text-amber-900 border border-amber-200/60 font-medium text-[11px]"
                                 >
                                   <span className="text-neutral-500 mr-1 capitalize">{k}:</span>
                                   <span className="font-semibold">{String(v)}</span>
@@ -392,7 +392,7 @@ const ReturnsRefundsPage = () => {
                           );
                         })()}
                         <div className="flex items-center gap-3 mt-2 text-xs">
-                          <span className="px-2 py-0.5 bg-neutral-100 text-neutral-700 rounded font-medium">
+                          <span className="px-2 py-0.5 bg-neutral-100 text-neutral-700 rounded-lg font-medium">
                             Return Qty: {item.quantity}
                           </span>
                           <span className="font-semibold text-neutral-900">
@@ -406,7 +406,7 @@ const ReturnsRefundsPage = () => {
                         {/* Reason badge */}
                         <div className="mt-3 flex items-center gap-2 flex-wrap text-xs">
                           <span className="font-medium text-neutral-500">Reason:</span>
-                          <span className="px-2 py-0.5 bg-amber-50 text-amber-900 border border-amber-200/60 rounded text-[11px] font-semibold">
+                          <span className="px-2 py-0.5 bg-amber-50 text-amber-900 border border-amber-200/60 rounded-lg text-[11px] font-semibold">
                             {REASON_LABELS[item.reason] || item.reason}
                           </span>
                         </div>
@@ -417,7 +417,7 @@ const ReturnsRefundsPage = () => {
                           </div>
                         )}
                         {item.reasonDetails && (
-                          <p className="text-xs text-neutral-600 mt-1.5 italic bg-neutral-50 p-2 rounded border border-neutral-100">
+                          <p className="text-xs text-neutral-600 mt-1.5 italic bg-neutral-50 p-2 rounded-lg border border-neutral-100">
                             "{item.reasonDetails}"
                           </p>
                         )}
@@ -425,14 +425,14 @@ const ReturnsRefundsPage = () => {
                     </div>
 
                     {/* Unboxing Video Proof & Inspection Box */}
-                    <div className="md:w-72 bg-neutral-50 p-4 rounded-xl border border-neutral-200/60 flex flex-col justify-between gap-3 shrink-0">
+                    <div className="md:w-72 bg-neutral-50 p-4 rounded-lg border border-neutral-200/60 flex flex-col justify-between gap-3 shrink-0">
                       <div>
                         <div className="flex items-center justify-between gap-2 mb-2">
                           <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-700 flex items-center gap-1.5">
                             <ShieldCheck size={14} className="text-brand-gold" />
                             Unboxing Video Proof
                           </span>
-                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded-lg">
                             Attached
                           </span>
                         </div>
@@ -567,7 +567,7 @@ const ReturnsRefundsPage = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-neutral-900 rounded-2xl overflow-hidden max-w-2xl w-full shadow-2xl relative border border-neutral-800"
+              className="bg-neutral-900 rounded-lg overflow-hidden max-w-2xl w-full shadow-2xl relative border border-neutral-800"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between p-4 border-b border-neutral-800 text-white">

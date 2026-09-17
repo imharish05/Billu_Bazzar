@@ -1,0 +1,10 @@
+'use strict';
+const router = require('express').Router();
+const controller = require('./addressesController');
+router.get('/addresses', controller.listAddresses);
+router.post('/addresses', controller.createAddress);
+router.get('/addresses/:addressId', controller.getAddress);
+router.put('/addresses/:addressId', controller.updateAddress);
+router.put('/addresses/:addressId/default', controller.setDefaultAddress);
+router.delete('/addresses/:addressId', controller.deleteAddress);
+module.exports = router;

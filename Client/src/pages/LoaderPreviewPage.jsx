@@ -39,7 +39,7 @@ const LoaderPreviewPage = () => {
       {/* Interactive Actions Grid */}
       <div className="w-full max-w-4xl space-y-8">
         {/* 1. Fullscreen Preloader Showcase Button */}
-        <div className="bg-gradient-to-r from-neutral-900 via-neutral-950 to-neutral-900 p-8 rounded-2xl border border-neutral-800 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="bg-gradient-to-r from-neutral-900 via-neutral-950 to-neutral-900 p-8 rounded-lg border border-neutral-800 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="space-y-1 text-center md:text-left">
             <h3 className="text-xl font-bold text-[#F2D98D]" style={{ fontFamily: '"Cinzel", serif' }}>
               Full-Screen Website Entrance Preloader
@@ -50,7 +50,7 @@ const LoaderPreviewPage = () => {
           </div>
           <button
             onClick={() => setShowPreloader(true)}
-            className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#8A6820] via-[#C9A24B] to-[#F2D98D] text-black font-bold text-xs uppercase tracking-widest rounded-xl hover:brightness-110 shadow-lg shadow-[#C9A24B]/20 transition-all active:scale-95 shrink-0"
+            className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#8A6820] via-[#C9A24B] to-[#F2D98D] text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:brightness-110 shadow-lg shadow-[#C9A24B]/20 transition-all active:scale-95 shrink-0"
           >
             <Play size={16} fill="black" />
             Play Fullscreen Preloader
@@ -58,7 +58,7 @@ const LoaderPreviewPage = () => {
         </div>
 
         {/* 2. Inline Component Loader Variations */}
-        <div className="bg-white p-8 rounded-2xl border border-neutral-200 shadow-sm space-y-6">
+        <div className="bg-white p-8 rounded-lg border border-neutral-200 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-100 pb-4">
             <div>
               <h3 className="text-lg font-bold text-neutral-900" style={{ fontFamily: '"Cinzel", serif' }}>
@@ -76,7 +76,7 @@ const LoaderPreviewPage = () => {
                   <button
                     key={s}
                     onClick={() => setActiveSize(s)}
-                    className={`px-3 py-1 rounded-md uppercase transition-all ${
+                    className={`px-3 py-1 rounded-lg uppercase transition-all ${
                       activeSize === s ? 'bg-black text-white shadow' : 'text-neutral-600 hover:text-black'
                     }`}
                   >
@@ -96,7 +96,7 @@ const LoaderPreviewPage = () => {
 
           {/* Loader Preview Stage */}
           <div
-            className={`min-h-[260px] rounded-xl flex flex-col items-center justify-center p-8 transition-colors ${
+            className={`min-h-[260px] rounded-lg flex flex-col items-center justify-center p-8 transition-colors ${
               darkTheme ? 'bg-[#080809] border border-neutral-800' : 'bg-neutral-50 border border-neutral-200'
             }`}
           >

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { User, Package, Heart, Star, Gift, Headphones, LogOut, Lock, Mail, Eye, EyeOff, Phone, ArrowLeft, CheckCircle, RefreshCw, MessageSquare, RotateCcw } from 'lucide-react';
+import { User, MapPin, Package, Heart, Star, Gift, Headphones, LogOut, Lock, Mail, Eye, EyeOff, Phone, ArrowLeft, CheckCircle, RefreshCw, MessageSquare, RotateCcw } from 'lucide-react';
 import Footer from '../../components/Footer';
 import { loginCustomer, registerCustomer, logout, clearError, fetchProfile } from '../../redux/slices/authSlice';
 import toast from 'react-hot-toast';
@@ -11,6 +11,7 @@ import api from '../../services/api';
 
 const NAV_ITEMS = [
   { to: '/account', label: 'Profile', icon: User, end: true },
+  { to: '/account/addresses', label: 'Saved Addresses', icon: MapPin },
   { to: '/account/orders', label: 'My Orders', icon: Package },
   { to: '/account/wishlist', label: 'Wishlist', icon: Heart },
   { to: '/account/reviews', label: 'My Reviews', icon: MessageSquare },
@@ -281,7 +282,7 @@ const AccountLayout = () => {
   if (!isAuthenticated) {
     return (
       <main id="main-content" className="bg-[#FDFDFB] min-h-[85vh] flex items-center justify-center py-20 px-6">
-        <div className="w-full max-w-md bg-white border border-neutral-100 p-8 md:p-10 shadow-sm rounded-xl">
+        <div className="w-full max-w-md bg-white border border-neutral-100 p-8 md:p-10 shadow-sm rounded-lg">
 
           {/* ════════════════════════════════════
               STEP 1 — Enter Email
@@ -545,7 +546,7 @@ const AccountLayout = () => {
                   {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
                 </div>
 
-                {error && <p className="text-xs text-red-600 bg-red-50 p-2.5 rounded border border-red-100">{error}</p>}
+                {error && <p className="text-xs text-red-600 bg-red-50 p-2.5 rounded-lg border border-red-100">{error}</p>}
 
                 <button type="submit" disabled={loading} className="btn-primary w-full py-3 rounded-lg flex items-center justify-center font-semibold text-sm transition-transform active:scale-[0.98] mt-6" id="auth-submit-btn">
                   {loading
@@ -588,7 +589,7 @@ const AccountLayout = () => {
             </div>
             <button
               onClick={handleSignOut}
-              className="px-2 py-1 text-[11px] text-red-500 font-semibold hover:bg-red-50 rounded flex items-center gap-1 transition-colors flex-shrink-0"
+              className="px-2 py-1 text-[11px] text-red-500 font-semibold hover:bg-red-50 rounded-lg flex items-center gap-1 transition-colors flex-shrink-0"
               id="mobile-account-logout"
             >
               <LogOut size={12} /> Sign Out
@@ -622,7 +623,7 @@ const AccountLayout = () => {
         <div className="flex flex-col md:flex-row gap-8">
           {/* Desktop Sidebar (>= md) */}
           <aside className="hidden md:block w-60 flex-shrink-0">
-            <div className="bg-white shadow-sm p-5 text-center mb-4 border border-neutral-100 rounded-xl">
+            <div className="bg-white shadow-sm p-5 text-center mb-4 border border-neutral-100 rounded-lg">
               <div className="w-16 h-16 rounded-full bg-brand-gold flex items-center justify-center mx-auto mb-3">
                 <span className="text-white font-bold text-xl">{customer?.name?.[0]?.toUpperCase() || 'B'}</span>
               </div>
@@ -633,7 +634,7 @@ const AccountLayout = () => {
                 <span className="text-xs font-medium text-brand-gold">{customer?.loyaltyPoints || 0} pts</span>
               </div>
             </div>
-            <nav className="bg-white shadow-sm rounded-xl border border-neutral-100 overflow-hidden">
+            <nav className="bg-white shadow-sm rounded-lg border border-neutral-100 overflow-hidden">
               {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
                 <NavLink key={to} to={to} end={end}
                   className={({ isActive }) => `w-full flex items-center gap-3 px-4 py-3 text-sm text-left border-l-2 transition-all hover:bg-brand-light ${isActive ? 'border-brand-gold text-brand-gold bg-brand-light/50 font-medium' : 'border-transparent text-brand-grey'}`}

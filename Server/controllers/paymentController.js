@@ -183,7 +183,7 @@ const initiatePayment = async (req, res) => {
     });
   } catch (err) {
     console.error('[initiatePayment] Error:', err.message, err.stack);
-    res.status(500).json({ success: false, message: err.message || 'Internal server error during payment initiation' });
+    res.status(err.status || 500).json({ success: false, ...(err.code ? { code: err.code } : {}), message: err.message || 'Internal server error during payment initiation' });
   }
 };
 

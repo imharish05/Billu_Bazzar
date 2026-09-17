@@ -11,9 +11,11 @@ const sequelize = require('../config/db');
 const Role          = require('./Role');
 const AdminUser     = require('./AdminUser');
 const Customer      = require('./Customer');
+const CustomerAddress = require('./CustomerAddress');
+Customer.hasMany(CustomerAddress, { foreignKey: 'customerId', as: 'savedAddresses', onDelete: 'CASCADE' });
+CustomerAddress.belongsTo(Customer, { foreignKey: 'customerId', as: 'customer', onDelete: 'CASCADE' });
 const Category      = require('./Category');
 const SubCategory   = require('./SubCategory');
-const SubSubCategory = require('./SubSubCategory');
 const Vendor        = require('./Vendor');
 const Product       = require('./Product');
 const Warehouse     = require('./Warehouse');
@@ -46,22 +48,16 @@ Category.hasMany(SearchKeyword,   { foreignKey: 'category_id', as: 'searchKeywor
 AdminUser.belongsTo(Role, { foreignKey: 'roleId', as: 'role' });
 Role.hasMany(AdminUser,   { foreignKey: 'roleId', as: 'admins' });
 
-// Category ↔ SubCategory ↔ SubSubCategory
+// Category ↔ SubCategory
 SubCategory.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
 Category.hasMany(SubCategory,   { foreignKey: 'categoryId', as: 'subcategories' });
 
-SubSubCategory.belongsTo(SubCategory, { foreignKey: 'subCategoryId', as: 'subcategory' });
-SubCategory.hasMany(SubSubCategory,   { foreignKey: 'subCategoryId', as: 'subsubcategories' });
-
-// Product ↔ Category / Vendor / SubCategory / SubSubCategory
+// Product ↔ Category / Vendor / SubCategory
 Product.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
 Category.hasMany(Product,   { foreignKey: 'categoryId', as: 'products' });
 
 Product.belongsTo(SubCategory, { foreignKey: 'subCategoryId', as: 'subcategory' });
 SubCategory.hasMany(Product,   { foreignKey: 'subCategoryId', as: 'products' });
-
-Product.belongsTo(SubSubCategory, { foreignKey: 'subSubCategoryId', as: 'subsubcategory' });
-SubSubCategory.hasMany(Product,   { foreignKey: 'subSubCategoryId', as: 'products' });
 
 Product.belongsTo(Vendor,   { foreignKey: 'vendorId', as: 'vendor' });
 Vendor.hasMany(Product,     { foreignKey: 'vendorId', as: 'products' });
@@ -183,8 +179,8 @@ const ContactEnquiry   = require('./ContactEnquiry');
 
 module.exports = {
   sequelize,
-  Role, AdminUser, Customer,
-  Category, SubCategory, SubSubCategory, Vendor, Product, ProductVariant,
+  Role, AdminUser, Customer, CustomerAddress,
+  Category, SubCategory, Vendor, Product, ProductVariant,
   Warehouse, WarehouseStock,
   Cart, CartItem,
   Coupon, Affiliate,

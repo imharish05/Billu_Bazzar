@@ -1,5 +1,5 @@
 'use strict';
-const { Category, SubCategory, SubSubCategory, Product, sequelize } = require('../models');
+const { Category, SubCategory, Product, sequelize } = require('../models');
 const fs = require('fs');
 const path = require('path');
 
@@ -18,7 +18,7 @@ const handleDBError = (err, res, type = 'item') => {
 };
 
 const { deleteLocalFile } = require('../utils/fileHelper');
-
+const { deleteProductsCascade } = require('../services/productCascadeService');
 const { toAbsoluteUrl } = require('../utils/imageUrl');
 
 const formatCategoryNode = (cat, req) => {
@@ -27,9 +27,6 @@ const formatCategoryNode = (cat, req) => {
   if (json.image) json.image = toAbsoluteUrl(json.image, req);
   if (Array.isArray(json.subcategories)) {
     json.subcategories = json.subcategories.map(sc => formatCategoryNode(sc, req));
-  }
-  if (Array.isArray(json.subsubcategories)) {
-    json.subsubcategories = json.subsubcategories.map(ssc => formatCategoryNode(ssc, req));
   }
   if (Array.isArray(json.children)) {
     json.children = json.children.map(ch => formatCategoryNode(ch, req));
@@ -45,37 +42,46 @@ const getTree = async (req, res) => {
 
     const categories = await Category.findAll({
       where,
+      attributes: ['id', 'name', 'slug', 'image', 'sortOrder', 'isActive', 'showHeader'],
       include: [
         {
           model: SubCategory,
           as: 'subcategories',
+          attributes: ['id', 'categoryId', 'name', 'slug', 'image', 'sortOrder', 'isActive'],
           required: false,
-          where,
-          include: [
-            {
-              model: SubSubCategory,
-              as: 'subsubcategories',
-              required: false,
-              where
-            }
-          ]
+          where
         }
       ],
       order: [
         ['sortOrder', 'ASC'],
         [{ model: SubCategory, as: 'subcategories' }, 'sortOrder', 'ASC'],
-        [{ model: SubCategory, as: 'subcategories' }, { model: SubSubCategory, as: 'subsubcategories' }, 'sortOrder', 'ASC'],
       ]
     });
 
     const tree = categories.map(c => {
-      const cJson = formatCategoryNode(c, req);
+      const cJson = c.toJSON ? c.toJSON() : { ...c };
+      const subcategories = (cJson.subcategories || []).map(sub => {
+        const sJson = sub.toJSON ? sub.toJSON() : { ...sub };
+        return {
+          id: sJson.id,
+          categoryId: sJson.categoryId,
+          name: sJson.name,
+          slug: sJson.slug,
+          image: toAbsoluteUrl(sJson.image, req),
+          sortOrder: sJson.sortOrder,
+          isActive: sJson.isActive
+        };
+      });
+
       return {
-        ...cJson,
-        children: (cJson.subcategories || []).map(sub => ({
-          ...sub,
-          children: sub.subsubcategories || []
-        }))
+        id: cJson.id,
+        name: cJson.name,
+        slug: cJson.slug,
+        image: toAbsoluteUrl(cJson.image, req),
+        sortOrder: cJson.sortOrder,
+        isActive: cJson.isActive,
+        showHeader: cJson.showHeader,
+        subcategories
       };
     });
 
@@ -100,7 +106,7 @@ const getAll = async (req, res) => {
 
       const { count, rows } = await Category.findAndCountAll({
         where,
-        attributes: { exclude: ['attributes', 'description'] },
+        attributes: ['id', 'name', 'slug', 'image', 'sortOrder', 'isActive', 'showHeader'],
         order: [['sortOrder', 'ASC']],
         limit: l,
         offset: (p - 1) * l
@@ -118,7 +124,7 @@ const getAll = async (req, res) => {
 
     const categories = await Category.findAll({
       where,
-      attributes: { exclude: ['attributes', 'description'] },
+      attributes: ['id', 'name', 'slug', 'image', 'sortOrder', 'isActive', 'showHeader'],
       order: [['sortOrder', 'ASC']]
     });
     res.json({ success: true, categories });
@@ -202,67 +208,62 @@ const remove = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Category not found' });
     }
 
-    // 1. Delete category image
-    deleteLocalFile(category.image);
-
-    // 2. Find subcategories and delete their images and records
+    // 1. Find all sub-categories belonging to this category
     const subCategories = await SubCategory.findAll({
       where: { categoryId: category.id },
       transaction
     });
-    const subIds = subCategories.map(sc => sc.id);
+    const subCategoryIds = subCategories.map(sc => sc.id);
 
-    if (subIds.length > 0) {
-      // Find sub-subcategories
-      const subSubCategories = await SubSubCategory.findAll({
-        where: { subCategoryId: subIds },
-        transaction
-      });
-      for (const ssc of subSubCategories) {
-        deleteLocalFile(ssc.image);
-      }
-      await SubSubCategory.destroy({ where: { subCategoryId: subIds }, transaction });
-
-      for (const sc of subCategories) {
-        deleteLocalFile(sc.image);
-      }
-      await SubCategory.destroy({ where: { categoryId: category.id }, transaction });
-    }
-
-    // 3. Find and delete products linked to this category
+    // 2. Find all products linked directly to this category OR to any of its sub-categories
+    const { Op } = require('sequelize');
+    const productWhere = {
+      [Op.or]: [
+        { categoryId: category.id },
+        ...(subCategoryIds.length > 0 ? [{ subCategoryId: { [Op.in]: subCategoryIds } }] : [])
+      ]
+    };
     const products = await Product.findAll({
-      where: { categoryId: category.id },
-      attributes: ['id', 'name'],
+      where: productWhere,
+      attributes: ['id'],
       transaction
     });
     const productIds = products.map(p => p.id);
 
+    // 3. Cascade delete products and their variants (preserves product & variant images on disk)
     if (productIds.length > 0) {
-      const { WarehouseStock, CartItem, Wishlist, Review, StockAlert, OrderItem, InventoryMovementLog, ProductVariant } = require('../models');
-
-      if (InventoryMovementLog) await InventoryMovementLog.destroy({ where: { productId: productIds }, transaction });
-      await OrderItem.update({ productId: null }, { where: { productId: productIds }, transaction });
-      if (ProductVariant) await ProductVariant.destroy({ where: { productId: productIds }, transaction });
-      await WarehouseStock.destroy({ where: { productId: productIds }, transaction });
-      await CartItem.destroy({ where: { productId: productIds }, transaction });
-      await Wishlist.destroy({ where: { productId: productIds }, transaction });
-      await Review.destroy({ where: { productId: productIds }, transaction });
-      await StockAlert.destroy({ where: { productId: productIds }, transaction });
-
-      await Product.destroy({ where: { id: productIds }, transaction });
+      await deleteProductsCascade(productIds, transaction);
     }
 
-    // Delete SearchKeyword entries referring to the category
-    const { SearchKeyword } = require('../models');
-    await SearchKeyword.destroy({ where: { category_id: category.id }, transaction });
+    // 4. Delete sub-category images from disk and destroy sub-categories
+    if (subCategoryIds.length > 0) {
+      for (const sc of subCategories) {
+        if (sc.image) {
+          deleteLocalFile(sc.image);
+        }
+      }
+      await SubCategory.destroy({ where: { categoryId: category.id }, transaction });
+    }
 
-    await Category.destroy({ where: { id: category.id }, transaction });
+    // 5. Delete category image from disk
+    if (category.image) {
+      deleteLocalFile(category.image);
+    }
+
+    // 6. Delete SearchKeyword entries referring to this category
+    const { SearchKeyword } = require('../models');
+    if (SearchKeyword) {
+      await SearchKeyword.destroy({ where: { category_id: category.id }, transaction });
+    }
+
+    // 7. Destroy the category
+    await category.destroy({ transaction });
 
     await transaction.commit();
 
     res.json({
       success: true,
-      message: `Category and its associated sub-categories, sub-sub-categories, and products have been deleted successfully.`
+      message: `Category, its sub-categories, and all linked products and variants have been deleted successfully.`
     });
 
   } catch (err) {
@@ -402,25 +403,6 @@ const seed = async (req, res) => {
           }
         });
         parentCount++;
-
-        for (let cIdx = 0; cIdx < parent.children.length; cIdx++) {
-          const childName = parent.children[cIdx];
-          const childSlug = slugify(childName, parentSlug);
-
-          await SubSubCategory.findOrCreate({
-            where: { slug: childSlug },
-            defaults: {
-              subCategoryId: parentCat.id,
-              name: childName,
-              slug: childSlug,
-              description: `${childName} under ${parent.name}`,
-              image: getSmallPlaceholderImage(childName),
-              sortOrder: cIdx + 1,
-              isActive: true
-            }
-          });
-          childCount++;
-        }
       }
     }
 
@@ -429,8 +411,7 @@ const seed = async (req, res) => {
       message: 'Categories auto-seeded successfully!',
       summary: {
         rootCategories: rootCount,
-        subCategories: parentCount,
-        subSubCategories: childCount
+        subCategories: parentCount
       }
     });
   } catch (err) {

@@ -17,7 +17,6 @@ const Product = sequelize.define('Product', {
   stock: { type: DataTypes.INTEGER, defaultValue: 0 },
   categoryId: { type: DataTypes.INTEGER, allowNull: false },
   subCategoryId: { type: DataTypes.INTEGER, allowNull: true },
-  subSubCategoryId: { type: DataTypes.INTEGER, allowNull: true },
   vendorId: { type: DataTypes.INTEGER },
   showAuthenticity: { type: DataTypes.BOOLEAN, defaultValue: false, allowNull: false },
   warehouseId: { type: DataTypes.INTEGER, allowNull: true },

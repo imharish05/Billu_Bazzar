@@ -6,7 +6,18 @@ const WISHLIST_STORAGE_KEY = 'billubazzar_wishlist';
 const loadWishlistFromStorage = () => {
   try {
     const data = localStorage.getItem(WISHLIST_STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    if (!data) return [];
+    const items = JSON.parse(data);
+    return Array.isArray(items) ? items.map(item => {
+      let sel = item.selectedVariant;
+      if (typeof sel === 'string') {
+        try { sel = JSON.parse(sel); } catch { sel = {}; }
+      }
+      return {
+        ...item,
+        selectedVariant: typeof sel === 'object' && sel !== null ? sel : {}
+      };
+    }) : [];
   } catch (err) {
     console.error('Failed to load wishlist from localStorage:', err);
     return [];
@@ -38,11 +49,18 @@ export const fetchWishlist = createAsyncThunk('wishlist/fetchWishlist', async (_
       const dbItems = res.data.wishlist.map(w => {
         const prod = w.product || {};
         const varItem = w.variant || {};
+        let selVar = w.selectedVariant || {};
+        if (typeof selVar === 'string') {
+          try { selVar = JSON.parse(selVar); } catch { selVar = {}; }
+        }
+        if (typeof selVar !== 'object' || selVar === null) {
+          selVar = {};
+        }
         return {
           id: prod.id || w.productId,
           productId: prod.id || w.productId,
           variantId: varItem.id || w.variantId || null,
-          selectedVariant: w.selectedVariant || {},
+          selectedVariant: selVar,
           name: prod.productName || prod.name || 'Product',
           slug: prod.slug || '',
           image: varItem.image || prod.defaultProductImage || (prod.images && prod.images[0]) || '',
@@ -89,7 +107,11 @@ const wishlistSlice = createSlice({
       const payload = action.payload || {};
       const targetProductId = payload.productId || payload.id || payload;
       const targetVariantId = payload.variantId || null;
-      const targetSelectedVariant = payload.selectedVariant || null;
+      let rawSel = payload.selectedVariant || null;
+      if (typeof rawSel === 'string') {
+        try { rawSel = JSON.parse(rawSel); } catch { rawSel = null; }
+      }
+      const targetSelectedVariant = (typeof rawSel === 'object' && rawSel !== null) ? rawSel : null;
 
       const idx = state.items.findIndex(item => {
         const sameProd = Number(item.productId || item.id) === Number(targetProductId);

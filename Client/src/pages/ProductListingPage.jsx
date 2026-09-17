@@ -44,26 +44,36 @@ const ProductListingPage = () => {
   const dispatch = useDispatch();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { slug, sub, subsub } = useParams();
+  const { slug, sub } = useParams();
   const { items: products, loading, total, totalPages } = useSelector(s => s.products);
   const { items: categories } = useSelector(s => s.categories);
 
-  const routeCategory = subsub || sub || slug;
+  const routeCategory = sub || slug;
   const currentCategory = routeCategory || searchParams.get('category') || '';
 
   const [priceRange, setPriceRange] = useState({ min: 0, max: 50000 });
 
-  const [filters, setFilters] = useState({
-    category: currentCategory,
-    search: searchParams.get('search') || '',
-    minPrice: searchParams.get('minPrice') || '',
-    maxPrice: searchParams.get('maxPrice') || '',
-    vendorId: searchParams.get('vendorId') || '',
-    minDiscount: searchParams.get('minDiscount') || '',
-    maxDiscount: searchParams.get('maxDiscount') || '',
-    sort: 'createdAt',
-    order: 'DESC',
-    page: 1,
+  const [filters, setFilters] = useState(() => {
+    const col = (searchParams.get('collection') || '').toLowerCase();
+    const isBest = searchParams.get('bestSeller') === 'true' || col === 'bestseller' || col === 'bestsellers' || col === 'best-sellers';
+    const isNew = searchParams.get('newArrival') === 'true' || col === 'newarrival' || col === 'new-arrivals' || col === 'newarrivals';
+    const isFeat = searchParams.get('featured') === 'true' || col === 'featured' || col === 'customer-favourites' || col === 'customer-favorites';
+
+    return {
+      category: currentCategory,
+      search: searchParams.get('search') || '',
+      minPrice: searchParams.get('minPrice') || '',
+      maxPrice: searchParams.get('maxPrice') || '',
+      vendorId: searchParams.get('vendorId') || '',
+      minDiscount: searchParams.get('minDiscount') || '',
+      maxDiscount: searchParams.get('maxDiscount') || '',
+      bestSeller: isBest ? true : undefined,
+      newArrival: isNew ? true : undefined,
+      featured: isFeat ? true : undefined,
+      sort: 'createdAt',
+      order: 'DESC',
+      page: 1,
+    };
   });
 
   const applyPriceRange = useCallback((min, max) => {
@@ -84,7 +94,6 @@ const ProductListingPage = () => {
 
   useEffect(() => {
     dispatch(fetchProducts({ ...filters, limit: 16 }));
-    document.title = 'Shop All — Billu Bazaar';
   }, [filters, dispatch]);
 
   // Fetch real min/max price from DB on mount
@@ -103,6 +112,15 @@ const ProductListingPage = () => {
     const vendorId = searchParams.get('vendorId') || '';
     const minDiscount = searchParams.get('minDiscount') || '';
     const maxDiscount = searchParams.get('maxDiscount') || '';
+
+    const col = (searchParams.get('collection') || '').toLowerCase();
+    const isBest = searchParams.get('bestSeller') === 'true' || col === 'bestseller' || col === 'bestsellers' || col === 'best-sellers';
+    const isNew = searchParams.get('newArrival') === 'true' || col === 'newarrival' || col === 'new-arrivals' || col === 'newarrivals';
+    const isFeat = searchParams.get('featured') === 'true' || col === 'featured' || col === 'customer-favourites' || col === 'customer-favorites';
+    const bestSeller = isBest ? true : undefined;
+    const newArrival = isNew ? true : undefined;
+    const featured = isFeat ? true : undefined;
+
     setFilters(prev => {
       if (
         prev.category !== category ||
@@ -111,7 +129,10 @@ const ProductListingPage = () => {
         prev.maxPrice !== maxPrice ||
         prev.vendorId !== vendorId ||
         prev.minDiscount !== minDiscount ||
-        prev.maxDiscount !== maxDiscount
+        prev.maxDiscount !== maxDiscount ||
+        prev.bestSeller !== bestSeller ||
+        prev.newArrival !== newArrival ||
+        prev.featured !== featured
       ) {
         return {
           ...prev,
@@ -122,12 +143,15 @@ const ProductListingPage = () => {
           vendorId,
           minDiscount,
           maxDiscount,
+          bestSeller,
+          newArrival,
+          featured,
           page: 1,
         };
       }
       return prev;
     });
-  }, [searchParams, slug, sub, subsub]);
+  }, [searchParams, slug, sub, routeCategory]);
 
   useEffect(() => {
     dispatch(fetchCategories());
@@ -151,13 +175,24 @@ const ProductListingPage = () => {
   };
 
   const handleCollectionChange = (val) => {
+    const newArrival = val === 'newArrival' ? true : undefined;
+    const bestSeller = val === 'bestSeller' ? true : undefined;
+    const featured = val === 'featured' ? true : undefined;
+
     setFilters(prev => ({
       ...prev,
-      newArrival: val === 'newArrival' ? true : undefined,
-      bestSeller: val === 'bestSeller' ? true : undefined,
-      featured: val === 'featured' ? true : undefined,
+      newArrival,
+      bestSeller,
+      featured,
       page: 1,
     }));
+
+    const newParams = new URLSearchParams(searchParams);
+    if (newArrival) newParams.set('newArrival', 'true'); else newParams.delete('newArrival');
+    if (bestSeller) newParams.set('bestSeller', 'true'); else newParams.delete('bestSeller');
+    if (featured) newParams.set('featured', 'true'); else newParams.delete('featured');
+    newParams.delete('collection');
+    setSearchParams(newParams, { replace: true });
   };
 
   const handleDiscountChange = (val) => {
@@ -193,8 +228,9 @@ const ProductListingPage = () => {
   const findCategoryInTree = (cats, targetSlug) => {
     for (const cat of cats) {
       if (cat.slug === targetSlug) return cat;
-      if (cat.children && cat.children.length > 0) {
-        const found = findCategoryInTree(cat.children, targetSlug);
+      const subs = cat.subcategories || cat.children || [];
+      if (subs.length > 0) {
+        const found = findCategoryInTree(subs, targetSlug);
         if (found) return found;
       }
     }
@@ -202,6 +238,18 @@ const ProductListingPage = () => {
   };
 
   const activeCategoryObject = filters.category ? findCategoryInTree(categories, filters.category) : null;
+
+  const collectionTitle = selectedCollection === 'bestSeller'
+    ? 'Best Sellers'
+    : selectedCollection === 'newArrival'
+    ? 'New Arrivals'
+    : selectedCollection === 'featured'
+    ? 'Customer Favourites'
+    : '';
+
+  const pageHeading = activeCategoryObject
+    ? activeCategoryObject.name
+    : collectionTitle || 'All Products';
 
   const getBreadcrumbs = () => {
     if (!slug) return null;
@@ -211,22 +259,16 @@ const ProductListingPage = () => {
     const crumbs = [{ label: catObj.name, path: `/category/${catObj.slug}` }];
 
     if (sub) {
-      const subObj = catObj.children?.find(s => s.slug === sub);
+      const subs = catObj.subcategories || catObj.children || [];
+      const subObj = subs.find(s => s.slug === sub);
       if (subObj) {
         crumbs.push({ label: subObj.name, path: `/category/${catObj.slug}/${subObj.slug}` });
-        
-        if (subsub) {
-          const subSubObj = subObj.children?.find(ss => ss.slug === subsub);
-          if (subSubObj) {
-            crumbs.push({ label: subSubObj.name, path: `/category/${catObj.slug}/${subObj.slug}/${subSubObj.slug}` });
-          }
-        }
       }
     }
     return crumbs;
   };
 
-  const renderCategoryTree = (cats, currentCatSlug, currentSubSlug, currentSubSubSlug) => {
+  const renderCategoryTree = (cats, currentCatSlug, currentSubSlug) => {
     return (
       <div className="space-y-4">
         <h3 className="font-playfair text-base font-bold uppercase tracking-wider text-brand-text mb-3 pb-2 border-b border-brand-light">Categories</h3>
@@ -242,7 +284,8 @@ const ProductListingPage = () => {
           
           {cats.map(cat => {
             const isCatActive = currentCatSlug === cat.slug;
-            const hasSubcategories = cat.children && cat.children.length > 0;
+            const subs = cat.subcategories || cat.children || [];
+            const hasSubcategories = subs.length > 0;
             
             return (
               <li key={cat.id} className="space-y-1.5">
@@ -257,38 +300,17 @@ const ProductListingPage = () => {
                 
                 {hasSubcategories && (isCatActive || currentCatSlug === cat.slug) && (
                   <ul className="pl-3 space-y-1.5 border-l-2 border-brand-gold/30 ml-3 my-1.5">
-                    {cat.children.map(subCat => {
+                    {subs.map(subCat => {
                       const isSubActive = currentSubSlug === subCat.slug;
-                      const hasSubSub = subCat.children && subCat.children.length > 0;
                       
                       return (
                         <li key={subCat.id} className="space-y-1">
                           <Link
                             to={`/category/${cat.slug}/${subCat.slug}`}
-                            className={`flex items-center justify-between px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${isSubActive ? 'bg-brand-gold/20 text-brand-gold font-semibold' : 'text-brand-grey hover:text-brand-text hover:bg-neutral-100'}`}
+                            className={`flex items-center justify-between px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${isSubActive ? 'bg-brand-gold/20 text-brand-gold font-semibold' : 'text-brand-grey hover:text-brand-text hover:bg-neutral-100'}`}
                           >
                             <span>{subCat.name}</span>
-                            {hasSubSub && <span className="text-[10px] text-neutral-400 font-normal">({subCat.children.length})</span>}
                           </Link>
-                          
-                          {hasSubSub && isSubActive && (
-                            <ul className="pl-2 space-y-1 mt-1 border-l-2 border-brand-gold/20 ml-2">
-                              {subCat.children.map(subSubCat => {
-                                const isSubSubActive = currentSubSubSlug === subSubCat.slug;
-                                return (
-                                  <li key={subSubCat.id}>
-                                    <Link
-                                      to={`/category/${cat.slug}/${subCat.slug}/${subSubCat.slug}`}
-                                      className={`flex items-center gap-2 px-3 py-2 rounded-md text-xs font-medium transition-colors min-h-[38px] ${isSubSubActive ? 'bg-brand-gold/25 text-brand-gold font-semibold' : 'text-neutral-600 hover:text-brand-gold hover:bg-neutral-100'}`}
-                                    >
-                                      <span className={`w-1.5 h-1.5 rounded-full ${isSubSubActive ? 'bg-brand-gold' : 'bg-neutral-400'}`} />
-                                      <span>{subSubCat.name}</span>
-                                    </Link>
-                                  </li>
-                                );
-                              })}
-                            </ul>
-                          )}
                         </li>
                       );
                     })}
@@ -311,7 +333,17 @@ const ProductListingPage = () => {
           <nav className="text-xs text-brand-grey mb-2" aria-label="Breadcrumb">
             <Link to="/" className="hover:text-brand-gold transition-colors">Home</Link>
             <span className="mx-2">/</span>
-            <Link to="/products" className="hover:text-brand-gold transition-colors">Products</Link>
+            {slug || collectionTitle ? (
+              <Link to="/products" className="hover:text-brand-gold transition-colors">Products</Link>
+            ) : (
+              <span className="text-brand-gold font-medium">Products</span>
+            )}
+            {collectionTitle && !slug && (
+              <>
+                <span className="mx-2">/</span>
+                <span className="text-brand-gold font-medium">{collectionTitle}</span>
+              </>
+            )}
             {getBreadcrumbs()?.map((crumb, idx) => (
               <span key={crumb.path}>
                 <span className="mx-2">/</span>
@@ -324,7 +356,7 @@ const ProductListingPage = () => {
             ))}
           </nav>
           <h1 className="font-playfair text-3xl font-bold text-brand-text mb-1">
-            {activeCategoryObject ? activeCategoryObject.name : 'All Products'}
+            {pageHeading}
           </h1>
           <p className="text-brand-grey text-sm mt-1">{total} products</p>
         </div>
@@ -335,7 +367,7 @@ const ProductListingPage = () => {
           {/* Left Sidebar (Desktop) */}
           <aside className="hidden md:block md:col-span-1 space-y-8 bg-white p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] border border-brand-light self-start sticky top-24">
             {/* Category Tree */}
-            {renderCategoryTree(categories, slug, sub, subsub)}
+            {renderCategoryTree(categories, slug, sub)}
 
             {/* Price Range Slider */}
             <div className="pt-6 border-t border-brand-light">
@@ -372,7 +404,7 @@ const ProductListingPage = () => {
                     id="products-collection"
                     value={selectedCollection}
                     onChange={e => handleCollectionChange(e.target.value)}
-                    className="border border-neutral-300 rounded-sm text-xs px-3 py-1.5 bg-white text-brand-text focus:outline-none focus:border-brand-gold"
+                    className="border border-neutral-300 rounded-lg text-xs px-3 py-1.5 bg-white text-brand-text focus:outline-none focus:border-brand-gold"
                   >
                     <option value="">All Collections</option>
                     <option value="newArrival">New Arrivals</option>
@@ -390,7 +422,7 @@ const ProductListingPage = () => {
                     id="products-discount"
                     value={filters.minDiscount ? `${filters.minDiscount}-${filters.maxDiscount}` : ''}
                     onChange={e => handleDiscountChange(e.target.value)}
-                    className="border border-neutral-300 rounded-sm text-xs px-3 py-1.5 bg-white text-brand-text focus:outline-none focus:border-brand-gold"
+                    className="border border-neutral-300 rounded-lg text-xs px-3 py-1.5 bg-white text-brand-text focus:outline-none focus:border-brand-gold"
                   >
                     <option value="">All Discounts</option>
                     <option value="1-10">Upto 10%</option>
@@ -409,7 +441,7 @@ const ProductListingPage = () => {
                     id="products-sort"
                     value={`${filters.sort}-${filters.order}`}
                     onChange={e => handleSort(e.target.value)}
-                    className="border border-neutral-300 rounded-sm text-xs px-3 py-1.5 bg-white text-brand-text focus:outline-none focus:border-brand-gold"
+                    className="border border-neutral-300 rounded-lg text-xs px-3 py-1.5 bg-white text-brand-text focus:outline-none focus:border-brand-gold"
                   >
                     {sortOptions.map(o => (
                       <option key={o.value} value={o.value}>{o.label}</option>
@@ -488,7 +520,7 @@ const ProductListingPage = () => {
               animate={{ height: filtersOpen ? 'auto' : 0, opacity: filtersOpen ? 1 : 0 }}
               className="overflow-hidden md:hidden"
             >
-              <div className="bg-neutral-50 border border-neutral-200 rounded-xl p-5 mb-6 space-y-6 shadow-sm">
+              <div className="bg-neutral-50 border border-neutral-200 rounded-lg p-5 mb-6 space-y-6 shadow-sm">
                 {/* Discount options */}
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-neutral-900 mb-2.5">Discounts</p>
@@ -536,7 +568,7 @@ const ProductListingPage = () => {
                 {/* Category tree on mobile */}
                 <div className="pt-4 border-t border-neutral-200">
                   <p className="text-xs font-bold uppercase tracking-wider text-neutral-900 mb-3">Categories</p>
-                  {renderCategoryTree(categories, slug, sub, subsub)}
+                  {renderCategoryTree(categories, slug, sub)}
                 </div>
 
                 {/* Apply / Close button */}
@@ -554,17 +586,17 @@ const ProductListingPage = () => {
             {loading ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {[...Array(12)].map((_, i) => (
-                  <div key={i} className="bg-white shadow-sm">
-                    <div className="skeleton aspect-[3/4]" />
-                    <div className="p-4 space-y-2">
-                      <div className="skeleton h-4 w-3/4" /><div className="skeleton h-4 w-1/2" /><div className="skeleton h-5 w-1/3" />
+                  <div key={i} className="bg-white shadow-sm rounded-lg overflow-hidden">
+                    <div className="skeleton aspect-square" />
+                    <div className="p-3 space-y-1.5">
+                      <div className="skeleton h-3.5 w-3/4" /><div className="skeleton h-3 w-1/2" /><div className="skeleton h-4 w-1/3" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : products.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 text-center">
-                <div className="w-24 h-24 bg-brand-light flex items-center justify-center mb-6">
+                <div className="w-24 h-24 bg-brand-light flex items-center justify-center mb-6 rounded-lg">
                   <Grid2X2 size={40} className="text-brand-grey" strokeWidth={1} />
                 </div>
                 <h2 className="font-playfair text-2xl mb-2">No products found</h2>

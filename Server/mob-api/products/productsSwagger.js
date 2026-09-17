@@ -5,7 +5,7 @@ module.exports = {
       "tags": [
         "products"
       ],
-      "summary": "Browse active products",
+      "summary": "Browse products with filters",
       "security": [
         {
           "bearerAuth": []
@@ -13,120 +13,155 @@ module.exports = {
       ],
       "parameters": [
         {
-          "name": "page",
+          "name": "q",
           "in": "query",
+          "required": false,
+          "description": "Product name search text. Required on /products/search; optional on /products.",
+          "schema": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        {
+          "name": "categoryId",
+          "in": "query",
+          "required": false,
+          "description": "Active category ID. Unknown IDs return 404; incompatible category/subcategory pairs return 400.",
           "schema": {
             "type": "integer",
             "minimum": 1
           }
         },
         {
-          "name": "limit",
+          "name": "subCategoryId",
           "in": "query",
+          "required": false,
+          "description": "Active subcategory ID. Unknown IDs return 404; incompatible category/subcategory pairs return 400.",
           "schema": {
             "type": "integer",
-            "minimum": 1,
-            "maximum": 100
-          }
-        },
-        {
-          "name": "category",
-          "in": "query",
-          "schema": {
-            "type": "string"
-          }
-        },
-        {
-          "name": "search",
-          "in": "query",
-          "schema": {
-            "type": "string"
+            "minimum": 1
           }
         },
         {
           "name": "minPrice",
           "in": "query",
+          "required": false,
+          "description": "Inclusive INR product price bound. Uses product price, not individual variant prices.",
           "schema": {
-            "type": "string"
+            "type": "number",
+            "minimum": 0
           }
         },
         {
           "name": "maxPrice",
           "in": "query",
+          "required": false,
+          "description": "Inclusive INR product price bound. Uses product price, not individual variant prices.",
           "schema": {
-            "type": "string"
+            "type": "number",
+            "minimum": 0
           }
         },
         {
-          "name": "sort",
+          "name": "collection",
           "in": "query",
+          "required": false,
+          "description": "new-arrivals, best-sellers, or featured. Comma-separated values match any selected collection; other filters still apply.",
           "schema": {
-            "type": "string"
-          }
-        },
-        {
-          "name": "order",
-          "in": "query",
-          "schema": {
-            "type": "string"
-          }
-        },
-        {
-          "name": "featured",
-          "in": "query",
-          "schema": {
-            "type": "string"
-          }
-        },
-        {
-          "name": "newArrival",
-          "in": "query",
-          "schema": {
-            "type": "string"
-          }
-        },
-        {
-          "name": "bestSeller",
-          "in": "query",
-          "schema": {
-            "type": "string"
+            "type": "string",
+            "example": "new-arrivals,best-sellers"
           }
         },
         {
           "name": "minDiscount",
           "in": "query",
+          "required": false,
+          "description": "Inclusive discount percentage bound. Calculated from product price and comparePrice, rounded to a whole percentage. Products without a discount count as 0%.",
           "schema": {
-            "type": "string"
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
           }
         },
         {
           "name": "maxDiscount",
           "in": "query",
+          "required": false,
+          "description": "Inclusive discount percentage bound. Calculated from product price and comparePrice, rounded to a whole percentage. Products without a discount count as 0%.",
           "schema": {
-            "type": "string"
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "required": false,
+          "description": "Price low to high, price high to low, newest first, or highest rating first.",
+          "schema": {
+            "type": "string",
+            "enum": [
+              "price_asc",
+              "price_desc",
+              "newest",
+              "rating"
+            ],
+            "default": "newest"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "description": "Results page, starting at 1.",
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "description": "Maximum products per page. The mobile request middleware caps larger limits at 100.",
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
           }
         }
       ],
       "responses": {
         "200": {
-          "description": "Successful response using the existing customer API response format"
+          "description": "Products and pagination, or an empty products array when no matches exist"
         },
         "400": {
-          "description": "Invalid request",
+          "description": "Invalid filter values, reversed ranges, missing search query, or a subcategory outside the selected category",
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Error"
+              },
+              "example": {
+                "success": false,
+                "message": "minPrice must not exceed maxPrice"
               }
             }
           }
         },
         "401": {
-          "description": "Missing, invalid, expired, or inactive customer token",
+          "description": "Missing or invalid customer access token",
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Error"
+              },
+              "example": {
+                "success": false,
+                "message": "Authentication required"
               }
             }
           }
@@ -142,11 +177,15 @@ module.exports = {
           }
         },
         "404": {
-          "description": "Resource not found or not owned by this customer",
+          "description": "Selected category or subcategory does not exist or is inactive",
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Error"
+              },
+              "example": {
+                "success": false,
+                "message": "Category not found"
               }
             }
           }
@@ -162,16 +201,21 @@ module.exports = {
           }
         },
         "500": {
-          "description": "Internal server error",
+          "description": "Unable to fetch products due to a server error",
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Error"
+              },
+              "example": {
+                "success": false,
+                "message": "Unable to fetch products"
               }
             }
           }
         }
-      }
+      },
+      "description": "Combine category, subcategory, product price, collection, discount percentage, and sorting filters. Returns full product records with variants and pagination. Valid requests with no matches return 200 and products: []. Requires a customer bearer token."
     }
   },
   "/mob-api/products/featured": {
@@ -258,7 +302,7 @@ module.exports = {
       "tags": [
         "products"
       ],
-      "summary": "Search products",
+      "summary": "Search products with filters",
       "security": [
         {
           "bearerAuth": []
@@ -268,31 +312,153 @@ module.exports = {
         {
           "name": "q",
           "in": "query",
+          "required": true,
+          "description": "Product name search text. Required on /products/search; optional on /products.",
           "schema": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        {
+          "name": "categoryId",
+          "in": "query",
+          "required": false,
+          "description": "Active category ID. Unknown IDs return 404; incompatible category/subcategory pairs return 400.",
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        {
+          "name": "subCategoryId",
+          "in": "query",
+          "required": false,
+          "description": "Active subcategory ID. Unknown IDs return 404; incompatible category/subcategory pairs return 400.",
+          "schema": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        {
+          "name": "minPrice",
+          "in": "query",
+          "required": false,
+          "description": "Inclusive INR product price bound. Uses product price, not individual variant prices.",
+          "schema": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        {
+          "name": "maxPrice",
+          "in": "query",
+          "required": false,
+          "description": "Inclusive INR product price bound. Uses product price, not individual variant prices.",
+          "schema": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        {
+          "name": "collection",
+          "in": "query",
+          "required": false,
+          "description": "new-arrivals, best-sellers, or featured. Comma-separated values match any selected collection; other filters still apply.",
+          "schema": {
+            "type": "string",
+            "example": "new-arrivals,best-sellers"
+          }
+        },
+        {
+          "name": "minDiscount",
+          "in": "query",
+          "required": false,
+          "description": "Inclusive discount percentage bound. Calculated from product price and comparePrice, rounded to a whole percentage. Products without a discount count as 0%.",
+          "schema": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        {
+          "name": "maxDiscount",
+          "in": "query",
+          "required": false,
+          "description": "Inclusive discount percentage bound. Calculated from product price and comparePrice, rounded to a whole percentage. Products without a discount count as 0%.",
+          "schema": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        {
+          "name": "sort",
+          "in": "query",
+          "required": false,
+          "description": "Price low to high, price high to low, newest first, or highest rating first.",
+          "schema": {
+            "type": "string",
+            "enum": [
+              "price_asc",
+              "price_desc",
+              "newest",
+              "rating"
+            ],
+            "default": "newest"
+          }
+        },
+        {
+          "name": "page",
+          "in": "query",
+          "required": false,
+          "description": "Results page, starting at 1.",
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "required": false,
+          "description": "Maximum products per page. The mobile request middleware caps larger limits at 100.",
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
           }
         }
       ],
       "responses": {
         "200": {
-          "description": "Successful response using the existing customer API response format"
+          "description": "Products and pagination, or an empty products array when no matches exist"
         },
         "400": {
-          "description": "Invalid request",
+          "description": "Invalid filter values, reversed ranges, missing search query, or a subcategory outside the selected category",
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Error"
+              },
+              "example": {
+                "success": false,
+                "message": "minPrice must not exceed maxPrice"
               }
             }
           }
         },
         "401": {
-          "description": "Missing, invalid, expired, or inactive customer token",
+          "description": "Missing or invalid customer access token",
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Error"
+              },
+              "example": {
+                "success": false,
+                "message": "Authentication required"
               }
             }
           }
@@ -308,11 +474,15 @@ module.exports = {
           }
         },
         "404": {
-          "description": "Resource not found or not owned by this customer",
+          "description": "Selected category or subcategory does not exist or is inactive",
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Error"
+              },
+              "example": {
+                "success": false,
+                "message": "Category not found"
               }
             }
           }
@@ -328,16 +498,21 @@ module.exports = {
           }
         },
         "500": {
-          "description": "Internal server error",
+          "description": "Unable to fetch products due to a server error",
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/Error"
+              },
+              "example": {
+                "success": false,
+                "message": "Unable to fetch products"
               }
             }
           }
         }
-      }
+      },
+      "description": "Combine category, subcategory, product price, collection, discount percentage, and sorting filters. Returns full product records with variants and pagination. Valid requests with no matches return 200 and products: []. Requires a customer bearer token."
     }
   },
   "/mob-api/products/price-range": {

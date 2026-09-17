@@ -1,5 +1,5 @@
 'use strict';
-const { Category, SubCategory, SubSubCategory, Product, sequelize } = require('../models');
+const { Category, SubCategory, Product, sequelize } = require('../models');
 const fs = require('fs');
 const path = require('path');
 
@@ -18,6 +18,15 @@ const handleDBError = (err, res, type = 'item') => {
 };
 
 const { deleteLocalFile } = require('../utils/fileHelper');
+const { deleteProductsCascade } = require('../services/productCascadeService');
+const { toAbsoluteUrl } = require('../utils/imageUrl');
+
+const formatSubCategory = (sub, req) => {
+  if (!sub) return sub;
+  const json = typeof sub.toJSON === 'function' ? sub.toJSON() : { ...sub };
+  if (json.image) json.image = toAbsoluteUrl(json.image, req);
+  return json;
+};
 
 const getAll = async (req, res) => {
   try {
@@ -34,6 +43,7 @@ const getAll = async (req, res) => {
 
       const { count, rows } = await SubCategory.findAndCountAll({
         where,
+        attributes: ['id', 'categoryId', 'name', 'slug', 'image', 'sortOrder', 'isActive'],
         include: [{ model: Category, as: 'category', attributes: ['id', 'name'] }],
         order: [['sortOrder', 'ASC']],
         limit: l,
@@ -42,7 +52,7 @@ const getAll = async (req, res) => {
 
       return res.json({
         success: true,
-        subCategories: rows,
+        subCategories: rows.map(r => formatSubCategory(r, req)),
         total: count,
         page: p,
         limit: l,
@@ -52,10 +62,11 @@ const getAll = async (req, res) => {
 
     const subCategories = await SubCategory.findAll({
       where,
+      attributes: ['id', 'categoryId', 'name', 'slug', 'image', 'sortOrder', 'isActive'],
       include: [{ model: Category, as: 'category', attributes: ['id', 'name'] }],
       order: [['sortOrder', 'ASC']]
     });
-    res.json({ success: true, subCategories });
+    res.json({ success: true, subCategories: subCategories.map(s => formatSubCategory(s, req)) });
   } catch (err) {
     return handleDBError(err, res, 'subcategory');
   }
@@ -65,6 +76,12 @@ const create = async (req, res) => {
   try {
     const data = { ...req.body };
     if (req.file) {
+      if (req.file.size > 5 * 1024 * 1024) {
+        const normalizedPath = req.file.path.replace(/\\/g, '/');
+        const uploadsIndex = normalizedPath.indexOf('uploads');
+        deleteLocalFile('/' + normalizedPath.substring(uploadsIndex));
+        return res.status(400).json({ success: false, message: 'Sub-category image file size exceeds 5MB limit. Please upload an image under 5MB.' });
+      }
       const normalizedPath = req.file.path.replace(/\\/g, '/');
       const uploadsIndex = normalizedPath.indexOf('uploads');
       data.image = '/' + normalizedPath.substring(uploadsIndex);
@@ -76,7 +93,7 @@ const create = async (req, res) => {
     const fresh = await SubCategory.findByPk(subCategory.id, {
       include: [{ model: Category, as: 'category', attributes: ['id', 'name'] }]
     });
-    res.status(201).json({ success: true, subCategory: fresh });
+    res.status(201).json({ success: true, subCategory: formatSubCategory(fresh, req) });
   } catch (err) {
     return handleDBError(err, res, 'sub-category');
   }
@@ -90,6 +107,12 @@ const update = async (req, res) => {
     }
     const data = { ...req.body };
     if (req.file) {
+      if (req.file.size > 5 * 1024 * 1024) {
+        const normalizedPath = req.file.path.replace(/\\/g, '/');
+        const uploadsIndex = normalizedPath.indexOf('uploads');
+        deleteLocalFile('/' + normalizedPath.substring(uploadsIndex));
+        return res.status(400).json({ success: false, message: 'Sub-category image file size exceeds 5MB limit. Please upload an image under 5MB.' });
+      }
       deleteLocalFile(subCategory.image);
       const normalizedPath = req.file.path.replace(/\\/g, '/');
       const uploadsIndex = normalizedPath.indexOf('uploads');
@@ -102,7 +125,7 @@ const update = async (req, res) => {
     const fresh = await SubCategory.findByPk(subCategory.id, {
       include: [{ model: Category, as: 'category', attributes: ['id', 'name'] }]
     });
-    res.json({ success: true, subCategory: fresh });
+    res.json({ success: true, subCategory: formatSubCategory(fresh, req) });
   } catch (err) {
     return handleDBError(err, res, 'sub-category');
   }
@@ -118,21 +141,32 @@ const remove = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Sub-category not found' });
     }
 
-    // Delete image file
-    deleteLocalFile(subCategory.image);
+    // 1. Find all products linked to this sub-category
+    const products = await Product.findAll({
+      where: { subCategoryId: id },
+      attributes: ['id'],
+      transaction
+    });
+    const productIds = products.map(p => p.id);
 
-    // Find and delete all sub-subcategories under this subcategory
-    const subSubs = await SubSubCategory.findAll({ where: { subCategoryId: id }, transaction });
-    for (const ss of subSubs) {
-      deleteLocalFile(ss.image);
+    // 2. Cascade delete linked products and their variants (preserves product & variant images on disk)
+    if (productIds.length > 0) {
+      await deleteProductsCascade(productIds, transaction);
     }
-    await SubSubCategory.destroy({ where: { subCategoryId: id }, transaction });
 
-    // Note: If products are linked to Category, we leave them, but if we need any other cleanups, we do it here.
-    await SubCategory.destroy({ where: { id }, transaction });
+    // 3. Delete sub-category image file from disk
+    if (subCategory.image) {
+      deleteLocalFile(subCategory.image);
+    }
+
+    // 4. Destroy the sub-category record
+    await subCategory.destroy({ transaction });
 
     await transaction.commit();
-    res.json({ success: true, message: 'Sub-category and associated sub-subcategories deleted successfully.' });
+    res.json({
+      success: true,
+      message: 'Sub-category and all linked products and variants have been deleted successfully.'
+    });
   } catch (err) {
     await transaction.rollback();
     return handleDBError(err, res, 'sub-category');
@@ -155,4 +189,3 @@ const reorder = async (req, res) => {
 };
 
 module.exports = { getAll, create, update, remove, reorder };
-

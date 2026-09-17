@@ -155,12 +155,17 @@
             "gstRate": "0%",
             "isActive": true,
             "rating": "0.00",
-            "reviewCount": 0
+            "reviewCount": 0,
+            "categoryId": 12,
+            "subCategoryId": null,
+            "variants": []
           }
         ],
         "total": 1,
         "page": 1,
-        "totalPages": 1
+        "limit": 20,
+        "totalPages": 1,
+        "hasMore": false
       }
     },
     "GET /mob-api/products/featured": {
@@ -202,12 +207,26 @@
             "name": "Demo Cotton Shirt",
             "slug": "demo-cotton-shirt",
             "price": "999.00",
+            "comparePrice": "1299.00",
+            "currency": "INR",
+            "stock": 25,
             "images": [
               "https://example.com/uploads/demo-shirt.jpg"
             ],
-            "discountPercent": 0
+            "gstRate": "0%",
+            "isActive": true,
+            "rating": "0.00",
+            "reviewCount": 0,
+            "categoryId": 12,
+            "subCategoryId": null,
+            "variants": []
           }
-        ]
+        ],
+        "total": 1,
+        "page": 1,
+        "limit": 20,
+        "totalPages": 1,
+        "hasMore": false
       }
     },
     "GET /mob-api/products/price-range": {
@@ -295,21 +314,6 @@
         ]
       }
     },
-    "GET /mob-api/subsubcategories": {
-      "status": 200,
-      "response": {
-        "success": true,
-        "subSubCategories": [
-          {
-            "id": 108,
-            "subCategoryId": 30,
-            "name": "Cotton Shirts",
-            "slug": "cotton-shirts",
-            "isActive": true
-          }
-        ]
-      }
-    },
     "GET /mob-api/categories/tree": {
       "status": 200,
       "response": {
@@ -327,15 +331,7 @@
                 "name": "Shirts",
                 "slug": "shirts",
                 "isActive": true,
-                "subsubcategories": [
-                  {
-                    "id": 108,
-                    "subCategoryId": 30,
-                    "name": "Cotton Shirts",
-                    "slug": "cotton-shirts",
-                    "isActive": true
-                  }
-                ]
+                "children": []
               }
             ]
           }
@@ -348,8 +344,6 @@
         "success": true,
         "cart": {
           "id": 1,
-          "customerId": 7,
-          "sessionId": null,
           "items": [
             {
               "id": 1,
@@ -373,13 +367,15 @@
               "variant": null,
               "gstRate": "0%",
               "stockStatus": "VALID",
-              "availableStock": 25
+              "availableStock": 25,
+              "unitPrice": 999,
+              "lineTotal": 999
             }
           ],
-          "subtotal": 999
-        },
-        "cartAdjusted": false,
-        "adjustments": []
+          "subtotal": 999,
+          "itemCount": 1,
+          "currency": "INR"
+        }
       }
     },
     "POST /mob-api/cart/add": {
@@ -387,7 +383,8 @@
       "response": {
         "success": true,
         "message": "Added to cart",
-        "sessionId": null
+        "itemId": 1,
+        "quantity": 1
       },
       "request": {
         "productId": 224,
@@ -398,39 +395,8 @@
       "status": 200,
       "response": {
         "success": true,
-        "cart": {
-          "id": 1,
-          "customerId": 7,
-          "sessionId": null,
-          "items": [
-            {
-              "id": 1,
-              "cartId": 1,
-              "productId": 224,
-              "variantId": null,
-              "quantity": 1,
-              "priceAtAdd": "999.00",
-              "selectedVariant": {},
-              "product": {
-                "id": 224,
-                "name": "Demo Cotton Shirt",
-                "price": "999.00",
-                "images": [
-                  "https://example.com/uploads/demo-shirt.jpg"
-                ],
-                "stock": 25,
-                "slug": "demo-cotton-shirt",
-                "gstRate": "0%"
-              },
-              "variant": null,
-              "gstRate": "0%",
-              "stockStatus": "VALID",
-              "availableStock": 25
-            }
-          ],
-          "subtotal": 999
-        },
-        "adjustments": []
+        "message": "Cart synced successfully",
+        "cartId": 1
       },
       "request": {
         "items": [
@@ -810,6 +776,8 @@
             "id": 1,
             "customerId": 7,
             "productId": 224,
+            "variantId": null,
+            "selectedVariant": {},
             "product": {
               "id": 224,
               "name": "Demo Cotton Shirt",
@@ -825,19 +793,23 @@
               "isActive": true,
               "rating": "0.00",
               "reviewCount": 0
-            }
+            },
+            "variant": null
           }
-        ]
+        ],
+        "total": 1
       }
     },
     "POST /mob-api/myaccount/wishlist": {
       "status": 200,
       "response": {
         "success": true,
-        "action": "added"
+        "action": "added",
+        "itemId": 1
       },
       "request": {
-        "productId": 224
+        "productId": 224,
+        "variantId": 10
       }
     },
     "GET /mob-api/myaccount/loyalty": {
@@ -901,9 +873,16 @@
             "maxDiscount": "200.00",
             "isActive": true,
             "validFrom": "2026-09-11T09:00:00.000Z",
-            "validUntil": "2026-12-31T23:59:59.000Z"
+            "validUntil": "2026-12-31T23:59:59.000Z",
+            "description": "Save 10%",
+            "usageLimit": 1
           }
-        ]
+        ],
+        "total": 1,
+        "page": 1,
+        "limit": 20,
+        "totalPages": 1,
+        "hasMore": false
       }
     },
     "POST /mob-api/coupons/validate": {
@@ -920,9 +899,13 @@
           "maxDiscount": "200.00",
           "isActive": true,
           "validFrom": "2026-09-11T09:00:00.000Z",
-          "validUntil": "2026-12-31T23:59:59.000Z"
+          "validUntil": "2026-12-31T23:59:59.000Z",
+          "description": "Save 10%",
+          "usageLimit": 1
         },
+        "subtotal": 1000,
         "discountAmount": 100,
+        "discountedSubtotal": 900,
         "freeShipping": false
       },
       "request": {
@@ -1035,18 +1018,24 @@
       "status": 200,
       "response": {
         "success": true,
+        "query": "shirt",
         "suggestions": [
-          "cotton shirt"
-        ],
-        "products": [
           {
             "id": 224,
-            "name": "Demo Cotton Shirt",
-            "price": "999.00",
-            "comparePrice": "1299.00",
-            "image": "https://example.com/uploads/demo-shirt.jpg",
-            "slug": "demo-cotton-shirt",
-            "discountPercent": 0
+            "name": "Demo Cotton Shirt"
+          }
+        ]
+      }
+    },
+    "GET /mob-api/search/suggestions": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "query": "shirt",
+        "suggestions": [
+          {
+            "id": 224,
+            "name": "Demo Cotton Shirt"
           }
         ]
       }
@@ -1393,6 +1382,374 @@
         "unboxingVideoUrl": "https://example.com/evidence/demo-unboxing.mp4"
       }
     },
+    "GET /mob-api/wishlist": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "wishlist": [
+          {
+            "id": 1,
+            "customerId": 7,
+            "productId": 224,
+            "variantId": null,
+            "selectedVariant": {},
+            "product": {
+              "id": 224,
+              "name": "Demo Cotton Shirt",
+              "slug": "demo-cotton-shirt",
+              "price": "999.00",
+              "comparePrice": "1299.00",
+              "currency": "INR",
+              "stock": 25,
+              "images": [
+                "https://example.com/uploads/demo-shirt.jpg"
+              ],
+              "gstRate": "0%",
+              "isActive": true,
+              "rating": "0.00",
+              "reviewCount": 0
+            },
+            "variant": null
+          }
+        ],
+        "total": 1
+      }
+    },
+    "POST /mob-api/wishlist/add": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "action": "added",
+        "itemId": 1
+      },
+      "request": {
+        "productId": 224,
+        "variantId": 10
+      }
+    },
+    "POST /mob-api/wishlist/toggle": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "action": "added",
+        "itemId": 1
+      },
+      "request": {
+        "productId": 224,
+        "variantId": 10
+      }
+    },
+    "DELETE /mob-api/wishlist/item/{itemId}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Removed from wishlist"
+      }
+    },
+    "DELETE /mob-api/wishlist/clear": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Wishlist cleared"
+      }
+    },
+    "GET /mob-api/addresses": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "addresses": [
+          {
+            "id": 1,
+            "customerId": 7,
+            "label": "Home",
+            "name": "Demo Customer",
+            "email": "mobile.demo@example.com",
+            "phone": "+919876543210",
+            "address": "10 Demo Street",
+            "city": "Chennai",
+            "state": "Tamil Nadu",
+            "pincode": "600001",
+            "country": "India",
+            "addressLine2": "",
+            "landmark": "",
+            "isDefault": true,
+            "createdAt": "2026-09-11T09:00:00.000Z",
+            "updatedAt": "2026-09-11T09:00:00.000Z"
+          }
+        ]
+      }
+    },
+    "POST /mob-api/addresses": {
+      "status": 201,
+      "response": {
+        "success": true,
+        "address": {
+          "id": 1,
+          "customerId": 7,
+          "label": "Home",
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "address": "10 Demo Street",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "pincode": "600001",
+          "country": "India",
+          "addressLine2": "",
+          "landmark": "",
+          "isDefault": true,
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      },
+      "request": {
+        "label": "Home",
+        "name": "Demo Customer",
+        "email": "mobile.demo@example.com",
+        "phone": "+919876543210",
+        "address": "10 Demo Street",
+        "city": "Chennai",
+        "state": "Tamil Nadu",
+        "pincode": "600001",
+        "country": "India",
+        "isDefault": true
+      }
+    },
+    "GET /mob-api/addresses/{addressId}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "address": {
+          "id": 1,
+          "customerId": 7,
+          "label": "Home",
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "address": "10 Demo Street",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "pincode": "600001",
+          "country": "India",
+          "addressLine2": "",
+          "landmark": "",
+          "isDefault": true,
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      }
+    },
+    "PUT /mob-api/addresses/{addressId}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "address": {
+          "id": 1,
+          "customerId": 7,
+          "label": "Work",
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "address": "10 Demo Street",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "pincode": "600001",
+          "country": "India",
+          "addressLine2": "",
+          "landmark": "",
+          "isDefault": true,
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      },
+      "request": {
+        "label": "Work"
+      }
+    },
+    "PUT /mob-api/addresses/{addressId}/default": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "address": {
+          "id": 1,
+          "customerId": 7,
+          "label": "Home",
+          "name": "Demo Customer",
+          "email": "mobile.demo@example.com",
+          "phone": "+919876543210",
+          "address": "10 Demo Street",
+          "city": "Chennai",
+          "state": "Tamil Nadu",
+          "pincode": "600001",
+          "country": "India",
+          "addressLine2": "",
+          "landmark": "",
+          "isDefault": true,
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z"
+        }
+      }
+    },
+    "DELETE /mob-api/addresses/{addressId}": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Saved address deleted"
+      }
+    },
+    "GET /mob-api/checkout": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "checkout": {
+          "cart": {
+            "id": 1,
+            "items": [
+              {
+                "id": 1,
+                "cartId": 1,
+                "productId": 224,
+                "variantId": null,
+                "quantity": 1,
+                "priceAtAdd": "999.00",
+                "selectedVariant": {},
+                "product": {
+                  "id": 224,
+                  "name": "Demo Cotton Shirt",
+                  "price": "999.00",
+                  "images": [
+                    "https://example.com/uploads/demo-shirt.jpg"
+                  ],
+                  "stock": 25,
+                  "slug": "demo-cotton-shirt",
+                  "gstRate": "0%"
+                },
+                "variant": null,
+                "gstRate": "0%",
+                "stockStatus": "VALID",
+                "availableStock": 25,
+                "unitPrice": 999,
+                "lineTotal": 999
+              }
+            ],
+            "subtotal": 999,
+            "itemCount": 1,
+            "currency": "INR"
+          },
+          "addresses": [
+            {
+              "id": 1,
+              "customerId": 7,
+              "label": "Home",
+              "name": "Demo Customer",
+              "email": "mobile.demo@example.com",
+              "phone": "+919876543210",
+              "address": "10 Demo Street",
+              "city": "Chennai",
+              "state": "Tamil Nadu",
+              "pincode": "600001",
+              "country": "India",
+              "addressLine2": "",
+              "landmark": "",
+              "isDefault": true,
+              "createdAt": "2026-09-11T09:00:00.000Z",
+              "updatedAt": "2026-09-11T09:00:00.000Z"
+            }
+          ],
+          "defaultAddressId": 1,
+          "stockIssues": [],
+          "totalsAreFinal": false
+        }
+      }
+    },
+    "POST /mob-api/checkout/place-order": {
+      "status": 201,
+      "response": {
+        "success": true,
+        "order": {
+          "id": 57,
+          "orderNumber": "BBDEMO0001",
+          "customerId": 7,
+          "status": "PENDING_PAYMENT",
+          "paymentStatus": "UNPAID",
+          "paymentMethod": "Razorpay Secure Online",
+          "subtotal": "999.00",
+          "discountAmount": "0.00",
+          "shippingAmount": "40.00",
+          "taxAmount": "0.00",
+          "totalAmount": "1039.00",
+          "currency": "INR",
+          "shippingAddress": {
+            "name": "Demo Customer",
+            "email": "mobile.demo@example.com",
+            "phone": "+919876543210",
+            "address": "10 Demo Street",
+            "city": "Chennai",
+            "state": "Tamil Nadu",
+            "pincode": "600001",
+            "country": "India"
+          },
+          "billingAddress": {
+            "name": "Demo Customer",
+            "email": "mobile.demo@example.com",
+            "phone": "+919876543210",
+            "address": "10 Demo Street",
+            "city": "Chennai",
+            "state": "Tamil Nadu",
+            "pincode": "600001",
+            "country": "India"
+          },
+          "createdAt": "2026-09-11T09:00:00.000Z",
+          "updatedAt": "2026-09-11T09:00:00.000Z",
+          "items": [
+            {
+              "id": 1,
+              "orderId": 57,
+              "productId": 224,
+              "productName": "Demo Cotton Shirt",
+              "quantity": 1,
+              "unitPrice": "999.00",
+              "totalPrice": "999.00"
+            }
+          ]
+        }
+      },
+      "request": {
+        "shippingAddressId": 1,
+        "billingAddressId": 1,
+        "paymentMethod": "Razorpay Secure Online",
+        "requestedCurrency": "INR"
+      }
+    },
+    "POST /mob-api/checkout/payments/initiate": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "gateway": "razorpay",
+        "key": "rzp_test_REPLACE_WITH_GATEWAY_KEY",
+        "amount": 103900,
+        "currency": "INR",
+        "name": "Billu Bazzar",
+        "description": "Payment for Order BBDEMO0001",
+        "order_id": "order_REPLACE_WITH_GATEWAY_ORDER_ID"
+      },
+      "request": {
+        "orderId": 57
+      }
+    },
+    "POST /mob-api/checkout/payments/verify": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "status": "PAID"
+      },
+      "request": {
+        "orderId": 57,
+        "razorpayPaymentId": "pay_REPLACE_WITH_GATEWAY_PAYMENT_ID",
+        "razorpayOrderId": "order_REPLACE_WITH_GATEWAY_ORDER_ID",
+        "razorpaySignature": "REPLACE_WITH_GATEWAY_SIGNATURE"
+      }
+    },
     "GET /mob-api/auth/me": {
       "status": 200,
       "response": {
@@ -1446,9 +1803,16 @@
             "maxDiscount": "200.00",
             "isActive": true,
             "validFrom": "2026-09-11T09:00:00.000Z",
-            "validUntil": "2026-12-31T23:59:59.000Z"
+            "validUntil": "2026-12-31T23:59:59.000Z",
+            "description": "Save 10%",
+            "usageLimit": 1
           }
-        ]
+        ],
+        "total": 1,
+        "page": 1,
+        "limit": 20,
+        "totalPages": 1,
+        "hasMore": false
       }
     },
     "POST /mob-api/offers/validate": {
@@ -1465,27 +1829,18 @@
           "maxDiscount": "200.00",
           "isActive": true,
           "validFrom": "2026-09-11T09:00:00.000Z",
-          "validUntil": "2026-12-31T23:59:59.000Z"
+          "validUntil": "2026-12-31T23:59:59.000Z",
+          "description": "Save 10%",
+          "usageLimit": 1
         },
+        "subtotal": 1000,
         "discountAmount": 100,
+        "discountedSubtotal": 900,
         "freeShipping": false
       },
       "request": {
         "code": "DEMO10",
         "subtotal": 1000
-      }
-    },
-    "GET /mob-api/delivery-zones/check": {
-      "status": 200,
-      "response": {
-        "success": true,
-        "deliverable": true,
-        "pincode": "600001",
-        "zoneName": "Chennai",
-        "city": "Chennai",
-        "state": "Tamil Nadu",
-        "deliveryCharge": 40,
-        "minOrderAmountForFreeDelivery": 1500
       }
     },
     "POST /mob-api/auth/send-checkout-otp": {
@@ -1579,6 +1934,8 @@
             "id": 1,
             "customerId": 7,
             "productId": 224,
+            "variantId": null,
+            "selectedVariant": {},
             "product": {
               "id": 224,
               "name": "Demo Cotton Shirt",
@@ -1594,19 +1951,23 @@
               "isActive": true,
               "rating": "0.00",
               "reviewCount": 0
-            }
+            },
+            "variant": null
           }
-        ]
+        ],
+        "total": 1
       }
     },
     "POST /mob-api/customers/wishlist": {
       "status": 200,
       "response": {
         "success": true,
-        "action": "added"
+        "action": "added",
+        "itemId": 1
       },
       "request": {
-        "productId": 224
+        "productId": 224,
+        "variantId": 10
       }
     },
     "GET /mob-api/customers/loyalty": {

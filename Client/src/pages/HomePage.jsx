@@ -516,11 +516,11 @@ const HomePage = () => {
             </div>
 
             {/* Product Preview (Visible on all devices including iPad Air/Mini & Mobile) */}
-            <div className="relative w-44 h-44 sm:w-52 sm:h-52 md:w-56 md:h-56 lg:w-56 lg:h-56 xl:w-64 xl:h-64 flex-shrink-0 rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-neutral-900 group">
+            <div className="relative w-44 h-44 sm:w-52 sm:h-52 md:w-56 md:h-56 lg:w-56 lg:h-56 xl:w-64 xl:h-64 flex-shrink-0 rounded-lg overflow-hidden shadow-2xl border border-white/20 bg-neutral-900 group">
               <img
                 src={getImageUrl(countdownBanner.image)}
                 alt={countdownBanner.title || 'Deal of the week'}
-                className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
             </div>
@@ -605,12 +605,12 @@ const HomePage = () => {
             {isCarouselLoading ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
                 {[...Array(4)].map((_, i) => (
-                  <div key={i} className="bg-white shadow-sm skeleton-card">
-                    <div className="skeleton aspect-[3/4]" />
-                    <div className="p-4 space-y-2">
-                      <div className="skeleton h-4 w-3/4" />
-                      <div className="skeleton h-4 w-1/2" />
-                      <div className="skeleton h-5 w-1/3" />
+                  <div key={i} className="bg-white shadow-sm rounded-lg overflow-hidden skeleton-card">
+                    <div className="skeleton aspect-square" />
+                    <div className="p-3 space-y-1.5">
+                      <div className="skeleton h-3.5 w-3/4" />
+                      <div className="skeleton h-3 w-1/2" />
+                      <div className="skeleton h-4 w-1/3" />
                     </div>
                   </div>
                 ))}
@@ -680,7 +680,7 @@ const HomePage = () => {
         <section className="py-8 bg-brand-light" aria-label="Curated collection">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-8">
             {promoBanners.length === 1 ? (
-              <div className="grid md:grid-cols-2 gap-0 shadow-xl rounded-2xl overflow-hidden md:h-[340px] bg-brand-text">
+              <div className="grid md:grid-cols-2 gap-0 shadow-xl rounded-lg overflow-hidden md:h-[340px] bg-brand-text">
                 <div className="relative h-64 md:h-full bg-neutral-950 overflow-hidden">
                   <img
                     src={getImageUrl(promoBanners[0].image)}
@@ -716,7 +716,7 @@ const HomePage = () => {
                 </ScrollReveal>
               </div>
             ) : (
-              <div className="relative shadow-xl rounded-2xl overflow-hidden bg-brand-text group/promo md:h-[340px]">
+              <div className="relative shadow-xl rounded-lg overflow-hidden bg-brand-text group/promo md:h-[340px]">
                 <div className="relative overflow-hidden h-full">
                   <div
                     className="flex transition-transform duration-500 ease-out h-full"
@@ -827,7 +827,7 @@ const HomePage = () => {
       {exclusiveBanners.length === 1 && (
         <section className="py-10 bg-white" aria-label="Promotional offers">
           <div className="max-w-site mx-auto px-6 md:px-8 flex justify-center">
-            <ScrollReveal className="relative overflow-hidden w-full max-w-5xl aspect-[16/9] sm:aspect-[2.5/1] md:aspect-[3/1] shadow-lg group">
+            <ScrollReveal className="relative overflow-hidden w-full max-w-5xl aspect-[16/9] sm:aspect-[2.5/1] md:aspect-[3/1] shadow-lg group rounded-lg">
               <img
                 src={getImageUrl(exclusiveBanners[0].image)}
                 alt={exclusiveBanners[0].title || 'Exclusive Collection'}
@@ -914,7 +914,7 @@ const HomePage = () => {
                   {exclusiveBanners.map((banner) => (
                     <div
                       key={banner.id}
-                      className="w-full md:w-[calc(50%-12px)] flex-shrink-0 relative overflow-hidden rounded-xl sm:rounded-2xl aspect-[4/3] sm:aspect-[16/9] min-h-[260px] sm:min-h-0 group shadow-md"
+                      className="w-full md:w-[calc(50%-12px)] flex-shrink-0 relative overflow-hidden rounded-lg aspect-[4/3] sm:aspect-[16/9] min-h-[260px] sm:min-h-0 group shadow-md"
                     >
                       <img
                         src={getImageUrl(banner.image)}
@@ -989,7 +989,7 @@ const HomePage = () => {
               </div>
             ) : (
               dbInfluencers[activeInfluencerIndex] && (
-                <div className="max-w-6xl mx-auto mt-6 mb-8 bg-white border border-brand-light/60 rounded-2xl shadow-sm overflow-hidden">
+                <div className="max-w-6xl mx-auto mt-6 mb-8 bg-white border border-brand-light/60 rounded-lg shadow-sm overflow-hidden">
                   <div className="relative h-[300px] lg:h-[340px] w-full" style={{ background: 'transparent' }}>
                     <CircularGallery
                       ref={galleryRef}
@@ -1092,16 +1092,29 @@ const HomePage = () => {
             <SectionHeader eyebrow="Customer Favourites" title="Most Loved Pieces" />
           </ScrollReveal>
 
-          {/* Featured items — top 5 */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-6 mb-5">
+          {/* Featured items — 4 on mobile/tablet (even 2x2 or 1x4), 5 on desktop (clean 1x5) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-6 mb-5">
             {(featured.length
               ? featured.slice(0, 5)
               : products.filter(p => p.isFeatured).slice(0, 5).length
                 ? products.filter(p => p.isFeatured).slice(0, 5)
                 : products.slice(0, 5)
             ).map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} compactMobile />
+              <div key={product.id || i} className={`w-full min-w-0 ${i === 4 ? 'hidden lg:block' : ''}`}>
+                <ProductCard product={product} index={i} compactMobile />
+              </div>
             ))}
+          </div>
+
+          {/* Centered VIEW ALL button for Most Loved Pieces */}
+          <div className="flex justify-center mt-6">
+            <Link
+              to="/products?featured=true"
+              className="px-10 py-3 border border-neutral-800 text-neutral-800 hover:bg-neutral-900 hover:text-white hover:border-neutral-900 transition-all font-inter text-xs font-semibold uppercase tracking-widest"
+              id="most-loved-view-all-btn"
+            >
+              View All
+            </Link>
           </div>
         </div>
       </section>
@@ -1112,7 +1125,7 @@ const HomePage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             {/* Card 1: Shipping */}
             <ScrollReveal className="h-full">
-              <div className="bg-white border border-neutral-200/60 rounded-xl p-6 flex items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 h-full">
+              <div className="bg-white border border-neutral-200/60 rounded-lg p-6 flex items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 h-full">
                 <div className="w-14 h-14 rounded-full bg-neutral-950 flex items-center justify-center text-brand-gold flex-shrink-0">
                   <Truck size={22} strokeWidth={1.5} />
                 </div>
@@ -1125,7 +1138,7 @@ const HomePage = () => {
 
             {/* Card 2: Satisfaction */}
             <ScrollReveal delay={0.08} className="h-full">
-              <div className="bg-white border border-neutral-200/60 rounded-xl p-6 flex items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 h-full">
+              <div className="bg-white border border-neutral-200/60 rounded-lg p-6 flex items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 h-full">
                 <div className="w-14 h-14 rounded-full bg-neutral-950 flex items-center justify-center text-brand-gold flex-shrink-0">
                   <Award size={22} strokeWidth={1.5} />
                 </div>
@@ -1138,7 +1151,7 @@ const HomePage = () => {
 
             {/* Card 3: Payments */}
             <ScrollReveal delay={0.16} className="h-full">
-              <div className="bg-white border border-neutral-200/60 rounded-xl p-6 flex items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 h-full">
+              <div className="bg-white border border-neutral-200/60 rounded-lg p-6 flex items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 h-full">
                 <div className="w-14 h-14 rounded-full bg-neutral-950 flex items-center justify-center text-brand-gold flex-shrink-0">
                   <Lock size={20} strokeWidth={1.5} />
                 </div>
@@ -1151,7 +1164,7 @@ const HomePage = () => {
 
             {/* Card 4: Support */}
             <ScrollReveal delay={0.24} className="h-full">
-              <div className="bg-white border border-neutral-200/60 rounded-xl p-6 flex items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 h-full">
+              <div className="bg-white border border-neutral-200/60 rounded-lg p-6 flex items-center gap-4 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 h-full">
                 <div className="w-14 h-14 rounded-full bg-neutral-950 flex items-center justify-center text-brand-gold flex-shrink-0">
                   <Headphones size={22} strokeWidth={1.5} />
                 </div>

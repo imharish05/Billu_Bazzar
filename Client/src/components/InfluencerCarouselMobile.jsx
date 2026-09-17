@@ -35,7 +35,7 @@ export default function InfluencerCarouselMobile({ items, onChangeActiveIndex })
 
   return (
     <div className="relative w-full max-w-xs mx-auto">
-      <div className="relative rounded-2xl overflow-hidden shadow-md border border-brand-light/60 bg-white">
+      <div className="relative rounded-lg overflow-hidden shadow-md border border-brand-light/60 bg-white">
         {/* Image */}
         <div className="relative w-full aspect-[4/5]">
           <img

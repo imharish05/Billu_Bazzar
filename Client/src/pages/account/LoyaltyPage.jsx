@@ -225,7 +225,7 @@ const LoyaltyPage = () => {
       {/* Top Balances Cards */}
       <div className="grid sm:grid-cols-2 gap-5 mb-7">
         {/* Points Balance Card */}
-        <div className="bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-600 text-white p-6 rounded-2xl shadow-md relative overflow-hidden flex flex-col justify-between space-y-4">
+        <div className="bg-gradient-to-br from-amber-500 via-amber-600 to-yellow-600 text-white p-6 rounded-lg shadow-md relative overflow-hidden flex flex-col justify-between space-y-4">
           <div className="relative z-10">
             <div className="flex items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-white">
@@ -266,7 +266,7 @@ const LoyaltyPage = () => {
         </div>
 
         {/* Cashback Wallet Card */}
-        <div className="bg-gradient-to-br from-neutral-900 via-neutral-950 to-neutral-900 text-white p-6 rounded-2xl shadow-md relative overflow-hidden flex flex-col justify-between space-y-4 border border-neutral-800">
+        <div className="bg-gradient-to-br from-neutral-900 via-neutral-950 to-neutral-900 text-white p-6 rounded-lg shadow-md relative overflow-hidden flex flex-col justify-between space-y-4 border border-neutral-800">
           <div className="relative z-10">
             <div className="flex items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-wider text-neutral-300">
@@ -296,7 +296,7 @@ const LoyaltyPage = () => {
       {/* Main Grid: How to Earn More & Recent Activity */}
       <div className="grid md:grid-cols-12 gap-6 items-start">
         {/* LEFT: How to earn more (5 cols) */}
-        <div className="md:col-span-5 bg-white rounded-2xl p-5 sm:p-6 border border-neutral-200/80 shadow-xs space-y-4">
+        <div className="md:col-span-5 bg-white rounded-lg p-5 sm:p-6 border border-neutral-200/80 shadow-xs space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-neutral-100">
             <div className="p-1.5 bg-amber-50 text-brand-gold rounded-lg">
               <Sparkles size={16} />
@@ -313,7 +313,7 @@ const LoyaltyPage = () => {
               earnRules.map((rule, idx) => (
                 <div
                   key={rule.id || idx}
-                  className="flex items-center justify-between gap-3 p-3 bg-neutral-50/70 hover:bg-neutral-50 rounded-xl border border-neutral-200/60 transition-colors text-xs"
+                  className="flex items-center justify-between gap-3 p-3 bg-neutral-50/70 hover:bg-neutral-50 rounded-lg border border-neutral-200/60 transition-colors text-xs"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="p-2 bg-white rounded-lg border border-neutral-200/70 shrink-0">
@@ -323,7 +323,7 @@ const LoyaltyPage = () => {
                       {rule.action}
                     </span>
                   </div>
-                  <span className="font-bold text-brand-gold font-mono shrink-0 bg-white px-2 py-1 rounded-md border border-amber-200/60 shadow-2xs">
+                  <span className="font-bold text-brand-gold font-mono shrink-0 bg-white px-2 py-1 rounded-lg border border-amber-200/60 shadow-2xs">
                     {rule.points}
                   </span>
                 </div>
@@ -335,7 +335,7 @@ const LoyaltyPage = () => {
         </div>
 
         {/* RIGHT: Recent Activity Ledger (7 cols) */}
-        <div className="md:col-span-7 bg-white rounded-2xl p-5 sm:p-6 border border-neutral-200/80 shadow-xs space-y-4">
+        <div className="md:col-span-7 bg-white rounded-lg p-5 sm:p-6 border border-neutral-200/80 shadow-xs space-y-4">
           <div className="flex items-center justify-between gap-3 pb-3 border-b border-neutral-100 flex-wrap">
             <div className="flex items-center gap-2">
               <div className="p-1.5 bg-amber-50 text-brand-gold rounded-lg">
@@ -347,7 +347,7 @@ const LoyaltyPage = () => {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex items-center bg-neutral-100 p-1 rounded-xl gap-1 text-xs">
+            <div className="flex items-center bg-neutral-100 p-1 rounded-lg gap-1 text-xs">
               <button
                 type="button"
                 onClick={() => handleTabChange('ALL')}
@@ -397,10 +397,10 @@ const LoyaltyPage = () => {
                 return (
                   <div
                     key={tx.id}
-                    className="flex items-center justify-between gap-3 p-3.5 bg-neutral-50/60 hover:bg-neutral-50 rounded-xl border border-neutral-200/70 transition-all text-xs"
+                    className="flex items-center justify-between gap-3 p-3.5 bg-neutral-50/60 hover:bg-neutral-50 rounded-lg border border-neutral-200/70 transition-all text-xs"
                   >
                     <div className="flex items-start gap-3 min-w-0">
-                      <div className={`p-2 rounded-xl shrink-0 ${meta.iconBg}`}>
+                      <div className={`p-2 rounded-lg shrink-0 ${meta.iconBg}`}>
                         {meta.icon}
                       </div>
                       <div className="min-w-0 space-y-1">
@@ -409,7 +409,7 @@ const LoyaltyPage = () => {
                             {tx.description || tx.type}
                           </p>
                           <span
-                            className={`text-[10px] font-bold px-2 py-0.2 rounded border uppercase tracking-wider ${meta.badgeColor}`}
+                            className={`text-[10px] font-bold px-2 py-0.2 rounded-lg border uppercase tracking-wider ${meta.badgeColor}`}
                           >
                             {meta.badge}
                           </span>

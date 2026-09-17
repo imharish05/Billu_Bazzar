@@ -76,7 +76,7 @@ const ContactPage = () => {
   return (
     <main id="main-content" className="min-h-screen bg-brand-bg">
       {/* Breadcrumb banner */}
-      <div className="bg-brand-light/30 border-y border-brand-light py-8">
+      <div className="bg-brand-light/30  py-8">
         <div className="max-w-site mx-auto px-6 md:px-8">
           <nav className="text-xs text-brand-grey mb-2" aria-label="Breadcrumb">
             <Link to="/" className="hover:text-brand-gold transition-colors">Home</Link>
@@ -104,7 +104,7 @@ const ContactPage = () => {
             <div className="space-y-6">
               {/* Address */}
               <div className="flex gap-4">
-                <div className="w-10 h-10 border border-brand-light flex items-center justify-center flex-shrink-0 text-brand-gold">
+                <div className="w-10 h-10 border border-brand-light flex items-center justify-center flex-shrink-0 text-brand-gold rounded-lg">
                   <MapPin size={18} />
                 </div>
                 <div>
@@ -118,7 +118,7 @@ const ContactPage = () => {
 
               {/* Call */}
               <div className="flex gap-4">
-                <div className="w-10 h-10 border border-brand-light flex items-center justify-center flex-shrink-0 text-brand-gold">
+                <div className="w-10 h-10 border border-brand-light flex items-center justify-center flex-shrink-0 text-brand-gold rounded-lg">
                   <Phone size={18} />
                 </div>
                 <div>
@@ -132,7 +132,7 @@ const ContactPage = () => {
 
               {/* Email */}
               <div className="flex gap-4">
-                <div className="w-10 h-10 border border-brand-light flex items-center justify-center flex-shrink-0 text-brand-gold">
+                <div className="w-10 h-10 border border-brand-light flex items-center justify-center flex-shrink-0 text-brand-gold rounded-lg">
                   <Mail size={18} />
                 </div>
                 <div>
@@ -160,7 +160,7 @@ const ContactPage = () => {
             </div>
 
             {/* Premium Note */}
-            <div className="border border-brand-light p-6 bg-brand-light/10">
+            <div className="border border-brand-light p-6 bg-brand-light/10 rounded-lg">
               <div className="flex items-center gap-1 text-brand-gold mb-2">
                 <Star size={14} className="fill-brand-gold" />
                 <Star size={14} className="fill-brand-gold" />
@@ -176,7 +176,7 @@ const ContactPage = () => {
           </div>
 
           {/* Right Column: Contact form */}
-          <div className="lg:col-span-7 bg-white border border-brand-light p-8 md:p-10 shadow-sm">
+          <div className="lg:col-span-7 bg-white border border-brand-light p-8 md:p-10 shadow-sm rounded-lg">
             <div>
               <h3 className="font-playfair text-xl md:text-2xl font-semibold text-brand-text mb-2">Send Us a Message</h3>
               <p className="text-brand-grey text-sm mb-8">
@@ -199,7 +199,7 @@ const ContactPage = () => {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="e.g. Aarav Mehta"
-                    className="w-full border border-brand-light px-4 py-3 text-sm focus:outline-none focus:border-brand-gold bg-transparent transition-colors placeholder-brand-grey/40"
+                    className="w-full border border-brand-light px-4 py-3 text-sm focus:outline-none focus:border-brand-gold bg-transparent transition-colors placeholder-brand-grey/40 rounded-lg"
                   />
                 </div>
 
@@ -216,7 +216,7 @@ const ContactPage = () => {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="e.g. aarav@example.com"
-                    className="w-full border border-brand-light px-4 py-3 text-sm focus:outline-none focus:border-brand-gold bg-transparent transition-colors placeholder-brand-grey/40"
+                    className="w-full border border-brand-light px-4 py-3 text-sm focus:outline-none focus:border-brand-gold bg-transparent transition-colors placeholder-brand-grey/40 rounded-lg"
                   />
                 </div>
               </div>
@@ -250,7 +250,7 @@ const ContactPage = () => {
                     name="subject"
                     value={formData.subject}
                     onChange={handleChange}
-                    className="w-full border border-brand-light px-4 py-3 text-sm focus:outline-none focus:border-brand-gold bg-transparent transition-colors text-brand-text"
+                    className="w-full border border-brand-light px-4 py-3 text-sm focus:outline-none focus:border-brand-gold bg-transparent transition-colors text-brand-text rounded-lg"
                   >
                     <option value="General Inquiry">General Inquiry</option>
                     <option value="Order Status">Order & Shipping Status</option>
@@ -275,7 +275,7 @@ const ContactPage = () => {
                   value={formData.message}
                   onChange={handleChange}
                   placeholder="How can we assist you today? Please provide as much detail as possible..."
-                  className="w-full border border-brand-light px-4 py-3 text-sm focus:outline-none focus:border-brand-gold bg-transparent transition-colors placeholder-brand-grey/40 resize-y"
+                  className="w-full border border-brand-light px-4 py-3 text-sm focus:outline-none focus:border-brand-gold bg-transparent transition-colors placeholder-brand-grey/40 resize-y rounded-lg"
                 />
               </div>
 
@@ -283,7 +283,7 @@ const ContactPage = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="btn-primary w-full md:w-auto flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary w-full md:w-auto flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg"
                 id="contact-submit-btn"
               >
                 {isSubmitting ? (
@@ -305,7 +305,7 @@ const ContactPage = () => {
 
       {/* Map Section */}
       <div className="max-w-site mx-auto px-6 md:px-8 pb-10 mt-6">
-        <div className="w-full h-[300px] md:h-[450px] overflow-hidden grayscale contrast-[1.08] hover:grayscale-0 transition-all duration-700 ease-in-out border border-brand-light shadow-sm">
+        <div className="w-full h-[300px] md:h-[450px] overflow-hidden grayscale contrast-[1.08] hover:grayscale-0 transition-all duration-700 ease-in-out border border-brand-light shadow-sm rounded-lg">
           <iframe
             title="Billu Bazaar Bandra West Location Map"
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3771.1895080060934!2d72.8335017!3d19.0554907!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7c9115c4d6dfd%3A0xe543e2646dcb001f!2sLinking%20Rd%2C%20Bandra%20West%2C%20Mumbai%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"

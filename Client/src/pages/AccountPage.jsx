@@ -98,7 +98,7 @@ const AccountPage = () => {
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar */}
           <aside className="w-full md:w-60 flex-shrink-0">
-            <div className="bg-white shadow-sm p-5 text-center mb-4">
+            <div className="bg-white shadow-sm p-5 text-center mb-4 rounded-lg">
               <div className="w-16 h-16 rounded-full bg-brand-gold flex items-center justify-center mx-auto mb-3">
                 <span className="text-white font-bold text-xl">{customer?.name?.[0] || 'B'}</span>
               </div>
@@ -109,7 +109,7 @@ const AccountPage = () => {
                 <span className="text-xs font-medium text-brand-gold">{customer?.loyaltyPoints || 0} pts</span>
               </div>
             </div>
-            <nav className="bg-white shadow-sm overflow-hidden">
+            <nav className="bg-white shadow-sm overflow-hidden rounded-lg">
               {TABS.map(tab => (
                 <button
                   key={tab.id}
@@ -141,7 +141,7 @@ const AccountPage = () => {
             >
               {/* Profile Tab */}
               {activeTab === 'profile' && (
-                <div className="bg-white shadow-sm p-6">
+                <div className="bg-white shadow-sm p-6 rounded-lg">
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="font-playfair text-xl font-semibold">My Profile</h2>
                     <button onClick={() => setEditing(!editing)} className="btn-outline text-xs px-4 py-2 flex items-center gap-2 focus-visible:outline-brand-gold" id="edit-profile-btn">
@@ -181,7 +181,7 @@ const AccountPage = () => {
                     return loading ? (
                       <div className="space-y-4">{[...Array(3)].map((_, i) => <div key={i} className="skeleton h-24 w-full" />)}</div>
                     ) : validOrders.length === 0 ? (
-                      <div className="bg-white shadow-sm p-12 text-center">
+                      <div className="bg-white shadow-sm p-12 text-center rounded-lg">
                         <Package size={40} className="text-brand-light mx-auto mb-3" strokeWidth={1} />
                         <p className="font-playfair text-xl mb-2">No orders yet</p>
                         <p className="text-brand-grey text-sm mb-4">Start exploring our curated collections</p>
@@ -190,7 +190,7 @@ const AccountPage = () => {
                     ) : (
                       <div className="space-y-4">
                         {validOrders.map(order => (
-                        <div key={order.id} className="bg-white shadow-sm p-5">
+                        <div key={order.id} className="bg-white shadow-sm p-5 rounded-lg">
                           <div className="flex justify-between items-start mb-3 flex-wrap gap-2">
                             <div>
                               <p className="font-medium">Order {order.orderNumber}</p>
@@ -213,9 +213,9 @@ const AccountPage = () => {
 
               {/* Loyalty Tab */}
               {activeTab === 'loyalty' && (
-                <div className="bg-white shadow-sm p-6">
+                <div className="bg-white shadow-sm p-6 rounded-lg">
                   <h2 className="font-playfair text-xl font-semibold mb-2">Loyalty Points</h2>
-                  <div className="bg-gradient-to-r from-brand-gold to-yellow-500 text-white p-6 mb-6">
+                  <div className="bg-gradient-to-r from-brand-gold to-yellow-500 text-white p-6 mb-6 rounded-lg">
                     <p className="text-sm opacity-80 mb-1">Total Balance</p>
                     <p className="font-playfair text-5xl font-bold">{customer?.loyaltyPoints || 0}</p>
                     <p className="text-sm opacity-80 mt-1">Points · Worth {formatPrice((customer?.loyaltyPoints || 0) * loyaltySettings.redeemRate, currencyCode, currencyRate)}</p>
@@ -238,7 +238,7 @@ const AccountPage = () => {
 
               {/* Personal Shopper Tab */}
               {activeTab === 'shopper' && (
-                <div className="bg-white shadow-sm p-6">
+                <div className="bg-white shadow-sm p-6 rounded-lg">
                   <h2 className="font-playfair text-xl font-semibold mb-2">Personal Shopper</h2>
                   <p className="text-brand-grey text-sm mb-6">Our personal stylists will curate a collection just for you based on your preferences, occasion, and budget.</p>
                   <form className="space-y-4" onSubmit={e => e.preventDefault()}>
@@ -259,7 +259,7 @@ const AccountPage = () => {
 
               {/* Support Tab */}
               {activeTab === 'support' && (
-                <div className="bg-white shadow-sm p-6">
+                <div className="bg-white shadow-sm p-6 rounded-lg">
                   <h2 className="font-playfair text-xl font-semibold mb-5">Support Tickets</h2>
                   <form className="space-y-4 mb-8" onSubmit={e => e.preventDefault()}>
                     <div>

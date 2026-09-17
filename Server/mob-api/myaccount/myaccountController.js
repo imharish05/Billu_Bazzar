@@ -2,9 +2,9 @@
 const customer = require('../../controllers/customerController');
 const auth = require('../../controllers/authController');
 
-exports.getWishlist = (req, res, next) => customer.getWishlist(req, res, next);
+exports.getWishlist = require('../wishlist/wishlistController').getWishlist;
 
-exports.toggleWishlist = (req, res, next) => customer.toggleWishlist(req, res, next);
+exports.toggleWishlist = require('../wishlist/wishlistController').toggleWishlist;
 
 exports.getLoyalty = (req, res, next) => customer.getLoyalty(req, res, next);
 

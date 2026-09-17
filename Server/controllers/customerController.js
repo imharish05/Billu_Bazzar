@@ -65,13 +65,39 @@ const getWishlist = async (req, res) => {
         { model: ProductVariant, as: 'variant' }
       ]
     });
-    res.json({ success: true, wishlist: items });
+    const parsedItems = items.map(item => {
+      const json = item.toJSON ? item.toJSON() : { ...item };
+      if (typeof json.selectedVariant === 'string') {
+        try {
+          json.selectedVariant = JSON.parse(json.selectedVariant);
+        } catch {
+          json.selectedVariant = {};
+        }
+      }
+      if (typeof json.selectedVariant !== 'object' || json.selectedVariant === null) {
+        json.selectedVariant = {};
+      }
+      return json;
+    });
+    res.json({ success: true, wishlist: parsedItems });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 
 const toggleWishlist = async (req, res) => {
   try {
     const { productId, variantId, selectedVariant } = req.body;
+    let safeVariant = selectedVariant || {};
+    if (typeof safeVariant === 'string') {
+      try {
+        safeVariant = JSON.parse(safeVariant);
+      } catch {
+        safeVariant = {};
+      }
+    }
+    if (typeof safeVariant !== 'object' || safeVariant === null) {
+      safeVariant = {};
+    }
+
     const items = await Wishlist.findAll({
       where: {
         customerId: req.customer.id,
@@ -84,7 +110,7 @@ const toggleWishlist = async (req, res) => {
       if (targetVariantId || w.variantId) {
         return Number(w.variantId) === targetVariantId;
       }
-      return areVariantsEqual(w.selectedVariant, selectedVariant);
+      return areVariantsEqual(w.selectedVariant, safeVariant);
     });
 
     if (existing) {
@@ -95,7 +121,7 @@ const toggleWishlist = async (req, res) => {
       customerId: req.customer.id,
       productId,
       variantId: targetVariantId,
-      selectedVariant: selectedVariant || {}
+      selectedVariant: safeVariant
     });
     res.json({ success: true, action: 'added' });
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }

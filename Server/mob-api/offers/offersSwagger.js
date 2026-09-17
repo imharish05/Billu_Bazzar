@@ -11,10 +11,41 @@ module.exports = {
           "bearerAuth": []
         }
       ],
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
+          }
+        },
+        {
+          "name": "subtotal",
+          "in": "query",
+          "schema": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 99999999.99,
+            "multipleOf": 0.01
+          },
+          "description": "Optional merchandise subtotal in the same currency as checkout, before delivery and tax."
+        }
+      ],
       "responses": {
         "200": {
-          "description": "Successful response using the existing customer API response format"
+          "description": "Successful customer coupon response"
         },
         "400": {
           "description": "Invalid request",
@@ -76,7 +107,8 @@ module.exports = {
             }
           }
         }
-      }
+      },
+      "description": "List active, currently valid coupons that have remaining redemptions for the authenticated customer. Optional subtotal also filters the minimum spend and returns discount previews. Does not redeem or create coupons."
     }
   },
   "/mob-api/coupons/validate": {
@@ -93,7 +125,7 @@ module.exports = {
       "parameters": [],
       "responses": {
         "200": {
-          "description": "Successful response using the existing customer API response format"
+          "description": "Successful customer coupon response"
         },
         "400": {
           "description": "Invalid request",
@@ -162,22 +194,30 @@ module.exports = {
           "application/json": {
             "schema": {
               "type": "object",
-              "properties": {
-                "code": {
-                  "type": "string"
-                },
-                "subtotal": {
-                  "type": "number"
-                }
-              },
               "required": [
                 "code",
                 "subtotal"
-              ]
+              ],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 30,
+                  "example": "WELCOME10"
+                },
+                "subtotal": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 99999999.99,
+                  "multipleOf": 0.01,
+                  "example": 1000
+                }
+              }
             }
           }
         }
-      }
+      },
+      "description": "Preview a discount using code and subtotal. Customer identity comes from the bearer token. No coupon is redeemed here. Send couponCode when placing the order; final amounts are calculated from server-side product prices. Cancelled orders do not count toward the per-customer usage limit; other order statuses do."
     }
   },
   "/mob-api/offers": {
@@ -191,10 +231,41 @@ module.exports = {
           "bearerAuth": []
         }
       ],
-      "parameters": [],
+      "parameters": [
+        {
+          "name": "page",
+          "in": "query",
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "default": 1
+          }
+        },
+        {
+          "name": "limit",
+          "in": "query",
+          "schema": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
+          }
+        },
+        {
+          "name": "subtotal",
+          "in": "query",
+          "schema": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 99999999.99,
+            "multipleOf": 0.01
+          },
+          "description": "Optional merchandise subtotal in the same currency as checkout, before delivery and tax."
+        }
+      ],
       "responses": {
         "200": {
-          "description": "Successful response using the existing customer API response format"
+          "description": "Successful customer coupon response"
         },
         "400": {
           "description": "Invalid request",
@@ -256,7 +327,8 @@ module.exports = {
             }
           }
         }
-      }
+      },
+      "description": "List active, currently valid coupons that have remaining redemptions for the authenticated customer. Optional subtotal also filters the minimum spend and returns discount previews. Does not redeem or create coupons."
     }
   },
   "/mob-api/offers/validate": {
@@ -273,7 +345,7 @@ module.exports = {
       "parameters": [],
       "responses": {
         "200": {
-          "description": "Successful response using the existing customer API response format"
+          "description": "Successful customer coupon response"
         },
         "400": {
           "description": "Invalid request",
@@ -342,22 +414,30 @@ module.exports = {
           "application/json": {
             "schema": {
               "type": "object",
-              "properties": {
-                "code": {
-                  "type": "string"
-                },
-                "subtotal": {
-                  "type": "number"
-                }
-              },
               "required": [
                 "code",
                 "subtotal"
-              ]
+              ],
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 30,
+                  "example": "WELCOME10"
+                },
+                "subtotal": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 99999999.99,
+                  "multipleOf": 0.01,
+                  "example": 1000
+                }
+              }
             }
           }
         }
-      }
+      },
+      "description": "Preview a discount using code and subtotal. Customer identity comes from the bearer token. No coupon is redeemed here. Send couponCode when placing the order; final amounts are calculated from server-side product prices. Cancelled orders do not count toward the per-customer usage limit; other order statuses do."
     }
   }
 };

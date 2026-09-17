@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Heart, Star, ChevronRight, ChevronLeft, Share2, Shield, Truck, RotateCcw, ZoomIn, Play, Mail, CheckCircle2, X, Tag, Copy, Edit3, Trash2, Store, Building2, FileText } from 'lucide-react';
 import { fetchProduct, fetchProducts } from '../redux/slices/productsSlice';
 import { addLocal, openCart, setBuyNowItem } from '../redux/slices/cartSlice';
-import { toggleItem } from '../redux/slices/wishlistSlice';
+import { toggleItem, toggleWishlistApi } from '../redux/slices/wishlistSlice';
 import { openQuickView } from '../redux/slices/uiSlice';
 import Footer from '../components/Footer';
 import ProductCard from '../components/ProductCard';
@@ -70,7 +70,7 @@ const ProductDetailsPage = () => {
   const videoRef = useRef(null);
   const [videoSpeed, setVideoSpeed] = useState(0.8);
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isAuthenticated } = useSelector(s => s.auth || {});
   const reviewsState = useSelector(s => s.reviews);
 
@@ -222,11 +222,17 @@ const ProductDetailsPage = () => {
     return product.attributes;
   }, [product]);
 
+  const sizes = useMemo(() => {
+    if (!product) return [];
+    if (product.variants && product.variants.length > 0) return [];
+    return attributes?.sizes || ['S', 'M', 'L', 'XL'];
+  }, [product, attributes]);
+
   const relatedProducts = useMemo(() => {
     if (!product) return [];
     return allProducts
       .filter(p => p.categoryId === product.categoryId && p.id !== product.id)
-      .slice(0, 4);
+      .slice(0, 5);
   }, [allProducts, product]);
 
   const parsedVariants = useMemo(() => {
@@ -281,12 +287,80 @@ const ProductDetailsPage = () => {
 
   useEffect(() => {
     if (product && parsedVariants.length > 0) {
+      const targetVariantId = searchParams.get('variant') || searchParams.get('variantId');
+
+      // 1. Try matching by variant ID
+      if (targetVariantId) {
+        const matched = parsedVariants.find(v => String(v.id) === String(targetVariantId));
+        if (matched && matched.attributes) {
+          setSelectedAttributes(matched.attributes);
+          return;
+        }
+      }
+
+      // 2. Try matching by attribute query parameters (e.g. ?size=s or ?color=red)
+      const paramAttrs = {};
+      let hasParamAttr = false;
+      for (const [pKey, pVal] of searchParams.entries()) {
+        const matchingKey = variantAttributeKeys.find(
+          k => k.toLowerCase() === pKey.toLowerCase()
+        );
+        if (matchingKey && pVal) {
+          paramAttrs[matchingKey] = pVal;
+          hasParamAttr = true;
+        }
+      }
+
+      if (hasParamAttr) {
+        // Try exact match on all supplied attribute params
+        const exactMatch = parsedVariants.find(v =>
+          Object.entries(paramAttrs).every(([k, val]) =>
+            v.attributes && String(v.attributes[k]).toLowerCase() === String(val).toLowerCase()
+          )
+        );
+        if (exactMatch && exactMatch.attributes) {
+          setSelectedAttributes(exactMatch.attributes);
+          return;
+        }
+
+        // Try best partial match
+        let bestCandidate = null;
+        let maxMatches = 0;
+        parsedVariants.forEach(v => {
+          if (!v.attributes) return;
+          let matches = 0;
+          Object.entries(paramAttrs).forEach(([k, val]) => {
+            if (String(v.attributes[k]).toLowerCase() === String(val).toLowerCase()) {
+              matches++;
+            }
+          });
+          if (matches > maxMatches) {
+            maxMatches = matches;
+            bestCandidate = v;
+          }
+        });
+        if (bestCandidate && bestCandidate.attributes) {
+          setSelectedAttributes(bestCandidate.attributes);
+          return;
+        }
+      }
+
+      // 3. Fallback: first available in-stock variant or first variant
       const firstValid = parsedVariants.find(v => v.stock === undefined || parseInt(v.stock, 10) > 0) || parsedVariants[0];
       setSelectedAttributes(firstValid.attributes || {});
+    } else if (product && (!product.variants || product.variants.length === 0)) {
+      const sizeParam = searchParams.get('size');
+      if (sizeParam && sizes.length > 0) {
+        const matchedSize = sizes.find(s => String(s).toLowerCase() === String(sizeParam).toLowerCase());
+        if (matchedSize) {
+          setSelectedSize(matchedSize);
+        }
+      }
+      setSelectedAttributes({});
     } else {
       setSelectedAttributes({});
     }
-  }, [product, parsedVariants]);
+  }, [product?.id, parsedVariants, searchParams, variantAttributeKeys, sizes]);
 
   const handleSelectAttribute = (groupKey, value) => {
     if (!parsedVariants || parsedVariants.length === 0) {
@@ -304,6 +378,7 @@ const ProductDetailsPage = () => {
     );
 
     let nextAttrs = tentativeAttrs;
+    let matchedVariant = exactMatch;
 
     if (exactMatch) {
       nextAttrs = exactMatch.attributes || tentativeAttrs;
@@ -332,11 +407,23 @@ const ProductDetailsPage = () => {
           }
         });
 
+        matchedVariant = bestVariant;
         nextAttrs = bestVariant.attributes || tentativeAttrs;
       }
     }
 
     setSelectedAttributes(nextAttrs);
+
+    if (matchedVariant && matchedVariant.id) {
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set('variant', String(matchedVariant.id));
+      Object.entries(nextAttrs).forEach(([k, v]) => {
+        if (v && typeof v !== 'object') {
+          newParams.set(k.toLowerCase(), String(v));
+        }
+      });
+      setSearchParams(newParams, { replace: true });
+    }
   };
 
   const selectedVariant = useMemo(() => {
@@ -552,7 +639,7 @@ const ProductDetailsPage = () => {
         ? selectedVariant.attributes 
         : (selectedSize ? { size: selectedSize } : {})
     };
-    dispatch(toggleItem(payload));
+    dispatch(toggleWishlistApi(payload));
   };
 
   if (loading || !product) {
@@ -600,9 +687,6 @@ const ProductDetailsPage = () => {
     ? Math.round(((displayComparePrice - displayPrice) / displayComparePrice) * 100)
     : null;
 
-  const sizes = !product.variants || product.variants.length === 0
-    ? (attributes?.sizes || ['S', 'M', 'L', 'XL'])
-    : [];
 
   const vendorName = product.vendor?.name || product.vendorName || attributes?.vendorName || attributes?.sellerName || 'Billu Bazaar Official';
   const rawVendorGst = product.vendor?.gstin || product.vendorGst || product.vendor?.gst || attributes?.vendorGst || attributes?.gstin || attributes?.gstNumber || '29ABCDE1234F1Z5';
@@ -677,7 +761,7 @@ const ProductDetailsPage = () => {
 
               {/* Main image */}
               <div
-                className="relative flex-1 aspect-square bg-brand-light overflow-hidden"
+                className="relative flex-1 aspect-square bg-brand-light overflow-hidden rounded-lg"
               >
                 {viewMode === 'spin' ? (
                   <Product360Viewer product={product} onClose={() => setViewMode('standard')} />
@@ -757,7 +841,7 @@ const ProductDetailsPage = () => {
                 </p>
               )}
               {vendorName && (
-                <div className="w-full sm:w-auto flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-[11px] sm:text-xs text-neutral-700 bg-neutral-100/90 p-3 rounded-xl border border-neutral-200 shadow-2xs font-medium max-w-full overflow-hidden">
+                <div className="w-full sm:w-auto flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-[11px] sm:text-xs text-neutral-700 bg-neutral-100/90 p-3 rounded-lg border border-neutral-200 shadow-2xs font-medium max-w-full overflow-hidden">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <Store size={14} className="text-brand-gold flex-shrink-0" />
                     <span className="truncate">Seller: <strong className="text-neutral-900 font-bold">{vendorName}</strong></span>
@@ -937,7 +1021,7 @@ const ProductDetailsPage = () => {
                             type="button"
                             disabled={!directVariantMatch && !anyVariantWithVal}
                             onClick={() => handleSelectAttribute(key, val)}
-                            className={`px-5 py-2.5 min-w-[80px] rounded-2xl text-sm font-extrabold transition-all duration-150 focus-visible:outline-none ${btnStyle}`}
+                            className={`px-5 py-2.5 min-w-[80px] rounded-lg text-sm font-extrabold transition-all duration-150 focus-visible:outline-none ${btnStyle}`}
                             title={isOutOfStock ? `${val} — Out of stock` : (!directVariantMatch && anyVariantWithVal ? `Click to select variant with ${key}: ${val}` : `${key}: ${val}`)}
                           >
                             {val}
@@ -976,7 +1060,7 @@ const ProductDetailsPage = () => {
             {/* Quantity */}
             <div className="flex flex-wrap items-center gap-2.5 sm:gap-4">
               <p className="font-semibold text-xs sm:text-sm text-neutral-900 flex-shrink-0">Quantity</p>
-              <div className="flex items-center border border-neutral-300 rounded bg-white">
+              <div className="flex items-center border border-neutral-300 rounded-lg bg-white">
                 <button type="button" onClick={() => setQuantity(q => Math.max(1, q - 1))} className="w-9 h-9 flex items-center justify-center hover:bg-neutral-100 transition-colors focus-visible:outline-brand-gold font-bold text-neutral-700" aria-label="Decrease quantity">−</button>
                 <span className="w-9 text-center font-bold text-xs sm:text-sm text-neutral-900">{quantity}</span>
                 <button
@@ -1046,7 +1130,7 @@ const ProductDetailsPage = () => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   onSubmit={handleNotifySubmit}
-                  className="bg-brand-light p-4 rounded-xl border border-brand-light space-y-3"
+                  className="bg-brand-light p-4 rounded-lg border border-brand-light space-y-3"
                 >
                   <p className="text-xs font-semibold text-brand-text">Get notified when this item is back in stock:</p>
                   <div className="flex gap-2">
@@ -1069,7 +1153,7 @@ const ProductDetailsPage = () => {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="bg-green-50 text-green-700 p-4 rounded-xl border border-green-200 flex items-start gap-2.5"
+                  className="bg-green-50 text-green-700 p-4 rounded-lg border border-green-200 flex items-start gap-2.5"
                 >
                   <CheckCircle2 size={16} className="flex-shrink-0 mt-0.5" />
                   <div>
@@ -1084,13 +1168,15 @@ const ProductDetailsPage = () => {
             <div className="grid grid-cols-3 gap-1.5 sm:gap-4 pt-4 border-t border-brand-light w-full max-w-full overflow-hidden">
               {[
                 { icon: Truck, label: 'Free Shipping', sub: 'on orders ₹1499+' },
+                { icon: Shield, label: 'Authentic', sub: '100% genuine' },
                 { icon: RotateCcw, label: 'Easy Returns', sub: '7-day policy' },
-                { icon: Shield, label: 'Secure Pay', sub: '100% secured' },
               ].map(({ icon: Icon, label, sub }) => (
-                <div key={label} className="flex flex-col items-center text-center gap-0.5 sm:gap-1 px-0.5 min-w-0">
+                <div key={label} className="flex items-center gap-1.5 sm:gap-2.5 text-center sm:text-left">
                   <Icon size={18} className="text-brand-gold flex-shrink-0" strokeWidth={1.5} />
-                  <p className="text-[10px] sm:text-xs font-semibold text-neutral-900 truncate w-full">{label}</p>
-                  <p className="text-[9px] sm:text-[11px] text-brand-grey truncate w-full">{sub}</p>
+                  <div>
+                    <p className="text-[11px] sm:text-xs font-semibold text-brand-text leading-tight">{label}</p>
+                    <p className="text-[9px] sm:text-[10px] text-brand-grey hidden sm:block">{sub}</p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1124,7 +1210,7 @@ const ProductDetailsPage = () => {
 
             {/* Authenticity Certificate Card */}
             {product.showAuthenticity && (
-              <div className="bg-amber-50/50 border border-amber-200/50 p-4 rounded-xl flex items-start gap-3">
+              <div className="bg-amber-50/50 border border-amber-200/50 p-4 rounded-lg flex items-start gap-3">
                 <Shield size={24} className="text-brand-gold flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-xs font-semibold text-brand-text tracking-wider uppercase">Authenticity Guaranteed</p>
@@ -1290,7 +1376,7 @@ const ProductDetailsPage = () => {
                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                className="bg-white rounded-xl max-w-lg w-full p-6 shadow-2xl relative"
+                className="bg-white rounded-lg max-w-lg w-full p-6 shadow-2xl relative"
                 onClick={e => e.stopPropagation()}
               >
                 <button
@@ -1337,7 +1423,7 @@ const ProductDetailsPage = () => {
                       value={reviewTitle}
                       onChange={e => setReviewTitle(e.target.value)}
                       placeholder="e.g. Excellent quality, perfect fit!"
-                      className="w-full px-3 py-2 border border-neutral-200 rounded text-sm focus:border-brand-gold focus:outline-none"
+                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:border-brand-gold focus:outline-none"
                     />
                   </div>
 
@@ -1349,7 +1435,7 @@ const ProductDetailsPage = () => {
                       value={reviewBody}
                       onChange={e => setReviewBody(e.target.value)}
                       placeholder="Tell us what you liked or disliked about this product after your purchase..."
-                      className="w-full px-3 py-2 border border-neutral-200 rounded text-sm focus:border-brand-gold focus:outline-none resize-none"
+                      className="w-full px-3 py-2 border border-neutral-200 rounded-lg text-sm focus:border-brand-gold focus:outline-none resize-none"
                       required
                     />
                   </div>
@@ -1404,7 +1490,7 @@ const ProductDetailsPage = () => {
                     <button
                       type="button"
                       onClick={() => setReviewModalOpen(false)}
-                      className="px-4 py-2 border border-neutral-200 text-neutral-600 text-xs font-semibold rounded hover:bg-neutral-50"
+                      className="px-4 py-2 border border-neutral-200 text-neutral-600 text-xs font-semibold rounded-lg hover:bg-neutral-50"
                     >
                       Cancel
                     </button>
@@ -1427,9 +1513,9 @@ const ProductDetailsPage = () => {
       {relatedProducts.length > 0 && (
         <div className="border-t border-brand-light pt-16 max-w-site mx-auto px-6 md:px-8">
           <h2 className="font-playfair text-2xl font-bold text-brand-text">Related Creations</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 py-10">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 py-8">
             {relatedProducts.map((p, idx) => (
-              <ProductCard key={p.id} product={p} index={idx} />
+              <ProductCard key={p.id} product={p} index={idx} compactMobile />
             ))}
           </div>
         </div>
@@ -1443,7 +1529,7 @@ const ProductDetailsPage = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-4xl aspect-video bg-black shadow-2xl overflow-hidden rounded-xl"
+              className="relative w-full max-w-4xl aspect-video bg-black shadow-2xl overflow-hidden rounded-lg"
             >
               <button
                 onClick={() => setVideoOpen(false)}
@@ -1579,7 +1665,7 @@ const ProductDetailsPage = () => {
                   <button
                     key={i}
                     onClick={() => setLightboxIndex(i)}
-                    className={`w-16 h-20 rounded border-2 overflow-hidden flex-shrink-0 transition-all ${
+                    className={`w-16 h-20 rounded-lg border-2 overflow-hidden flex-shrink-0 transition-all ${
                       lightboxIndex === i ? 'border-brand-gold scale-105 shadow-md' : 'border-white/20 hover:border-white/60 opacity-60'
                     }`}
                   >

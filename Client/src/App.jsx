@@ -17,6 +17,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import OrderConfirmationPage from './pages/OrderConfirmationPage';
 import AccountLayout from './pages/account/AccountLayout';
 import ProfilePage from './pages/account/ProfilePage';
+import SavedAddressesPage from './pages/account/SavedAddressesPage';
 import OrdersPage from './pages/account/OrdersPage';
 import OrderDetailPage from './pages/account/OrderDetailPage';
 import ReturnDetailPage from './pages/account/ReturnDetailPage';
@@ -169,7 +170,6 @@ const App = () => {
           <Route path="/products" element={<ProductListingPage />} />
           <Route path="/category/:slug" element={<ProductListingPage />} />
           <Route path="/category/:slug/:sub" element={<ProductListingPage />} />
-          <Route path="/category/:slug/:sub/:subsub" element={<ProductListingPage />} />
           <Route path="/products/:slug" element={<ProductDetailsPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
@@ -192,6 +192,7 @@ const App = () => {
           <Route path="/forgot-password" element={<Navigate to="/account?view=forgot" replace />} />
           <Route path="/account" element={<AccountLayout />}>
             <Route index element={<ProfilePage />} />
+            <Route path="addresses" element={<SavedAddressesPage />} />
             <Route path="orders" element={<OrdersPage />} />
             <Route path="orders/:id" element={<OrderDetailPage />} />
             <Route path="orders/:orderId/returns/:id" element={<ReturnDetailPage />} />

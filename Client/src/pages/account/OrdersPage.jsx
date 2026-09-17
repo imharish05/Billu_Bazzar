@@ -60,19 +60,19 @@ const OrdersPage = () => {
       </div>
 
       {loading && sortedOrders.length === 0 ? (
-        <div className="bg-white shadow-sm p-12 text-center">
+        <div className="bg-white shadow-sm rounded-lg p-12 text-center">
           <div className="h-8 w-8 border-2 border-brand-gold border-t-transparent rounded-full animate-spin mx-auto mb-3" />
           <p className="text-brand-grey text-sm">Fetching your orders from server...</p>
         </div>
       ) : error && sortedOrders.length === 0 ? (
-        <div className="bg-white shadow-sm p-8 text-center border border-red-100">
+        <div className="bg-white shadow-sm rounded-lg p-8 text-center border border-red-100">
           <p className="text-red-600 text-sm mb-3">{error}</p>
           <button onClick={() => dispatch(fetchMyOrders())} className="btn-outline text-xs px-4 py-2">
             Try Again
           </button>
         </div>
       ) : sortedOrders.length === 0 ? (
-        <div className="bg-white shadow-sm p-12 text-center">
+        <div className="bg-white shadow-sm rounded-lg p-12 text-center">
           <Package size={40} className="text-brand-light mx-auto mb-3" strokeWidth={1} />
           <p className="font-playfair text-xl mb-2">No orders yet</p>
           <p className="text-brand-grey text-sm mb-4">Start exploring our luxury curated collections</p>
@@ -151,7 +151,7 @@ const OrdersPage = () => {
                       <img
                         src={getImageUrl(firstItem.displayImage || firstItem.variantImage || firstItem.variant?.image || firstItem.image || firstItem.productImage || firstItem.product?.defaultProductImage) || getPlaceholderSvg(firstItem.productName || firstItem.name || 'Product')}
                         alt={firstItem.productName || firstItem.name || 'Product'}
-                        className="w-12 h-12 object-cover rounded border border-neutral-100 flex-shrink-0"
+                        className="w-12 h-12 object-cover rounded-lg border border-neutral-100 flex-shrink-0"
                         onError={(e) => { e.target.onerror = null; e.target.src = getPlaceholderSvg(firstItem.productName || firstItem.name || 'Product'); }}
                       />
                       <div className="min-w-0 flex-1">

@@ -260,7 +260,7 @@ const Product360Fallback = ({ images = [], onClose, productName = 'Product' }) =
   const progress = frameCount ? Math.round((loadedCount / frameCount) * 100) : 0;
 
   return (
-    <div className="relative w-full h-full bg-neutral-50 select-none overflow-hidden rounded-sm">
+    <div className="relative w-full h-full bg-neutral-50 select-none overflow-hidden rounded-lg">
       <div className="absolute top-4 left-4 bg-white/90 backdrop-blur text-brand-text text-[10px] font-bold px-2.5 py-1 tracking-wider uppercase flex items-center gap-1.5 rounded-full border border-neutral-200 z-20 shadow-sm">
         <RotateCcw size={11} className={ready && !isDragging ? '' : 'animate-spin'} />
         360° View

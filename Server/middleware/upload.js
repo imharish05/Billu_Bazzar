@@ -11,6 +11,8 @@ const storage = multer.diskStorage({
       subfolder = 'banners';
     } else if (url.includes('/products')) {
       subfolder = 'products';
+    } else if (url.includes('/subcategories')) {
+      subfolder = 'subcategories';
     } else if (url.includes('/categories')) {
       subfolder = 'categories';
     } else if (url.includes('/site-settings')) {
@@ -56,6 +58,13 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({ storage, fileFilter, limits: { fileSize: 50 * 1024 * 1024 } });
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 50 * 1024 * 1024,
+    fieldSize: 25 * 1024 * 1024,
+  },
+});
 
 module.exports = upload;

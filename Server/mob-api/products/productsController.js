@@ -1,11 +1,12 @@
 'use strict';
 const product = require('../../controllers/productController');
+const productSearch = require('./productSearch');
 
-exports.getAll = (req, res, next) => product.getAll(req, res, next);
+exports.getAll = productSearch.list;
 
 exports.getFeatured = (req, res, next) => product.getFeatured(req, res, next);
 
-exports.search = (req, res, next) => product.search(req, res, next);
+exports.search = productSearch.search;
 
 exports.getPriceRange = (req, res, next) => product.getPriceRange(req, res, next);
 

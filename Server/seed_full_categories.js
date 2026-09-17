@@ -1,7 +1,7 @@
 'use strict';
 require('dotenv').config();
 const sequelize = require('./config/db');
-const { Category, SubCategory, SubSubCategory } = require('./models');
+const { Category, SubCategory } = require('./models');
 
 const slugify = (text, prefix = '') => {
   let str = (prefix ? `${prefix}-` : '') + text;
@@ -166,7 +166,6 @@ async function seed() {
 
     let rootCount = 0;
     let parentCount = 0;
-    let childCount = 0;
 
     for (let rIdx = 0; rIdx < data.length; rIdx++) {
       const item = data[rIdx];
@@ -203,32 +202,12 @@ async function seed() {
           }
         });
         parentCount++;
-
-        for (let cIdx = 0; cIdx < parent.children.length; cIdx++) {
-          const childName = parent.children[cIdx];
-          const childSlug = slugify(childName, parentSlug);
-
-          await SubSubCategory.findOrCreate({
-            where: { slug: childSlug },
-            defaults: {
-              subCategoryId: parentCat.id,
-              name: childName,
-              slug: childSlug,
-              description: `${childName} under ${parent.name}`,
-              image: getSmallPlaceholderImage(childName),
-              sortOrder: cIdx + 1,
-              isActive: true
-            }
-          });
-          childCount++;
-        }
       }
     }
 
     console.log(`SUCCESSFULLY SEEDED:`);
     console.log(`- ${rootCount} Root Categories (Category)`);
     console.log(`- ${parentCount} Parent Categories (SubCategory)`);
-    console.log(`- ${childCount} Child Categories (SubSubCategory)`);
 
   } catch (err) {
     console.error('Error seeding categories:', err);

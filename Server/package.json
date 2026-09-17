@@ -8,7 +8,7 @@
     "dev": "nodemon server.js",
     "swagger": "node swagger.js",
     "swagger:mob": "node swagger-mob.js",
-    "test:mob": "node --test mob-api/common/mobile.test.js",
+    "test:mob": "node --test mob-api/common/mobile.test.js mob-api/common/shopping.test.js mob-api/addresses/addresses.test.js mob-api/offers/offers.test.js mob-api/checkout/checkout.test.js",
     "test": "echo No tests"
   },
   "keywords": [],
