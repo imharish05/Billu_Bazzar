@@ -311,7 +311,7 @@ const OrderConfirmationPage = () => {
                   {order.razorpay_payment_id && (
                     <div className="flex items-center justify-between gap-4">
                       <span className="text-brand-grey shrink-0 whitespace-nowrap">Transaction ID</span>
-                      <span className="text-[11px] font-mono text-neutral-600 text-right truncate max-w-[170px]" title={order.razorpay_payment_id}>
+                      <span className="text-xs text-neutral-700 text-right truncate max-w-[200px]" title={order.razorpay_payment_id}>
                         {order.razorpay_payment_id}
                       </span>
                     </div>

@@ -1,5 +1,7 @@
 'use strict';
 module.exports = {
+  /*
+  Checkout OTP verification is not available for the mobile API checkout flow.
   "/mob-api/checkout/send-otp": {
     "post": {
       "summary": "Send checkout verification OTP",
@@ -202,6 +204,7 @@ module.exports = {
       "description": "Verify checkout OTP. Customer authentication is required."
     }
   },
+  */
   "/mob-api/checkout": {
     "get": {
       "tags": [

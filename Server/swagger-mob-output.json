@@ -758,6 +758,76 @@
         }
       }
     },
+    "/mob-api/site-settings/newsletter-subscribe": {
+      "post": {
+        "tags": [
+          "settings"
+        ],
+        "summary": "Subscribe to newsletter (site-settings alias)",
+        "description": "Same request and response as /mob-api/settings/newsletter-subscribe.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "required": [
+                  "email"
+                ]
+              },
+              "example": {
+                "email": "mobile.demo@example.com"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscribed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "pointsAwarded": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "message": "Thank you!",
+                  "pointsAwarded": 0
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid email"
+          },
+          "401": {
+            "description": "Customer authentication required"
+          }
+        }
+      }
+    },
     "/mob-api/site-settings/{key}": {
       "get": {
         "tags": [
@@ -805,6 +875,9 @@
                         },
                         "requireCodOtp": {
                           "type": "boolean"
+                        },
+                        "codOnly": {
+                          "type": "boolean"
                         }
                       }
                     }
@@ -816,7 +889,8 @@
                   "data": {
                     "inrThreshold": 20000,
                     "aedThreshold": 800,
-                    "requireCodOtp": true
+                    "requireCodOtp": true,
+                    "codOnly": true
                   }
                 }
               }
@@ -1004,6 +1078,9 @@
                         },
                         "requireCodOtp": {
                           "type": "boolean"
+                        },
+                        "codOnly": {
+                          "type": "boolean"
                         }
                       }
                     }
@@ -1015,7 +1092,8 @@
                   "data": {
                     "inrThreshold": 20000,
                     "aedThreshold": 800,
-                    "requireCodOtp": true
+                    "requireCodOtp": true,
+                    "codOnly": true
                   }
                 }
               }
@@ -1080,6 +1158,158 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/mob-api/variants": {
+      "get": {
+        "tags": [
+          "products"
+        ],
+        "summary": "Browse variants of active products",
+        "description": "Paginated customer catalog variants. Warehouse and internal inventory details are excluded.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated variants",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "variants": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "productId": {
+                            "type": "integer"
+                          },
+                          "sku": {
+                            "type": "string"
+                          },
+                          "price": {
+                            "type": "string"
+                          },
+                          "stock": {
+                            "type": "integer"
+                          },
+                          "attributes": {
+                            "type": "object",
+                            "properties": {
+                              "Size": {
+                                "type": "string"
+                              },
+                              "Color": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "product": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "slug": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "hasMore": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "variants": [
+                    {
+                      "id": 10,
+                      "productId": 224,
+                      "sku": "DEMO-SHIRT-M",
+                      "price": "999.00",
+                      "stock": 25,
+                      "attributes": {
+                        "Size": "M",
+                        "Color": "Blue"
+                      },
+                      "product": {
+                        "id": 224,
+                        "name": "Demo Cotton Shirt",
+                        "slug": "demo-cotton-shirt"
+                      }
+                    }
+                  ],
+                  "total": 1,
+                  "page": 1,
+                  "limit": 20,
+                  "totalPages": 1,
+                  "hasMore": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid pagination"
+          },
+          "401": {
+            "description": "Customer authentication required"
+          },
+          "500": {
+            "description": "Internal server error"
           }
         }
       }
@@ -10230,409 +10460,6 @@
         }
       }
     },
-    "/mob-api/coupons": {
-      "get": {
-        "tags": [
-          "coupons"
-        ],
-        "summary": "Active coupons",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "default": 1
-            },
-            "example": 1
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 100,
-              "default": 20
-            },
-            "example": 10
-          },
-          {
-            "name": "subtotal",
-            "in": "query",
-            "schema": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 99999999.99,
-              "multipleOf": 0.01
-            },
-            "description": "Optional merchandise subtotal in the same currency as checkout, before delivery and tax."
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful customer coupon response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "coupons": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer"
-                          },
-                          "code": {
-                            "type": "string"
-                          },
-                          "type": {
-                            "type": "string"
-                          },
-                          "value": {
-                            "type": "string"
-                          },
-                          "minOrderValue": {
-                            "type": "string"
-                          },
-                          "maxDiscount": {
-                            "type": "string"
-                          },
-                          "isActive": {
-                            "type": "boolean"
-                          },
-                          "validFrom": {
-                            "type": "string"
-                          },
-                          "validUntil": {
-                            "type": "string"
-                          },
-                          "description": {
-                            "type": "string"
-                          },
-                          "usageLimit": {
-                            "type": "integer"
-                          }
-                        }
-                      }
-                    },
-                    "total": {
-                      "type": "integer"
-                    },
-                    "page": {
-                      "type": "integer"
-                    },
-                    "limit": {
-                      "type": "integer"
-                    },
-                    "totalPages": {
-                      "type": "integer"
-                    },
-                    "hasMore": {
-                      "type": "boolean"
-                    }
-                  }
-                },
-                "example": {
-                  "success": true,
-                  "coupons": [
-                    {
-                      "id": 1,
-                      "code": "DEMO10",
-                      "type": "PERCENT",
-                      "value": "10.00",
-                      "minOrderValue": "500.00",
-                      "maxDiscount": "200.00",
-                      "isActive": true,
-                      "validFrom": "2026-09-11T09:00:00.000Z",
-                      "validUntil": "2026-12-31T23:59:59.000Z",
-                      "description": "Save 10%",
-                      "usageLimit": 1
-                    }
-                  ],
-                  "total": 1,
-                  "page": 1,
-                  "limit": 20,
-                  "totalPages": 1,
-                  "hasMore": false
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Missing, invalid, expired, or inactive customer token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Operation not permitted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found or not owned by this customer",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Operation conflicts with current state",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        },
-        "description": "List active, currently valid coupons that have remaining redemptions for the authenticated customer. Optional subtotal also filters the minimum spend and returns discount previews. Does not redeem or create coupons."
-      }
-    },
-    "/mob-api/coupons/validate": {
-      "post": {
-        "tags": [
-          "coupons"
-        ],
-        "summary": "Validate a coupon",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Successful customer coupon response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "valid": {
-                      "type": "boolean"
-                    },
-                    "coupon": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "integer"
-                        },
-                        "code": {
-                          "type": "string"
-                        },
-                        "type": {
-                          "type": "string"
-                        },
-                        "value": {
-                          "type": "string"
-                        },
-                        "minOrderValue": {
-                          "type": "string"
-                        },
-                        "maxDiscount": {
-                          "type": "string"
-                        },
-                        "isActive": {
-                          "type": "boolean"
-                        },
-                        "validFrom": {
-                          "type": "string"
-                        },
-                        "validUntil": {
-                          "type": "string"
-                        },
-                        "description": {
-                          "type": "string"
-                        },
-                        "usageLimit": {
-                          "type": "integer"
-                        }
-                      }
-                    },
-                    "subtotal": {
-                      "type": "integer"
-                    },
-                    "discountAmount": {
-                      "type": "integer"
-                    },
-                    "discountedSubtotal": {
-                      "type": "integer"
-                    },
-                    "freeShipping": {
-                      "type": "boolean"
-                    }
-                  }
-                },
-                "example": {
-                  "success": true,
-                  "valid": true,
-                  "coupon": {
-                    "id": 1,
-                    "code": "DEMO10",
-                    "type": "PERCENT",
-                    "value": "10.00",
-                    "minOrderValue": "500.00",
-                    "maxDiscount": "200.00",
-                    "isActive": true,
-                    "validFrom": "2026-09-11T09:00:00.000Z",
-                    "validUntil": "2026-12-31T23:59:59.000Z",
-                    "description": "Save 10%",
-                    "usageLimit": 1
-                  },
-                  "subtotal": 1000,
-                  "discountAmount": 100,
-                  "discountedSubtotal": 900,
-                  "freeShipping": false
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Missing, invalid, expired, or inactive customer token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Operation not permitted",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found or not owned by this customer",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Operation conflicts with current state",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        },
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "required": [
-                  "code",
-                  "subtotal"
-                ],
-                "properties": {
-                  "code": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 30,
-                    "example": "WELCOME10"
-                  },
-                  "subtotal": {
-                    "type": "number",
-                    "minimum": 0,
-                    "maximum": 99999999.99,
-                    "multipleOf": 0.01,
-                    "example": 1000
-                  }
-                }
-              },
-              "example": {
-                "code": "DEMO10",
-                "subtotal": 1000
-              }
-            }
-          }
-        },
-        "description": "Preview a discount using code and subtotal. Customer identity comes from the bearer token. No coupon is redeemed here. Send couponCode when placing the order; final amounts are calculated from server-side product prices. Cancelled orders do not count toward the per-customer usage limit; other order statuses do."
-      }
-    },
     "/mob-api/offers": {
       "get": {
         "tags": [
@@ -10841,6 +10668,409 @@
       "post": {
         "tags": [
           "offers"
+        ],
+        "summary": "Validate a coupon",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Successful customer coupon response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "valid": {
+                      "type": "boolean"
+                    },
+                    "coupon": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "code": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "minOrderValue": {
+                          "type": "string"
+                        },
+                        "maxDiscount": {
+                          "type": "string"
+                        },
+                        "isActive": {
+                          "type": "boolean"
+                        },
+                        "validFrom": {
+                          "type": "string"
+                        },
+                        "validUntil": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "usageLimit": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "subtotal": {
+                      "type": "integer"
+                    },
+                    "discountAmount": {
+                      "type": "integer"
+                    },
+                    "discountedSubtotal": {
+                      "type": "integer"
+                    },
+                    "freeShipping": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "valid": true,
+                  "coupon": {
+                    "id": 1,
+                    "code": "DEMO10",
+                    "type": "PERCENT",
+                    "value": "10.00",
+                    "minOrderValue": "500.00",
+                    "maxDiscount": "200.00",
+                    "isActive": true,
+                    "validFrom": "2026-09-11T09:00:00.000Z",
+                    "validUntil": "2026-12-31T23:59:59.000Z",
+                    "description": "Save 10%",
+                    "usageLimit": 1
+                  },
+                  "subtotal": 1000,
+                  "discountAmount": 100,
+                  "discountedSubtotal": 900,
+                  "freeShipping": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, expired, or inactive customer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not owned by this customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code",
+                  "subtotal"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 30,
+                    "example": "WELCOME10"
+                  },
+                  "subtotal": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 99999999.99,
+                    "multipleOf": 0.01,
+                    "example": 1000
+                  }
+                }
+              },
+              "example": {
+                "code": "DEMO10",
+                "subtotal": 1000
+              }
+            }
+          }
+        },
+        "description": "Preview a discount using code and subtotal. Customer identity comes from the bearer token. No coupon is redeemed here. Send couponCode when placing the order; final amounts are calculated from server-side product prices. Cancelled orders do not count toward the per-customer usage limit; other order statuses do."
+      }
+    },
+    "/mob-api/coupons": {
+      "get": {
+        "tags": [
+          "coupons"
+        ],
+        "summary": "Active coupons",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "example": 1
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "example": 10
+          },
+          {
+            "name": "subtotal",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 99999999.99,
+              "multipleOf": 0.01
+            },
+            "description": "Optional merchandise subtotal in the same currency as checkout, before delivery and tax."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful customer coupon response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "coupons": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "code": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          },
+                          "minOrderValue": {
+                            "type": "string"
+                          },
+                          "maxDiscount": {
+                            "type": "string"
+                          },
+                          "isActive": {
+                            "type": "boolean"
+                          },
+                          "validFrom": {
+                            "type": "string"
+                          },
+                          "validUntil": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "usageLimit": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "type": "integer"
+                    },
+                    "hasMore": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "coupons": [
+                    {
+                      "id": 1,
+                      "code": "DEMO10",
+                      "type": "PERCENT",
+                      "value": "10.00",
+                      "minOrderValue": "500.00",
+                      "maxDiscount": "200.00",
+                      "isActive": true,
+                      "validFrom": "2026-09-11T09:00:00.000Z",
+                      "validUntil": "2026-12-31T23:59:59.000Z",
+                      "description": "Save 10%",
+                      "usageLimit": 1
+                    }
+                  ],
+                  "total": 1,
+                  "page": 1,
+                  "limit": 20,
+                  "totalPages": 1,
+                  "hasMore": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, expired, or inactive customer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not owned by this customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "List active, currently valid coupons that have remaining redemptions for the authenticated customer. Optional subtotal also filters the minimum spend and returns discount previews. Does not redeem or create coupons."
+      }
+    },
+    "/mob-api/coupons/validate": {
+      "post": {
+        "tags": [
+          "coupons"
         ],
         "summary": "Validate a coupon",
         "security": [
@@ -12689,6 +12919,139 @@
         }
       }
     },
+    "/mob-api/delivery-zones/check": {
+      "get": {
+        "tags": [
+          "delivery"
+        ],
+        "summary": "Check delivery availability (query parameter)",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "pincode",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "600001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response using the existing customer API response format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "deliverable": {
+                      "type": "boolean"
+                    },
+                    "pincode": {
+                      "type": "string"
+                    },
+                    "zoneName": {
+                      "type": "string"
+                    },
+                    "city": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "deliveryCharge": {
+                      "type": "integer"
+                    },
+                    "minOrderAmountForFreeDelivery": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "deliverable": true,
+                  "pincode": "600001",
+                  "zoneName": "Chennai",
+                  "city": "Chennai",
+                  "state": "Tamil Nadu",
+                  "deliveryCharge": 40,
+                  "minOrderAmountForFreeDelivery": 1500
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, invalid, expired, or inactive customer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Operation not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found or not owned by this customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Operation conflicts with current state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "description": "Same as the path-parameter version; use when the pincode is easier to pass as a query string."
+      }
+    },
     "/mob-api/stock-status": {
       "get": {
         "tags": [
@@ -13787,300 +14150,6 @@
         "tags": [
           "affiliates"
         ]
-      }
-    },
-    "/mob-api/checkout/send-otp": {
-      "post": {
-        "summary": "Send checkout verification OTP",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "example": {
-                  "success": true,
-                  "message": "Verification OTP sent to mobile.demo@example.com"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request"
-          },
-          "401": {
-            "description": "Customer login required"
-          },
-          "404": {
-            "description": "Resource not found"
-          }
-        },
-        "tags": [
-          "checkout"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "type": "string"
-                  },
-                  "name": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "email"
-                ]
-              },
-              "example": {
-                "email": "mobile.demo@example.com",
-                "name": "Demo Customer"
-              }
-            }
-          }
-        },
-        "description": "Send checkout verification OTP. Customer authentication is required."
-      }
-    },
-    "/mob-api/checkout/verify-otp": {
-      "post": {
-        "summary": "Verify checkout OTP",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "example": {
-                  "success": true,
-                  "message": "Security verification successful"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request"
-          },
-          "401": {
-            "description": "Customer login required"
-          },
-          "404": {
-            "description": "Resource not found"
-          }
-        },
-        "tags": [
-          "checkout"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "type": "string"
-                  },
-                  "otp": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "email",
-                  "otp"
-                ]
-              },
-              "example": {
-                "email": "mobile.demo@example.com",
-                "otp": "123456"
-              }
-            }
-          }
-        },
-        "description": "Verify checkout OTP. Customer authentication is required."
-      }
-    },
-    "/mob-api/auth/send-checkout-otp": {
-      "post": {
-        "summary": "Send checkout verification OTP",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "example": {
-                  "success": true,
-                  "message": "Verification OTP sent to mobile.demo@example.com"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request"
-          },
-          "401": {
-            "description": "Customer login required"
-          },
-          "404": {
-            "description": "Resource not found"
-          }
-        },
-        "tags": [
-          "checkout"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "type": "string"
-                  },
-                  "name": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "email"
-                ]
-              },
-              "example": {
-                "email": "mobile.demo@example.com",
-                "name": "Demo Customer"
-              }
-            }
-          }
-        },
-        "description": "Send checkout verification OTP. Customer authentication is required."
-      }
-    },
-    "/mob-api/auth/verify-checkout-otp": {
-      "post": {
-        "summary": "Verify checkout OTP",
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "message": {
-                      "type": "string"
-                    }
-                  }
-                },
-                "example": {
-                  "success": true,
-                  "message": "Security verification successful"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request"
-          },
-          "401": {
-            "description": "Customer login required"
-          },
-          "404": {
-            "description": "Resource not found"
-          }
-        },
-        "tags": [
-          "checkout"
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "email": {
-                    "type": "string"
-                  },
-                  "otp": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "email",
-                  "otp"
-                ]
-              },
-              "example": {
-                "email": "mobile.demo@example.com",
-                "otp": "123456"
-              }
-            }
-          }
-        },
-        "description": "Verify checkout OTP. Customer authentication is required."
       }
     },
     "/mob-api/checkout": {

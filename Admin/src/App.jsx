@@ -101,6 +101,7 @@ const App = () => {
         <Route path="/returns"     element={<Protected><ReturnsAdminPage /></Protected>} />
         <Route path="/customers"   element={<Protected><CustomersAdminPage /></Protected>} />
         <Route path="/contact-enquiries" element={<Protected><ContactEnquiriesAdminPage /></Protected>} />
+        <Route path="/contact_enquiries" element={<Navigate to="/contact-enquiries" replace />} />
         <Route path="/personal-shopper"   element={<Protected><PersonalShopperAdminPage /></Protected>} />
         <Route path="/abandoned-carts" element={<Protected><AbandonedCartsAdminPage /></Protected>} />
         <Route path="/slider-messages" element={<Protected><SliderMessagesAdminPage /></Protected>} />

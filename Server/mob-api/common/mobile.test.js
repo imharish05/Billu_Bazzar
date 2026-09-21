@@ -12,6 +12,14 @@ const models = {
   Customer: { findByPk: async id => { if (dbFailure) throw Error('database unavailable'); return id === 7 ? { id, isActive: active, email: 'customer@example.com' } : null; } },
   Order: { findOne: async ({ where }) => Number(where.id) === 10 && where.customerId === 7 ? { id: 10, customerId: 7, paymentGatewayRef: 'owned-ref' } : null },
   Product: { findAndCountAll: async options => { assert.equal(options.where.isActive, true); return { rows: [], count: 0 }; }, findOne: async ({ where }) => Number(where.id) === 1 ? { id: 1 } : null },
+  ProductVariant: { findAndCountAll: async options => {
+    assert.deepEqual(options.include[0].where, { isActive: true });
+    assert.equal(options.include[0].required, true);
+    assert.equal(options.attributes.includes('warehouseId'), false);
+    assert.equal(options.limit, 2);
+    assert.equal(options.offset, 2);
+    return { rows: [{ id: 5, productId: 1, product: { id: 1, name: 'Active', slug: 'active' } }], count: 3 };
+  } },
   Coupon: { findAll: async () => [] },
 };
 stub('../../models', models);
@@ -86,6 +94,16 @@ test('accepts original mobile tokens and strips admin catalog flags', async () =
   assert.deepEqual(data.products, []);
   assert.equal((await request('/api/mob/products?limit=-1')).status, 400);
 });
+test('variant catalog is paginated and newsletter site-settings alias is mounted', async () => {
+  const variants = await request('/mob-api/variants?page=2&limit=2');
+  assert.equal(variants.status, 200);
+  assert.deepEqual(await variants.json(), { success: true, variants: [{ id: 5, productId: 1, product: { id: 1, name: 'Active', slug: 'active' } }], total: 3, page: 2, limit: 2, totalPages: 2, hasMore: false });
+  assert.equal((await request('/api/mob/variants?limit=0')).status, 400);
+  assert.equal((await request('/mob-api/variants', { access: null })).status, 401);
+  const newsletter = await request('/mob-api/site-settings/newsletter-subscribe', { method: 'POST', body: { email: 'customer@example.com' } });
+  assert.equal(newsletter.status, 200);
+  assert.equal((await (await request('/api/mob/site-settings/newsletter-subscribe', { method: 'POST', body: { email: 'customer@example.com' } })).json()).action, 'subscribeNewsletter');
+});
 test('rejects inactive or missing customers and reports database outages as server errors', async () => {
   active = false;
   assert.equal((await request('/mob-api/cart')).status, 401);
@@ -127,8 +145,8 @@ test('Swagger shows only the requested sections while retaining the complete API
   assert.deepEqual(spec.paths['/mob-api/reviews/product/{productId}'].get.tags, ['Products & Review']);
   assert.deepEqual(spec.paths['/mob-api/reviews'].post.tags, ['Products & Review']);
   assert.deepEqual(spec.paths['/mob-api/delivery-zones/check/{pincode}'].get.tags, ['Delivery Zones']);
-  assert.equal(spec.paths['/mob-api/delivery-zones/check'], undefined);
-  assert.equal(fullSpec.paths['/mob-api/delivery-zones/check'], undefined);
+  assert.deepEqual(spec.paths['/mob-api/delivery-zones/check'].get.tags, ['Delivery Zones']);
+  assert.ok(fullSpec.paths['/mob-api/delivery-zones/check'].get);
   assert.ok(spec.paths['/mob-api/cart']);
   assert.ok(spec.paths['/mob-api/wishlist']);
   for (const route of ['/mob-api/myaccount/profile', '/mob-api/myaccount/change-password']) {

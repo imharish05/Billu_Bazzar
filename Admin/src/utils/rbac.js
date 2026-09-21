@@ -192,6 +192,7 @@ export const canAccessNav = (adminObj, path) => {
     case '/affiliates': return checkPermission(adminObj, 'manage_affiliates');
     case '/loyalty': return checkPermission(adminObj, 'manage_loyalty');
     case '/customers': return checkPermission(adminObj, 'view_customers');
+    case '/contact_enquiries':
     case '/contact-enquiries': return checkPermission(adminObj, 'view_contact_enquiries');
     case '/personal-shopper': return checkPermission(adminObj, 'view_personal_shopper');
     case '/payments': return checkPermission(adminObj, 'view_payments');

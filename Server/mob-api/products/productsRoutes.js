@@ -6,6 +6,7 @@ router.get('/products', controller.getAll);
 router.get('/products/featured', controller.getFeatured);
 router.get('/products/search', controller.search);
 router.get('/products/price-range', controller.getPriceRange);
+router.get('/variants', controller.getAllVariants);
 router.get('/products/:slug', controller.getOne);
 router.get('/variants/product/:productId', controller.getVariants);
 

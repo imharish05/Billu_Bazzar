@@ -48,8 +48,9 @@ Auth's original authController.js, authRoutes.js, authValidation.js, and JWT sig
 ## Client processes
 
 - banners: banners and marketing messages.
-- categories: category tree, categories, subcategories, sub-subcategories.
+- categories: category tree, categories, subcategories. There is no sub-subcategory level.
 - products: product list, details, featured products, search, price range, variants. New arrivals and best sellers use product-list filters.
+- variants: `GET /variants` lists active-product variants with pagination (`page`, `limit` up to 100) and catalog fields only; `/variants/product/:productId` lists one active product's variants.
 - offers: /offers and /offers/validate; /coupons URLs also work.
 - cart: fetch, add, sync, update/remove item, clear.
 - checkout: /checkout/send-otp and /checkout/verify-otp, also available at the client's /auth/send-checkout-otp and /auth/verify-checkout-otp URLs.
@@ -59,6 +60,7 @@ Auth's original authController.js, authRoutes.js, authValidation.js, and JWT sig
 - reviews and returns: customer review and return processes, including return evidence uploads.
 - delivery, stock, currency, gifts, contact, personalshopper, affiliates, search: corresponding storefront processes.
 - settings: about, loyalty, tax, OTP threshold and newsletter subscription. Both /settings/:key and /site-settings/:key work.
+- newsletter subscription is available at both `POST /settings/newsletter-subscribe` and `POST /site-settings/newsletter-subscribe`.
 
 Feature controllers call the existing backend commerce controllers to share business rules and response formats. Mobile-specific ownership and storefront checks live in the relevant feature folder. Admin CRUD, reports, seeding, and webhook endpoints are not mounted in this API. Existing gateway webhook URLs stay under /api/payments/webhook/*.
 

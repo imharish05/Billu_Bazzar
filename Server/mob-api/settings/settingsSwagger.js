@@ -1,5 +1,15 @@
 'use strict';
 module.exports = {
+  "/mob-api/site-settings/newsletter-subscribe": {
+    "post": {
+      "tags": ["settings"],
+      "summary": "Subscribe to newsletter (site-settings alias)",
+      "description": "Same request and response as /mob-api/settings/newsletter-subscribe.",
+      "security": [{ "bearerAuth": [] }],
+      "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "email": { "type": "string", "format": "email" } }, "required": ["email"] } } } },
+      "responses": { "200": { "description": "Subscribed" }, "400": { "description": "Invalid email" }, "401": { "description": "Customer authentication required" } }
+    }
+  },
   "/mob-api/site-settings/{key}": {
     "get": {
       "tags": [

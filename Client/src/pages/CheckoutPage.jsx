@@ -81,11 +81,12 @@ const CheckoutPage = () => {
   const [showAllItems, setShowAllItems] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
 
-  // Admin-configurable OTP threshold settings (Default: INR 20,000 / AED 800)
+  // Admin-configurable OTP threshold settings (Default: INR 20,000 / AED 800, COD Only: true)
   const [otpSettings, setOtpSettings] = useState({
     inrThreshold: 20000,
     aedThreshold: 800,
     requireCodOtp: true,
+    codOnly: true,
   });
 
   // Loyalty Settings & Auto-Apply state
@@ -118,6 +119,7 @@ const CheckoutPage = () => {
             inrThreshold: Number(res.data.data.inrThreshold) || 20000,
             aedThreshold: Number(res.data.data.aedThreshold) || 800,
             requireCodOtp: res.data.data.requireCodOtp !== false,
+            codOnly: res.data.data.codOnly !== false,
           });
         }
       })
@@ -1754,22 +1756,87 @@ const CheckoutPage = () => {
                     </div>
                   </div> */}
 
-                  {/* Payment Gateway Region Indicator */}
-                  <div className="flex items-center justify-between px-4 py-3 bg-neutral-50 rounded-md border border-neutral-200/80 text-xs">
-                    <div className="flex items-center gap-2 text-neutral-700 font-medium">
-                      <ShieldCheck size={16} className="text-brand-gold shrink-0" />
-                      <span>Payment Gateway:</span>
-                      <span className="font-semibold text-neutral-900">
-                        {paymentMethod === 'Cash on Delivery (COD)'
-                          ? 'Cash on Delivery (COD)'
-                          : geoCountry === 'AE'
-                          ? 'Telr Secure Online (Dubai / UAE)'
-                          : 'Razorpay Secure Online (India)'}
+                  {/* Payment Method Selector */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-xs text-neutral-500 uppercase tracking-wider">
+                        Payment Method
+                      </h3>
+                      <span className="text-[11px] text-neutral-400 italic">
+                        {geoCountry === 'AE' ? 'Region: UAE (AED)' : 'Region: India (INR)'}
                       </span>
                     </div>
-                    <span className="text-[11px] text-neutral-500 hidden sm:inline italic">
-                      Routed via Location
-                    </span>
+
+                    {/* Payment options (grid-cols-1 while COD is disabled, switch to sm:grid-cols-2 if re-enabling COD) */}
+                    <div className="grid grid-cols-1 gap-3">
+                      {/* Online Payment Option */}
+                      <label
+                        className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-all ${
+                          paymentMethod !== 'Cash on Delivery (COD)'
+                            ? 'border-brand-gold bg-amber-50/25 shadow-xs'
+                            : 'border-neutral-200 hover:border-neutral-300 bg-white'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="checkout-payment-method"
+                          checked={paymentMethod !== 'Cash on Delivery (COD)'}
+                          onChange={() => {
+                            setPaymentMethod(geoCountry === 'AE' ? 'Telr Secure Online' : 'Razorpay Secure Online');
+                            setIsVerified(false);
+                            setOtpSent(false);
+                          }}
+                          className="mt-0.5 w-4 h-4 accent-brand-gold"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 font-semibold text-xs text-neutral-900">
+                            <CreditCard size={15} className="text-brand-gold" />
+                            <span>Online Payment</span>
+                            <span className="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-1.5 py-0.5 rounded ml-auto">
+                              Direct & Fast
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-neutral-500 mt-1 leading-snug">
+                            {geoCountry === 'AE' ? 'Cards & Wallets via Telr Gateway' : 'UPI, Cards, NetBanking via Razorpay'}
+                          </p>
+                        </div>
+                      </label>
+
+                      {/* Cash on Delivery Option (Hidden for now as COD is not in requirements) */}
+                      {/*
+                      <label
+                        className={`flex items-start gap-3 p-3.5 rounded-lg border cursor-pointer transition-all ${
+                          paymentMethod === 'Cash on Delivery (COD)'
+                            ? 'border-brand-gold bg-amber-50/25 shadow-xs'
+                            : 'border-neutral-200 hover:border-neutral-300 bg-white'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="checkout-payment-method"
+                          checked={paymentMethod === 'Cash on Delivery (COD)'}
+                          onChange={() => {
+                            setPaymentMethod('Cash on Delivery (COD)');
+                            setIsVerified(false);
+                            setOtpSent(false);
+                          }}
+                          className="mt-0.5 w-4 h-4 accent-brand-gold"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 font-semibold text-xs text-neutral-900">
+                            <Truck size={15} className="text-brand-gold" />
+                            <span>Cash on Delivery</span>
+                            <span className="text-[10px] bg-amber-100 text-amber-800 font-bold px-1.5 py-0.5 rounded ml-auto">
+                              OTP Verified
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-neutral-500 mt-1 leading-snug">
+                            Pay in cash upon delivery. Requires email OTP verification.
+                          </p>
+                        </div>
+                      </label>
+                      */}
+                    </div>
                   </div>
 
                   <div className="flex flex-col-reverse sm:flex-row gap-3">
@@ -1793,7 +1860,11 @@ const CheckoutPage = () => {
                           ? totalInAed >= aedLimit
                           : total >= inrLimit;
 
-                        const requiresOtp = isHighValue || (isCod && otpSettings.requireCodOtp !== false);
+                        // When codOnly is active (default), OTP verification triggers ONLY for Cash on Delivery orders
+                        const isCodOnly = otpSettings.codOnly !== false;
+                        const requiresOtp = isCodOnly
+                          ? (isCod && otpSettings.requireCodOtp !== false)
+                          : (isHighValue || (isCod && otpSettings.requireCodOtp !== false));
 
                         if (requiresOtp && !isVerified) {
                           handleTriggerFraudCheck();
@@ -1804,7 +1875,13 @@ const CheckoutPage = () => {
                       disabled={placing || otpLoading}
                       className="btn-primary flex-1 py-3 text-sm font-semibold" id="place-order-btn"
                     >
-                      {placing ? 'Placing Order…' : otpLoading ? 'Sending Security Code…' : `Place Order & Pay — ${fmt(total)}`}
+                      {placing
+                        ? 'Placing Order…'
+                        : otpLoading
+                        ? 'Sending Verification Code…'
+                        : paymentMethod === 'Cash on Delivery (COD)'
+                        ? `Confirm COD Order — ${fmt(total)}`
+                        : `Place Order & Pay — ${fmt(total)}`}
                     </button>
                   </div>
                 </motion.div>
@@ -2070,7 +2147,11 @@ const CheckoutPage = () => {
                 <h3 className="font-playfair text-lg font-bold text-brand-text flex items-center gap-1.5"><Lock size={18} className="text-brand-gold" /> Security Verification</h3>
               </div>
               <p className="text-xs text-brand-grey leading-relaxed">
-                For security reasons, high-value orders (exceeding {geoCountry === 'AE' ? `AED ${otpSettings.aedThreshold}` : `₹${otpSettings.inrThreshold.toLocaleString('en-IN')}`}) and Cash on Delivery (COD) orders require email verification. We've sent a 6-digit code to <strong className="text-brand-text font-semibold">{billingAddress.email || customer?.email}</strong>.
+                {paymentMethod === 'Cash on Delivery (COD)' ? (
+                  <>For order confirmation and security, Cash on Delivery (COD) orders require email verification. We've sent a 6-digit code to <strong className="text-brand-text font-semibold">{billingAddress.email || customer?.email}</strong>.</>
+                ) : (
+                  <>For security reasons, high-value orders (exceeding {geoCountry === 'AE' ? `AED ${otpSettings.aedThreshold}` : `₹${otpSettings.inrThreshold.toLocaleString('en-IN')}`}) require email verification. We've sent a 6-digit code to <strong className="text-brand-text font-semibold">{billingAddress.email || customer?.email}</strong>.</>
+                )}
               </p>
 
               <div>

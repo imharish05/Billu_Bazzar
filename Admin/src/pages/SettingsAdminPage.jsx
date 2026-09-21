@@ -4,7 +4,10 @@ import AdminLayout from '../components/AdminLayout';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
-const TABS = ['Inventory Alerts', 'Security & OTP'];
+const TABS = [
+  'Inventory Alerts',
+  // 'Security & OTP', // Hidden: OTP verification is strictly COD-only; un-comment when needed
+];
 
 const SettingsAdminPage = () => {
   const [tab, setTab] = useState('Inventory Alerts');
@@ -17,6 +20,7 @@ const SettingsAdminPage = () => {
     inrThreshold: 20000,
     aedThreshold: 800,
     requireCodOtp: true,
+    codOnly: true,
   });
 
   // Global Inventory Low Stock Alert Threshold State
@@ -42,6 +46,7 @@ const SettingsAdminPage = () => {
           inrThreshold: otpRes.data.data.inrThreshold ?? 20000,
           aedThreshold: otpRes.data.data.aedThreshold ?? 800,
           requireCodOtp: otpRes.data.data.requireCodOtp ?? true,
+          codOnly: otpRes.data.data.codOnly ?? true,
         });
       }
 
@@ -82,6 +87,7 @@ const SettingsAdminPage = () => {
         inrThreshold: Number(otpSettings.inrThreshold),
         aedThreshold: Number(otpSettings.aedThreshold),
         requireCodOtp: Boolean(otpSettings.requireCodOtp),
+        codOnly: Boolean(otpSettings.codOnly),
       });
       setSaved(true);
       toast.success('OTP security thresholds saved successfully!');
@@ -160,35 +166,44 @@ const SettingsAdminPage = () => {
               <div className="flex items-center gap-2 pb-3 border-b border-neutral-100">
                 <ShieldCheck className="text-brand-gold" size={20} />
                 <div>
-                  <h2 className="text-base font-semibold text-neutral-900">OTP Security Verification Thresholds</h2>
-                  <p className="text-xs text-neutral-500">Configure real-time email OTP verification rules for high-value orders and COD checkout.</p>
+                  <h2 className="text-base font-semibold text-neutral-900">OTP Security Verification</h2>
+                  <p className="text-xs text-neutral-500">Configure email OTP verification rules for Cash on Delivery (COD) and checkout orders.</p>
                 </div>
               </div>
 
               {loading ? (
                 <div className="py-8 text-center text-xs text-neutral-400 flex items-center justify-center gap-2">
-                  <RefreshCw size={16} className="animate-spin text-brand-gold" /> Loading security thresholds…
+                  <RefreshCw size={16} className="animate-spin text-brand-gold" /> Loading security settings…
                 </div>
               ) : (
                 <>
-                  <Field
-                    label="INR Order Value Threshold (₹)"
-                    id="otp-inr-threshold"
-                    type="number"
-                    value={otpSettings.inrThreshold}
-                    onChange={e => setOtpSettings(s => ({ ...s, inrThreshold: e.target.value }))}
-                    helpText="Orders in INR exceeding this total will trigger a mandatory 6-digit email OTP verification before placement."
-                  />
+                  {/* Highlighted COD-Only Toggle Box */}
+                  <div className="p-4 bg-amber-50/70 border border-amber-200/80 rounded-xl space-y-2">
+                    <label className="flex items-center gap-2.5 text-sm font-semibold text-neutral-900 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={otpSettings.codOnly}
+                        onChange={e => setOtpSettings(s => ({ ...s, codOnly: e.target.checked }))}
+                        className="w-4 h-4 accent-brand-gold rounded cursor-pointer"
+                        id="otp-cod-only-toggle"
+                      />
+                      <span>Require OTP verification ONLY for Cash on Delivery (COD)</span>
+                    </label>
+                    <p className="text-xs text-neutral-600 pl-6.5 leading-relaxed">
+                      {otpSettings.codOnly ? (
+                        <span className="text-emerald-700 font-medium flex items-center gap-1 mt-1">
+                          <Check size={14} className="shrink-0" />
+                          <span><strong>Active:</strong> Email OTP verification will trigger <strong>strictly for Cash on Delivery</strong> orders. Online/Prepaid orders (Razorpay, UPI, cards, Telr) will bypass OTP and proceed directly to payment.</span>
+                        </span>
+                      ) : (
+                        <span className="text-neutral-500">
+                          When enabled, prepaid orders skip OTP and only COD requires verification. When unchecked, orders exceeding the thresholds below will also trigger OTP verification.
+                        </span>
+                      )}
+                    </p>
+                  </div>
 
-                  <Field
-                    label="AED Order Value Threshold (AED)"
-                    id="otp-aed-threshold"
-                    type="number"
-                    value={otpSettings.aedThreshold}
-                    onChange={e => setOtpSettings(s => ({ ...s, aedThreshold: e.target.value }))}
-                    helpText="Orders in AED exceeding this total will trigger a mandatory 6-digit email OTP verification."
-                  />
-
+                  {/* Second COD checkbox commented out to avoid redundancy; Top COD-Only checkbox governs OTP scope
                   <div className="pt-2">
                     <label className="flex items-center gap-2.5 text-sm font-medium text-neutral-800 cursor-pointer">
                       <input
@@ -203,6 +218,38 @@ const SettingsAdminPage = () => {
                     <p className="text-[11px] text-neutral-400 ml-6 mt-1">
                       When enabled, any customer selecting Cash on Delivery must verify their order via email OTP regardless of order value.
                     </p>
+                  </div>
+                  */}
+
+                  {/* Prepaid Order Value Thresholds */}
+                  <div className={`space-y-4 pt-3 border-t border-neutral-100 transition-opacity ${otpSettings.codOnly ? 'opacity-50' : 'opacity-100'}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-neutral-700">Prepaid Order Value Thresholds</span>
+                      {otpSettings.codOnly && (
+                        <span className="text-[11px] font-medium text-amber-800 bg-amber-100/70 px-2 py-0.5 rounded">
+                          Bypassed (COD Only Active)
+                        </span>
+                      )}
+                    </div>
+                    <Field
+                      label="INR Order Value Threshold (₹)"
+                      id="otp-inr-threshold"
+                      type="number"
+                      value={otpSettings.inrThreshold}
+                      disabled={otpSettings.codOnly}
+                      onChange={e => setOtpSettings(s => ({ ...s, inrThreshold: e.target.value }))}
+                      helpText={otpSettings.codOnly ? "Bypassed because 'Require OTP ONLY for Cash on Delivery' is active." : "Orders in INR exceeding this total will trigger a mandatory 6-digit email OTP verification before placement."}
+                    />
+
+                    <Field
+                      label="AED Order Value Threshold (AED)"
+                      id="otp-aed-threshold"
+                      type="number"
+                      value={otpSettings.aedThreshold}
+                      disabled={otpSettings.codOnly}
+                      onChange={e => setOtpSettings(s => ({ ...s, aedThreshold: e.target.value }))}
+                      helpText={otpSettings.codOnly ? "Bypassed because 'Require OTP ONLY for Cash on Delivery' is active." : "Orders in AED exceeding this total will trigger a mandatory 6-digit email OTP verification."}
+                    />
                   </div>
 
                   <div className="pt-4 border-t border-brand-light flex items-center gap-3">

@@ -285,6 +285,35 @@
         ]
       }
     },
+    "GET /mob-api/variants": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "variants": [
+          {
+            "id": 10,
+            "productId": 224,
+            "sku": "DEMO-SHIRT-M",
+            "price": "999.00",
+            "stock": 25,
+            "attributes": {
+              "Size": "M",
+              "Color": "Blue"
+            },
+            "product": {
+              "id": 224,
+              "name": "Demo Cotton Shirt",
+              "slug": "demo-cotton-shirt"
+            }
+          }
+        ],
+        "total": 1,
+        "page": 1,
+        "limit": 20,
+        "totalPages": 1,
+        "hasMore": false
+      }
+    },
     "GET /mob-api/categories": {
       "status": 200,
       "response": {
@@ -926,6 +955,19 @@
         "minOrderAmountForFreeDelivery": 1500
       }
     },
+    "GET /mob-api/delivery-zones/check": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "deliverable": true,
+        "pincode": "600001",
+        "zoneName": "Chennai",
+        "city": "Chennai",
+        "state": "Tamil Nadu",
+        "deliveryCharge": 40,
+        "minOrderAmountForFreeDelivery": 1500
+      }
+    },
     "GET /mob-api/stock-status": {
       "status": 200,
       "response": {
@@ -967,7 +1009,8 @@
         "data": {
           "inrThreshold": 20000,
           "aedThreshold": 800,
-          "requireCodOtp": true
+          "requireCodOtp": true,
+          "codOnly": true
         }
       }
     },
@@ -1162,28 +1205,6 @@
         "success": true,
         "message": "Click tracked successfully",
         "currentClicks": 1
-      }
-    },
-    "POST /mob-api/checkout/send-otp": {
-      "status": 200,
-      "response": {
-        "success": true,
-        "message": "Verification OTP sent to mobile.demo@example.com"
-      },
-      "request": {
-        "email": "mobile.demo@example.com",
-        "name": "Demo Customer"
-      }
-    },
-    "POST /mob-api/checkout/verify-otp": {
-      "status": 200,
-      "response": {
-        "success": true,
-        "message": "Security verification successful"
-      },
-      "request": {
-        "email": "mobile.demo@example.com",
-        "otp": "123456"
       }
     },
     "GET /mob-api/reviews/product/{productId}": {
@@ -1787,8 +1808,20 @@
         "data": {
           "inrThreshold": 20000,
           "aedThreshold": 800,
-          "requireCodOtp": true
+          "requireCodOtp": true,
+          "codOnly": true
         }
+      }
+    },
+    "POST /mob-api/site-settings/newsletter-subscribe": {
+      "status": 200,
+      "response": {
+        "success": true,
+        "message": "Thank you!",
+        "pointsAwarded": 0
+      },
+      "request": {
+        "email": "mobile.demo@example.com"
       }
     },
     "GET /mob-api/offers": {
@@ -1843,28 +1876,6 @@
       "request": {
         "code": "DEMO10",
         "subtotal": 1000
-      }
-    },
-    "POST /mob-api/auth/send-checkout-otp": {
-      "status": 200,
-      "response": {
-        "success": true,
-        "message": "Verification OTP sent to mobile.demo@example.com"
-      },
-      "request": {
-        "email": "mobile.demo@example.com",
-        "name": "Demo Customer"
-      }
-    },
-    "POST /mob-api/auth/verify-checkout-otp": {
-      "status": 200,
-      "response": {
-        "success": true,
-        "message": "Security verification successful"
-      },
-      "request": {
-        "email": "mobile.demo@example.com",
-        "otp": "123456"
       }
     },
     "GET /mob-api/myaccount/profile": {

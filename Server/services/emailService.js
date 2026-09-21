@@ -234,7 +234,7 @@ const sendFraudOtpEmail = async (toEmail, name, otp) => {
                       Hi <strong style="color:#1A1A1A;">${name || 'Valued Customer'}</strong>,
                     </p>
                     <p style="margin:0 0 28px;font-size:14px;color:#4B5563;line-height:1.6;">
-                      For your protection, high-value orders and Cash on Delivery purchases require a quick verification code. Use the 6-digit OTP below on your checkout screen to authorize and complete your order. This code expires in <strong style="color:#1A1A1A;">10 minutes</strong>.
+                      To confirm your Cash on Delivery (COD) order and verify your details, please enter the 6-digit verification code below on your checkout screen. This code expires in <strong style="color:#1A1A1A;">10 minutes</strong>.
                     </p>
 
                     <!-- OTP Box -->

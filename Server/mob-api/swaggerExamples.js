@@ -39,6 +39,7 @@ add('GET', '/products/search', { success: true, products: [{ ...product, categor
 add('GET', '/products/price-range', { success: true, minPrice: 999, maxPrice: 999 });
 add('GET', '/products/{slug}', { success: true, product: { ...product, category, variants: [] } });
 add('GET', '/variants/product/{productId}', { success: true, variants: [{ id: 10, productId: 224, sku: 'DEMO-SHIRT-M', price: '999.00', stock: 25, attributes: { Size: 'M', Color: 'Blue' } }] });
+add('GET', '/variants', { success: true, variants: [{ id: 10, productId: 224, sku: 'DEMO-SHIRT-M', price: '999.00', stock: 25, attributes: { Size: 'M', Color: 'Blue' }, product: { id: 224, name: product.name, slug: product.slug } }], total: 1, page: 1, limit: 20, totalPages: 1, hasMore: false });
 add('GET', '/categories', { success: true, categories: [category] });
 add('GET', '/subcategories', { success: true, subCategories: [subCategory] });
 add('GET', '/categories/tree', { success: true, categories: [{ ...category, subcategories: [{ ...subCategory, children: [] }] }] });
@@ -64,9 +65,10 @@ add('POST', '/myaccount/tickets', { success: true, ticket }, { subject: ticket.s
 add('GET', '/coupons', { success: true, coupons: [{ ...coupon, description: 'Save 10%', usageLimit: 1 }], total: 1, page: 1, limit: 20, totalPages: 1, hasMore: false });
 add('POST', '/coupons/validate', { success: true, valid: true, coupon: { ...coupon, description: 'Save 10%', usageLimit: 1 }, subtotal: 1000, discountAmount: 100, discountedSubtotal: 900, freeShipping: false }, { code: 'DEMO10', subtotal: 1000 });
 add('GET', '/delivery-zones/check/{pincode}', { success: true, deliverable: true, pincode: '600001', zoneName: 'Chennai', city: 'Chennai', state: 'Tamil Nadu', deliveryCharge: 40, minOrderAmountForFreeDelivery: 1500 });
+add('GET', '/delivery-zones/check', { success: true, deliverable: true, pincode: '600001', zoneName: 'Chennai', city: 'Chennai', state: 'Tamil Nadu', deliveryCharge: 40, minOrderAmountForFreeDelivery: 1500 });
 add('GET', '/stock-status', { success: true, productId: 224, variantId: null, stock: 25, cartQty: 1, availableStock: 24, stockStatus: 'IN_STOCK', stockLabel: 'In Stock', canAddToCart: true, canBuyNow: true });
 add('POST', '/stock-alerts', { ...ok('Restock alert set! We will email mobile.demo@example.com as soon as "Demo Cotton Shirt" is back in stock.'), alert: { id: 1, productId: 224, email, phone } }, { productId: 224, email, phone }, 201);
-add('GET', '/settings/{key}', { success: true, key: 'otp_threshold', data: { inrThreshold: 20000, aedThreshold: 800, requireCodOtp: true } });
+add('GET', '/settings/{key}', { success: true, key: 'otp_threshold', data: { inrThreshold: 20000, aedThreshold: 800, requireCodOtp: true, codOnly: true } });
 add('POST', '/settings/newsletter-subscribe', { ...ok('Thank you!'), pointsAwarded: 0 }, { email });
 add('GET', '/banners', { success: true, banners: [{ id: 1, title: 'New collection', image: 'https://example.com/uploads/demo-banner.jpg', type: 'HERO', ctaText: 'Shop now', ctaLink: '/products', position: 0, isActive: true }] });
 add('GET', '/marketing-messages', { success: true, messages: [{ id: 1, message: 'Explore our new collection', position: 0, isActive: true }] });
@@ -82,8 +84,9 @@ const shopper = { name: customer.name, email, phone, occasion: 'Wedding', budget
 add('POST', '/personal-shopper', { ...ok('Styling request sent — our stylist will reach out within 24h'), data: { id: 1, ...shopper, status: 'PENDING', createdAt: date, updatedAt: date } }, shopper, 201);
 add('GET', '/affiliates', { success: true, affiliates: [{ id: 1, name: 'Demo Stylist', handle: '@demo', avatar: 'https://example.com/demo-avatar.jpg', productsCurated: 10, followers: '1K', referralCode: 'DEMOREF', isActive: true }] });
 add('GET', '/affiliates/track', { ...ok('Click tracked successfully'), currentClicks: 1 });
-add('POST', '/checkout/send-otp', ok('Verification OTP sent to mobile.demo@example.com'), { email, name: customer.name });
-add('POST', '/checkout/verify-otp', ok('Security verification successful'), { email, otp: '123456' });
+// Checkout OTP verification is not available for the mobile API checkout flow.
+// add('POST', '/checkout/send-otp', ok('Verification OTP sent to mobile.demo@example.com'), { email, name: customer.name });
+// add('POST', '/checkout/verify-otp', ok('Security verification successful'), { email, otp: '123456' });
 add('GET', '/reviews/product/{productId}', { success: true, productId: 224, averageRating: 0, totalCount: 0, ratingBreakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }, reviews: [], userCanReview: true, userReview: null, eligibleOrderId: 57 });
 add('GET', '/reviews/my-delivered-items', { success: true, items: [{ orderId: 57, orderNumber: order.orderNumber, deliveredAt: date, productId: 224, productName: product.name, productSlug: product.slug, productImage: product.images[0], existingReview: null }] });
 add('POST', '/reviews', { ...ok('Review submitted successfully!'), review, productStats, bonusPointsEarned: 0 }, { productId: 224, orderId: 57, rating: 5, title: review.title, body: review.body }, 201);
@@ -116,8 +119,8 @@ examples['POST /mob-api/checkout/payments/verify'] = examples['POST /mob-api/pay
 
 const aliases = {
   '/auth/me': '/auth/getme', '/auth/reset-password': '/auth/new-password',
-  '/site-settings/{key}': '/settings/{key}', '/offers': '/coupons', '/offers/validate': '/coupons/validate',
-  '/auth/send-checkout-otp': '/checkout/send-otp', '/auth/verify-checkout-otp': '/checkout/verify-otp',
+  '/site-settings/{key}': '/settings/{key}', '/site-settings/newsletter-subscribe': '/settings/newsletter-subscribe', '/offers': '/coupons', '/offers/validate': '/coupons/validate',
+  // '/auth/send-checkout-otp': '/checkout/send-otp', '/auth/verify-checkout-otp': '/checkout/verify-otp',
   '/myaccount/profile': '/auth/profile', '/myaccount/change-password': '/auth/change-password',
   '/customers/wishlist': '/myaccount/wishlist', '/customers/loyalty': '/myaccount/loyalty', '/customers/tickets': '/myaccount/tickets'
 };

@@ -50,6 +50,7 @@ const defaultOtpSettings = {
   inrThreshold: 20000,
   aedThreshold: 800,
   requireCodOtp: true,
+  codOnly: true,
 };
 
 const defaultLoyaltySettings = {
@@ -99,6 +100,9 @@ const getSetting = async (req, res) => {
       return res.json({ success: true, key, data: {} });
     }
     const parsed = JSON.parse(setting.value);
+    if (key === 'otp_threshold' || key === 'security') {
+      return res.json({ success: true, key, data: { ...defaultOtpSettings, ...parsed } });
+    }
     if (key === 'loyalty') {
       return res.json({ success: true, key, data: { ...defaultLoyaltySettings, ...parsed } });
     }

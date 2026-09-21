@@ -1,5 +1,23 @@
 'use strict';
 module.exports = {
+  "/mob-api/variants": {
+    "get": {
+      "tags": ["products"],
+      "summary": "Browse variants of active products",
+      "description": "Paginated customer catalog variants. Warehouse and internal inventory details are excluded.",
+      "security": [{ "bearerAuth": [] }],
+      "parameters": [
+        { "name": "page", "in": "query", "schema": { "type": "integer", "minimum": 1, "default": 1 } },
+        { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 } }
+      ],
+      "responses": {
+        "200": { "description": "Paginated variants" },
+        "400": { "description": "Invalid pagination" },
+        "401": { "description": "Customer authentication required" },
+        "500": { "description": "Internal server error" }
+      }
+    }
+  },
   "/mob-api/products": {
     "get": {
       "tags": [
