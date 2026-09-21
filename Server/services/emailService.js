@@ -1,4 +1,5 @@
 'use strict';
+require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
 const nodemailer = require('nodemailer');
@@ -972,14 +973,83 @@ const sendRestockAlertEmail = async (toEmail, productName, productSlug, image) =
 };
 
 /**
+ * Resolves all recipient email addresses for admin alerts.
+ * Combines:
+ * 1. process.env.ADMIN_EMAIL (comma-separated support)
+ * 2. SiteSettings key 'contact_notification' (adminNotificationEmails)
+ * 3. Active AdminUser accounts in the database (isActive = true)
+ * Deduplicates and lowercases all email addresses.
+ */
+const getAdminNotificationEmails = async () => {
+  const emailSet = new Set();
+
+  // 1. From process.env.ADMIN_EMAIL
+  if (process.env.ADMIN_EMAIL) {
+    process.env.ADMIN_EMAIL.split(',')
+      .map(e => e.trim().toLowerCase())
+      .filter(e => e && e.includes('@'))
+      .forEach(e => emailSet.add(e));
+  }
+
+  // 2. From SiteSetting key 'contact_notification'
+  try {
+    const { SiteSetting } = require('../models');
+    if (SiteSetting) {
+      const setting = await SiteSetting.findOne({ where: { key: 'contact_notification' } });
+      if (setting && setting.value) {
+        const parsed = typeof setting.value === 'string' ? JSON.parse(setting.value) : setting.value;
+        const customEmails = parsed.adminNotificationEmails || parsed.email || parsed.contactEmail;
+        if (customEmails) {
+          String(customEmails).split(',')
+            .map(e => e.trim().toLowerCase())
+            .filter(e => e && e.includes('@'))
+            .forEach(e => emailSet.add(e));
+        }
+      }
+    }
+  } catch (e) {
+    // Non-critical, fallback continues
+  }
+
+  // 3. From Database active AdminUsers
+  try {
+    const { AdminUser } = require('../models');
+    if (AdminUser) {
+      const activeAdmins = await AdminUser.findAll({
+        where: { isActive: true },
+        attributes: ['email']
+      });
+      activeAdmins.forEach(admin => {
+        if (admin.email && admin.email.includes('@')) {
+          emailSet.add(admin.email.trim().toLowerCase());
+        }
+      });
+    }
+  } catch (e) {
+    // Non-critical, fallback continues
+  }
+
+  // Fallback default
+  if (emailSet.size === 0) {
+    emailSet.add('harish05082004@gmail.com');
+  }
+
+  return Array.from(emailSet);
+};
+
+/**
  * Sends HTML Email Notification to Admin when a customer submits a Contact Inquiry.
  */
 const sendContactEnquiryAdminNotification = async (enquiryData) => {
   try {
-    const adminEmail = process.env.ADMIN_EMAIL || 'harish05082004@gmail.com';
+    const data = enquiryData && typeof enquiryData.get === 'function'
+      ? enquiryData.get({ plain: true })
+      : (enquiryData || {});
+
+    const { name, email, phone, subject, message, createdAt, id } = data;
+    const adminEmails = await getAdminNotificationEmails();
     const transporter = createTransporter();
 
-    const { name, email, phone, subject, message, createdAt } = enquiryData;
     const dateFormatted = new Date(createdAt || Date.now()).toLocaleString('en-IN', {
       timeZone: 'Asia/Kolkata',
       dateStyle: 'medium',
@@ -988,9 +1058,17 @@ const sendContactEnquiryAdminNotification = async (enquiryData) => {
 
     const mailOptions = {
       from: `"Billu Bazaar Concierge" <${process.env.EMAIL_USER}>`,
-      to: adminEmail,
-      replyTo: email,
-      subject: `📩 New Contact Enquiry: ${subject || 'General Inquiry'} - ${name}`,
+      to: adminEmails.join(', '),
+      replyTo: email || process.env.EMAIL_USER,
+      subject: `📩 New Contact Enquiry #${id || ''}: ${subject || 'General Inquiry'} - ${name}`,
+      text: `New Contact Enquiry Alert\n\n` +
+        `Customer: ${name}\n` +
+        `Email: ${email}\n` +
+        `Phone: ${phone || 'Not provided'}\n` +
+        `Subject: ${subject || 'General Inquiry'}\n` +
+        `Date: ${dateFormatted}\n\n` +
+        `Message:\n${message}\n\n` +
+        `--\nBillu Bazaar Admin Concierge`,
       html: `
         <!DOCTYPE html>
         <html lang="en">
@@ -1091,12 +1169,162 @@ const sendContactEnquiryAdminNotification = async (enquiryData) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Contact enquiry admin notification email sent to ${adminEmail} — MsgID: ${info.messageId}`);
+    console.log(`✅ Contact enquiry admin notification email sent to [${adminEmails.join(', ')}] — MsgID: ${info.messageId}`);
     return info;
   } catch (err) {
-    console.error(`❌ Failed to send contact enquiry admin email:`, err.message);
-    // Don't re-throw so user form submission still succeeds
+    if (err.message && (err.message.includes('550-5.4.5') || err.message.includes('Daily user sending limit exceeded'))) {
+      console.warn(`⚠️ [EMAIL SERVICE] Gmail daily sending quota exceeded (550-5.4.5) on sender account [${process.env.EMAIL_USER}]. Please wait for Google's quota reset or configure a fresh Gmail App Password / SMTP relay in Server/.env.`);
+    } else {
+      console.error(`❌ Failed to send contact enquiry admin email:`, err.message);
+    }
+    throw err;
   }
+};
+
+/**
+ * Sends luxury-branded acknowledgment receipt to the customer who submitted the contact form.
+ */
+const sendContactEnquiryCustomerAcknowledgment = async (enquiryData) => {
+  try {
+    const data = enquiryData && typeof enquiryData.get === 'function'
+      ? enquiryData.get({ plain: true })
+      : (enquiryData || {});
+
+    const { name, email, subject, message } = data;
+    if (!email) return null;
+
+    const transporter = createTransporter();
+
+    const mailOptions = {
+      from: `"Billu Bazaar Concierge" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: `✨ We've received your inquiry — Billu Bazaar Concierge`,
+      text: `Dear ${name},\n\n` +
+        `Thank you for reaching out to Billu Bazaar Concierge.\n\n` +
+        `We have received your message regarding "${subject || 'General Inquiry'}". Our concierge desk is reviewing your details and will respond within 24 business hours.\n\n` +
+        `Your message summary:\n"${message}"\n\n` +
+        `Warm regards,\nBillu Bazaar Luxury Concierge Desk\nhello@billubazaar.com`,
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <title>Inquiry Received</title>
+        </head>
+        <body style="margin:0;padding:0;background-color:#FAF9F6;font-family:${SANS_SERIF_FONT};-webkit-font-smoothing:antialiased;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF9F6;padding:40px 0;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border:1px solid #EAEAEA;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.06);">
+                  
+                  <!-- Header -->
+                  <tr>
+                    <td style="background-color:#111111;padding:32px 40px;text-align:center;">
+                      <p style="margin:0;font-size:24px;font-weight:700;color:#ffffff;letter-spacing:0.12em;">
+                        BILLU <span style="color:#C9A24B;">BAZAAR</span>
+                      </p>
+                      <p style="margin:6px 0 0;font-size:11px;color:#A1A1A1;letter-spacing:0.18em;text-transform:uppercase;">
+                        Luxury Shopping Concierge
+                      </p>
+                    </td>
+                  </tr>
+
+                  <!-- Accent bar -->
+                  <tr><td style="background-color:#C9A24B;height:3px;font-size:0;line-height:0;">&nbsp;</td></tr>
+
+                  <!-- Content Body -->
+                  <tr>
+                    <td style="padding:40px;">
+                      <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#111111;">
+                        Thank You, ${name}.
+                      </h1>
+                      <p style="margin:0 0 20px;font-size:14px;color:#4B5563;line-height:1.7;">
+                        We have received your message regarding <strong style="color:#111111;">${subject || 'General Inquiry'}</strong>. Our dedicated luxury concierge desk has logged your inquiry and is reviewing your request.
+                      </p>
+
+                      <div style="background-color:#F9FAFB;border-left:4px solid #C9A24B;padding:20px;border-radius:0 8px 8px 0;margin:24px 0;font-size:13px;color:#374151;line-height:1.6;">
+                        <p style="margin:0 0 8px;font-weight:700;color:#111111;text-transform:uppercase;letter-spacing:0.05em;font-size:11px;">A copy of your inquiry:</p>
+                        <p style="margin:0;font-style:italic;">"${message}"</p>
+                      </div>
+
+                      <p style="margin:0 0 24px;font-size:14px;color:#4B5563;line-height:1.7;">
+                        You will receive a personalized response from one of our client specialists within <strong style="color:#111111;">24 business hours</strong>.
+                      </p>
+
+                      <table width="100%" cellpadding="12" cellspacing="0" style="background-color:#FAF9F6;border-radius:8px;font-size:12px;color:#6B7280;margin-top:20px;">
+                        <tr>
+                          <td><strong>Boutique Address:</strong> 14 Linking Road, Bandra West, Mumbai 400050</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Concierge Direct:</strong> <a href="mailto:concierge@billubazaar.com" style="color:#C9A24B;text-decoration:none;">concierge@billubazaar.com</a> | +91 99999 99999</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+
+                  <!-- Footer -->
+                  <tr>
+                    <td style="background-color:#FAF9F6;padding:20px 40px;text-align:center;color:#888888;font-size:11px;border-top:1px solid #EAEAEA;">
+                      <p style="margin:0 0 4px;color:#C9A24B;font-weight:700;letter-spacing:0.1em;font-size:12px;">BILLU BAZAAR</p>
+                      <p style="margin:0;color:#9CA3AF;">© ${new Date().getFullYear()} Billu Bazaar. All rights reserved.</p>
+                    </td>
+                  </tr>
+
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Contact inquiry customer acknowledgment sent to ${email} — MsgID: ${info.messageId}`);
+    return info;
+  } catch (err) {
+    if (err.message && (err.message.includes('550-5.4.5') || err.message.includes('Daily user sending limit exceeded'))) {
+      console.warn(`⚠️ [EMAIL SERVICE] Gmail daily sending quota exceeded (550-5.4.5) on sender account [${process.env.EMAIL_USER}]. Customer auto-reply temporarily deferred.`);
+    } else {
+      console.error(`❌ Failed to send customer contact acknowledgment to ${enquiryData?.email}:`, err.message);
+    }
+    return null;
+  }
+};
+
+/**
+ * Sends a live Test Notification email to verify SMTP and recipient delivery.
+ */
+const sendTestNotificationEmail = async (targetEmail) => {
+  const transporter = createTransporter();
+  const recipient = targetEmail || (await getAdminNotificationEmails()).join(', ');
+
+  const mailOptions = {
+    from: `"Billu Bazaar System" <${process.env.EMAIL_USER}>`,
+    to: recipient,
+    subject: `🧪 Test Email Alert — Billu Bazaar Notification System`,
+    text: `This is a test notification email from Billu Bazaar.\n\nYour SMTP email delivery system is functioning properly!\nTimestamp: ${new Date().toISOString()}`,
+    html: `
+      <div style="font-family:${SANS_SERIF_FONT};max-width:550px;margin:0 auto;padding:30px;background:#ffffff;border:1px solid #EAEAEA;border-radius:10px;">
+        <h2 style="color:#111111;margin-top:0;">🧪 SMTP Email Test Successful</h2>
+        <p style="color:#4B5563;font-size:14px;line-height:1.6;">
+          This is a confirmation test email dispatched from your Billu Bazaar server.
+        </p>
+        <div style="background:#F0FDF4;border:1px solid #BBF7D0;padding:14px;border-radius:6px;color:#166534;font-size:13px;font-weight:600;margin:20px 0;">
+          ✅ Email configuration and Gmail SMTP connectivity are working perfectly!
+        </div>
+        <p style="font-size:12px;color:#9CA3AF;">
+          Dispatched to: ${recipient}<br/>
+          Timestamp: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+        </p>
+      </div>
+    `
+  };
+
+  const info = await transporter.sendMail(mailOptions);
+  console.log(`✅ Test email successfully dispatched to [${recipient}] — MsgID: ${info.messageId}`);
+  return info;
 };
 
 /**
@@ -1817,6 +2045,10 @@ module.exports = {
   sendReturnStatusNotification,
   sendRestockAlertEmail,
   sendContactEnquiryAdminNotification,
+  sendContactEnquiryCustomerAcknowledgment,
+  sendTestNotificationEmail,
+  getAdminNotificationEmails,
   sendMarketingAutomationReport,
 };
+
 

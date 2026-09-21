@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Save, ShieldCheck, RefreshCw, Check } from 'lucide-react';
+import { Save, ShieldCheck, RefreshCw, Check, Mail, Send } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';
 import api from '../services/api';
 import toast from 'react-hot-toast';
 
 const TABS = [
   'Inventory Alerts',
+  'Email & Notifications',
   // 'Security & OTP', // Hidden: OTP verification is strictly COD-only; un-comment when needed
 ];
 
@@ -14,6 +15,13 @@ const SettingsAdminPage = () => {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Email Notification Settings State
+  const [notificationSettings, setNotificationSettings] = useState({
+    adminNotificationEmails: '',
+  });
+  const [testEmailLoading, setTestEmailLoading] = useState(false);
+  const [testEmailTarget, setTestEmailTarget] = useState('');
 
   // OTP Verification Thresholds State
   const [otpSettings, setOtpSettings] = useState({
@@ -36,9 +44,10 @@ const SettingsAdminPage = () => {
   const fetchSettings = async () => {
     setLoading(true);
     try {
-      const [otpRes, invRes] = await Promise.all([
+      const [otpRes, invRes, notifRes] = await Promise.all([
         api.get('/settings/otp_threshold').catch(() => null),
-        api.get('/settings/inventory').catch(() => null)
+        api.get('/settings/inventory').catch(() => null),
+        api.get('/settings/contact_notification').catch(() => null),
       ]);
 
       if (otpRes?.data?.success && otpRes?.data?.data) {
@@ -53,6 +62,12 @@ const SettingsAdminPage = () => {
       if (invRes?.data?.success && invRes?.data?.data) {
         setInventorySettings({
           globalLowStockThreshold: invRes.data.data.globalLowStockThreshold ?? 10,
+        });
+      }
+
+      if (notifRes?.data?.success && notifRes?.data?.data) {
+        setNotificationSettings({
+          adminNotificationEmails: notifRes.data.data.adminNotificationEmails || '',
         });
       }
     } catch (err) {
@@ -96,6 +111,40 @@ const SettingsAdminPage = () => {
       toast.error(err.response?.data?.message || 'Failed to save OTP thresholds');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveNotificationSettings = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await api.put('/settings/contact_notification', {
+        adminNotificationEmails: notificationSettings.adminNotificationEmails.trim()
+      });
+      setSaved(true);
+      toast.success('Notification recipient emails saved successfully!');
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save notification settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSendTestEmail = async (e) => {
+    e?.preventDefault();
+    setTestEmailLoading(true);
+    try {
+      const res = await api.post('/contact-enquiries/test-email', {
+        targetEmail: testEmailTarget.trim() || undefined
+      });
+      if (res.data?.success) {
+        toast.success(res.data.message || 'Test email dispatched successfully!');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to dispatch test email');
+    } finally {
+      setTestEmailLoading(false);
     }
   };
 
@@ -161,6 +210,72 @@ const SettingsAdminPage = () => {
                 </>
               )}
             </form>
+          ) : tab === 'Email & Notifications' ? (
+            <div className="space-y-8">
+              <form onSubmit={handleSaveNotificationSettings} className="space-y-6">
+                <div className="flex items-center gap-2 pb-3 border-b border-neutral-100">
+                  <Mail className="text-brand-gold" size={20} />
+                  <div>
+                    <h2 className="text-base font-semibold text-neutral-900">Admin Email Notifications</h2>
+                    <p className="text-xs text-neutral-500">Configure recipient email addresses for contact form inquiries and store alerts.</p>
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl text-xs text-neutral-700 leading-relaxed">
+                  <p className="font-semibold text-neutral-900 mb-1">ℹ️ Automatic Notification Scope:</p>
+                  <p>In addition to any custom email addresses entered below, all <strong>active Store Administrators</strong> and the primary email from your environment configuration (<code className="text-amber-900 font-mono">ADMIN_EMAIL</code>) automatically receive every customer contact message.</p>
+                </div>
+
+                <Field
+                  label="Additional Admin Notification Emails (comma-separated)"
+                  id="admin-notification-emails"
+                  type="text"
+                  placeholder="e.g. admin@billubazzar.com, support@billubazzar.com"
+                  value={notificationSettings.adminNotificationEmails}
+                  onChange={e => setNotificationSettings(s => ({ ...s, adminNotificationEmails: e.target.value }))}
+                  helpText="Enter one or more email addresses separated by commas to receive instant inquiry notifications."
+                />
+
+                <div className="pt-2 border-t border-brand-light flex items-center gap-3">
+                  <button type="submit" disabled={saving} className="btn-primary flex items-center gap-2 text-sm px-5 py-2.5" id="settings-save-notif">
+                    {saving ? <RefreshCw size={15} className="animate-spin" /> : <Save size={15} />}
+                    {saving ? 'Saving...' : 'Save Notification Emails'}
+                  </button>
+                  {saved && <span className="text-green-600 text-sm font-semibold flex items-center gap-1"><Check size={14} /> Saved!</span>}
+                </div>
+              </form>
+
+              {/* Live SMTP Test Trigger */}
+              <div className="pt-6 border-t border-neutral-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Send className="text-brand-gold" size={18} />
+                  <h3 className="text-sm font-semibold text-neutral-900">Live Email Delivery Test</h3>
+                </div>
+                <p className="text-xs text-neutral-500 mb-4">
+                  Send a live test email through your configured Gmail SMTP server to verify that notifications land directly in your inbox.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <input
+                    type="email"
+                    placeholder="Specific test email (or leave blank to send to all admins)"
+                    value={testEmailTarget}
+                    onChange={e => setTestEmailTarget(e.target.value)}
+                    className="flex-1 border border-neutral-300 rounded-lg p-2.5 text-xs text-neutral-900 focus:border-brand-gold focus:outline-none bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleSendTestEmail}
+                    disabled={testEmailLoading}
+                    className="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-white text-xs font-semibold rounded-lg flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                    id="settings-send-test-email"
+                  >
+                    {testEmailLoading ? <RefreshCw size={14} className="animate-spin text-brand-gold" /> : <Send size={14} />}
+                    {testEmailLoading ? 'Sending Test...' : 'Send Test Email'}
+                  </button>
+                </div>
+              </div>
+            </div>
           ) : (
             <form onSubmit={handleSaveOtpSettings} className="space-y-6">
               <div className="flex items-center gap-2 pb-3 border-b border-neutral-100">

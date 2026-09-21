@@ -8,6 +8,7 @@ const {
   updateContactEnquiry,
   deleteContactEnquiry,
   bulkDeleteContactEnquiries,
+  sendTestEmail,
 } = require('../controllers/contactEnquiryController');
 const { verifyAdmin } = require('../middleware/auth');
 const { hasPermission } = require('../middleware/rbac');
@@ -16,6 +17,7 @@ const { hasPermission } = require('../middleware/rbac');
 router.post('/', submitContactEnquiry);
 
 // Admin routes
+router.post('/test-email', verifyAdmin, sendTestEmail);
 router.get('/', verifyAdmin, hasPermission('view_contact_enquiries'), getContactEnquiries);
 router.get('/:id', verifyAdmin, hasPermission('view_contact_enquiries'), getContactEnquiryById);
 router.put('/:id', verifyAdmin, hasPermission('manage_customers'), updateContactEnquiry);

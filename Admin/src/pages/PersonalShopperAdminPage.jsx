@@ -9,6 +9,14 @@ import AdminLayout from '../components/AdminLayout';
 import { PaginationTop, PaginationBottom } from '../components/Pagination';
 import api from '../services/api';
 
+const STATUS_COLORS = {
+  PENDING: 'bg-amber-100 text-amber-800 border-amber-200',
+  IN_PROGRESS: 'bg-blue-100 text-blue-800 border-blue-200',
+  CONTACTED: 'bg-purple-100 text-purple-800 border-purple-200',
+  COMPLETED: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  CANCELLED: 'bg-rose-100 text-rose-800 border-rose-200',
+};
+
 const PersonalShopperAdminPage = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -245,7 +253,7 @@ const PersonalShopperAdminPage = () => {
         );
       case 'CANCELLED':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-neutral-100 text-neutral-700 border border-neutral-200">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-800 border border-rose-200">
             <AlertCircle className="w-3 h-3" /> Cancelled
           </span>
         );
@@ -478,11 +486,11 @@ const PersonalShopperAdminPage = () => {
                       <td className="p-4">
                         <div className="font-semibold text-neutral-900 flex items-center gap-1.5">
                           {item.name}
-                          {item.customerId && (
+                          {/* {item.customerId && (
                             <span className="px-1.5 py-0.5 bg-amber-100 text-amber-800 text-[10px] rounded font-bold uppercase">
                               Member
                             </span>
-                          )}
+                          )} */}
                         </div>
                       </td>
                       <td className="p-4 text-xs space-y-0.5">
@@ -507,13 +515,15 @@ const PersonalShopperAdminPage = () => {
                         <select
                           value={item.status}
                           onChange={(e) => handleUpdateStatus(item.id, e.target.value)}
-                          className="text-xs font-semibold bg-transparent border-0 focus:ring-0 cursor-pointer rounded-lg hover:bg-neutral-100 py-1"
+                          className={`text-xs font-semibold px-2.5 py-1 rounded-full border cursor-pointer focus:outline-none focus:ring-1 focus:ring-offset-1 transition-colors ${
+                            STATUS_COLORS[item.status] || 'bg-neutral-100 text-neutral-800 border-neutral-200'
+                          }`}
                         >
-                          <option value="PENDING">⏳ Pending</option>
-                          <option value="IN_PROGRESS">🔄 In Progress</option>
-                          <option value="CONTACTED">💬 Contacted</option>
-                          <option value="COMPLETED">✅ Completed</option>
-                          <option value="CANCELLED">❌ Cancelled</option>
+                          <option value="PENDING" className="bg-white text-neutral-800">Pending</option>
+                          <option value="IN_PROGRESS" className="bg-white text-neutral-800">In Progress</option>
+                          <option value="CONTACTED" className="bg-white text-neutral-800">Contacted</option>
+                          <option value="COMPLETED" className="bg-white text-neutral-800">Completed</option>
+                          <option value="CANCELLED" className="bg-white text-neutral-800">Cancelled</option>
                         </select>
                       </td>
                       <td className="p-4 text-right">

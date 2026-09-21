@@ -5,6 +5,7 @@ import {
   FileText, ExternalLink, Eye, CheckSquare, Square, Download, Eye as PreviewIcon
 } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';
+import AdminOrderDetailsModal from '../components/AdminOrderDetailsModal';
 import Switch from '../components/Switch';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -71,6 +72,10 @@ const AffiliatesAdminPage = () => {
   const [selectedAffiliateForOrders, setSelectedAffiliateForOrders] = useState(null);
   const [affiliateOrders, setAffiliateOrders] = useState([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
+
+  // Specific Order Details View Modal state
+  const [selectedOrderDetail, setSelectedOrderDetail] = useState(null);
+  const [loadingOrderDetailId, setLoadingOrderDetailId] = useState(null);
 
   const [form, setForm] = useState({
     name: '',
@@ -168,7 +173,7 @@ const AffiliatesAdminPage = () => {
 
     try {
       // 2. Silent backend sync
-      await api.put(`/affiliates/${aff.id}`, { ...aff, isActive: nextState });
+      await api.put(`/affiliates/${aff.id}`, { isActive: nextState });
       toast.success(nextState ? 'Affiliate link activated' : 'Affiliate link disabled');
     } catch (err) {
       // 3. Rollback on error
@@ -296,7 +301,7 @@ const AffiliatesAdminPage = () => {
         </div>
       </div>
     ), {
-      duration: 6000,
+      duration: 20000,
       position: 'top-center',
       style: {
         borderRadius: '12px',
@@ -321,6 +326,34 @@ const AffiliatesAdminPage = () => {
       toast.error('Failed to load orders for this affiliate.');
     } finally {
       setLoadingOrders(false);
+    }
+  };
+
+  const handleOpenOrderDetail = async (ord) => {
+    try {
+      setLoadingOrderDetailId(ord.id);
+      const res = await api.get(`/orders/${ord.id}`);
+      if (res.data?.success && res.data.order) {
+        setSelectedOrderDetail(res.data.order);
+      } else {
+        setSelectedOrderDetail(ord);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch full order details, falling back to modal data:', err);
+      setSelectedOrderDetail(ord);
+    } finally {
+      setLoadingOrderDetailId(null);
+    }
+  };
+
+  const handleOrderStatusUpdate = async (id, status) => {
+    try {
+      await api.patch(`/orders/${id}/status`, { status });
+      toast.success(`Order status updated to ${status}`);
+      setAffiliateOrders(prev => prev.map(o => o.id === id ? { ...o, status } : o));
+      setSelectedOrderDetail(prev => prev ? { ...prev, status } : null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update order status');
     }
   };
 
@@ -810,66 +843,173 @@ const AffiliatesAdminPage = () => {
 
       {/* Orders Breakdown Modal */}
       {ordersModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={e => e.target === e.currentTarget && setOrdersModalOpen(false)}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col overflow-hidden">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-brand-light bg-neutral-50 shrink-0">
-              <div>
-                <h3 className="font-playfair text-lg font-bold text-brand-text">
-                  Orders History — {selectedAffiliateForOrders?.name}
-                </h3>
-                <p className="text-xs text-brand-grey">
-                  Referral Code: <span className="font-mono text-brand-gold">{selectedAffiliateForOrders?.referralCode}</span> · Commission Rate: {selectedAffiliateForOrders?.commissionRate}%
-                </p>
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6" onClick={e => e.target === e.currentTarget && setOrdersModalOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl xl:max-w-6xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden border border-brand-light">
+            {/* Header: Title + Close Button top row, Badges second row */}
+            <div className="flex flex-col px-4 sm:px-6 py-3.5 sm:py-4 border-b border-brand-light bg-neutral-50 shrink-0 gap-2.5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-brand-gold/15 text-brand-gold flex items-center justify-center font-bold text-xs shrink-0 border border-brand-gold/30">
+                    {selectedAffiliateForOrders?.name ? selectedAffiliateForOrders.name[0].toUpperCase() : 'A'}
+                  </div>
+                  <h3 className="font-playfair text-base sm:text-lg md:text-xl font-bold text-brand-text truncate">
+                    Orders History — {selectedAffiliateForOrders?.name}
+                  </h3>
+                </div>
+                <button 
+                  onClick={() => setOrdersModalOpen(false)} 
+                  className="text-brand-grey hover:text-brand-text p-1.5 hover:bg-neutral-200/60 rounded-lg transition-colors shrink-0"
+                  title="Close modal"
+                >
+                  <X size={20} />
+                </button>
               </div>
-              <button onClick={() => setOrdersModalOpen(false)} className="text-brand-grey hover:text-brand-text">
-                <X size={20} />
-              </button>
+
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs">
+                <span className="text-brand-grey">
+                  Referral Code: <span className="font-mono font-bold text-brand-gold bg-brand-gold/10 px-1.5 sm:px-2 py-0.5 rounded border border-brand-gold/20">{selectedAffiliateForOrders?.referralCode}</span>
+                </span>
+                <span className="text-neutral-300">•</span>
+                <span className="bg-neutral-100 text-neutral-700 font-medium px-1.5 sm:px-2 py-0.5 rounded border border-neutral-200">
+                  Commission Rate: <strong className="text-brand-text">{selectedAffiliateForOrders?.commissionRate}%</strong>
+                </span>
+                <span className="text-neutral-300">•</span>
+                <span className="bg-neutral-100 text-neutral-700 font-medium px-1.5 sm:px-2 py-0.5 rounded border border-neutral-200">
+                  Total: <strong className="text-brand-text">{affiliateOrders.length} {affiliateOrders.length === 1 ? 'Order' : 'Orders'}</strong>
+                </span>
+                {affiliateOrders.length > 0 && (
+                  <>
+                    <span className="text-neutral-300">•</span>
+                    <span className="bg-emerald-50 text-emerald-800 font-bold px-1.5 sm:px-2 py-0.5 rounded border border-emerald-200">
+                      Total Commission: ₹{affiliateOrders.reduce((sum, o) => sum + (Number(o.totalAmount || 0) * parseFloat(selectedAffiliateForOrders?.commissionRate || 0)) / 100, 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
 
-            <div className="p-6 overflow-y-auto flex-1">
+            <div className="p-3 sm:p-6 overflow-y-auto flex-1 bg-neutral-50/30">
               {loadingOrders ? (
-                <div className="text-center py-8 text-brand-grey text-sm">Loading affiliate orders...</div>
+                <div className="text-center py-16 text-brand-grey text-sm flex flex-col items-center gap-2">
+                  <RefreshCw size={24} className="animate-spin text-brand-gold" />
+                  <span>Loading affiliate orders...</span>
+                </div>
               ) : affiliateOrders.length === 0 ? (
-                <div className="text-center py-8 text-brand-grey text-sm">
+                <div className="text-center py-16 text-brand-grey text-sm">
                   No orders placed through this affiliate link yet.
                 </div>
               ) : (
-                <table className="w-full text-xs text-left border-collapse">
-                  <thead>
-                    <tr className="bg-brand-light/40 border-b border-brand-light text-brand-grey font-semibold uppercase">
-                      <th className="px-4 py-3">Order</th>
-                      <th className="px-4 py-3">Customer</th>
-                      <th className="px-4 py-3">Date</th>
-                      <th className="px-4 py-3">Order Total</th>
-                      <th className="px-4 py-3">Commission Earned</th>
-                      <th className="px-4 py-3">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-brand-light">
-                    {affiliateOrders.map(ord => {
-                      const commRate = parseFloat(selectedAffiliateForOrders?.commissionRate || 0);
-                      const earnedComm = (Number(ord.totalAmount || 0) * commRate) / 100;
-                      return (
-                        <tr key={ord.id} className="hover:bg-neutral-50">
-                          <td className="px-4 py-3 font-mono font-semibold text-brand-text">{ord.orderNumber}</td>
-                          <td className="px-4 py-3 text-brand-text">{ord.customer?.name || 'Guest'} ({ord.customer?.email || 'N/A'})</td>
-                          <td className="px-4 py-3 text-brand-grey">{new Date(ord.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
-                          <td className="px-4 py-3 font-semibold text-brand-text">₹{Number(ord.totalAmount || 0).toLocaleString('en-IN')}</td>
-                          <td className="px-4 py-3 font-bold text-emerald-600">₹{earnedComm.toFixed(2)}</td>
-                          <td className="px-4 py-3">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700">
-                              {ord.status}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                <div className="overflow-x-auto rounded-xl border border-brand-light bg-white shadow-2xs">
+                  <table className="w-full text-xs text-left border-collapse min-w-[760px] md:min-w-full">
+                    <thead>
+                      <tr className="bg-brand-light/40 border-b border-brand-light text-brand-grey font-semibold uppercase tracking-wider">
+                        <th className="px-4 py-3.5 whitespace-nowrap">Order Number</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">Customer</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">Date</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">Order Total</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">Commission Earned</th>
+                        <th className="px-4 py-3.5 whitespace-nowrap">Status</th>
+                        <th className="px-4 py-3.5 text-center whitespace-nowrap">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-brand-light">
+                      {affiliateOrders.map(ord => {
+                        const commRate = parseFloat(selectedAffiliateForOrders?.commissionRate || 0);
+                        const earnedComm = (Number(ord.totalAmount || 0) * commRate) / 100;
+                        const statusColors = {
+                          PENDING_PAYMENT: 'bg-yellow-50 text-yellow-800 border-yellow-200',
+                          PAID: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                          PENDING: 'bg-amber-50 text-amber-800 border-amber-200',
+                          CONFIRMED: 'bg-blue-50 text-blue-800 border-blue-200',
+                          PROCESSING: 'bg-purple-50 text-purple-800 border-purple-200',
+                          SHIPPED: 'bg-indigo-50 text-indigo-800 border-indigo-200',
+                          OUT_FOR_DELIVERY: 'bg-orange-50 text-orange-800 border-orange-200',
+                          DELIVERED: 'bg-green-50 text-green-800 border-green-200',
+                          CANCELLED: 'bg-rose-50 text-rose-800 border-rose-200',
+                          RETURNED: 'bg-pink-50 text-pink-800 border-pink-200',
+                          REFUNDED: 'bg-purple-50 text-purple-800 border-purple-200',
+                        };
+                        const badgeColor = statusColors[ord.status] || 'bg-neutral-100 text-neutral-800 border-neutral-200';
+                        const itemsCount = ord.items?.length;
+
+                        return (
+                          <tr key={ord.id} className="hover:bg-brand-light/15 transition-colors">
+                            {/* Order Number */}
+                            <td className="px-4 py-3.5 whitespace-nowrap">
+                              <span className="font-mono font-bold text-brand-text block">{ord.orderNumber}</span>
+                              {itemsCount ? (
+                                <span className="text-[10px] text-brand-grey font-medium">
+                                  {itemsCount} {itemsCount === 1 ? 'item' : 'items'}
+                                </span>
+                              ) : null}
+                            </td>
+
+                            {/* Customer */}
+                            <td className="px-4 py-3.5">
+                              <p className="font-semibold text-brand-text whitespace-nowrap">{ord.customer?.name || 'Guest Checkout'}</p>
+                              <p className="text-[11px] text-brand-grey truncate max-w-[200px]" title={ord.customer?.email || 'N/A'}>
+                                {ord.customer?.email || 'N/A'}
+                              </p>
+                            </td>
+
+                            {/* Date */}
+                            <td className="px-4 py-3.5 text-brand-grey whitespace-nowrap">
+                              {new Date(ord.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </td>
+
+                            {/* Order Total */}
+                            <td className="px-4 py-3.5 font-bold text-brand-text whitespace-nowrap">
+                              ₹{Number(ord.totalAmount || 0).toLocaleString('en-IN')}
+                            </td>
+
+                            {/* Commission Earned */}
+                            <td className="px-4 py-3.5 font-bold text-emerald-600 whitespace-nowrap">
+                              ₹{earnedComm.toFixed(2)}
+                            </td>
+
+                            {/* Status */}
+                            <td className="px-4 py-3.5 whitespace-nowrap">
+                              <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold border ${badgeColor}`}>
+                                {ord.status}
+                              </span>
+                            </td>
+
+                            {/* Action Eye Details */}
+                            <td className="px-4 py-3.5 whitespace-nowrap text-center">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenOrderDetail(ord)}
+                                disabled={loadingOrderDetailId === ord.id}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-brand-gold/10 hover:bg-brand-gold hover:text-white text-brand-gold border border-brand-gold/25 transition-all shadow-2xs group cursor-pointer disabled:opacity-50"
+                                title="View Order Details"
+                              >
+                                {loadingOrderDetailId === ord.id ? (
+                                  <RefreshCw size={13} className="animate-spin text-brand-gold group-hover:text-white" />
+                                ) : (
+                                  <Eye size={13} className="group-hover:scale-110 transition-transform" />
+                                )}
+                                <span>Details</span>
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </div>
         </div>
+      )}
+
+      {/* Specific Order Details Modal */}
+      {selectedOrderDetail && (
+        <AdminOrderDetailsModal
+          order={selectedOrderDetail}
+          onClose={() => setSelectedOrderDetail(null)}
+          onStatusUpdate={handleOrderStatusUpdate}
+        />
       )}
     </AdminLayout>
   );

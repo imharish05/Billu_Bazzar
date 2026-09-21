@@ -2,7 +2,12 @@
 
 const { ContactEnquiry } = require('../models');
 const { Op } = require('sequelize');
-const { sendContactEnquiryAdminNotification } = require('../services/emailService');
+const {
+  sendContactEnquiryAdminNotification,
+  sendContactEnquiryCustomerAcknowledgment,
+  sendTestNotificationEmail,
+  getAdminNotificationEmails,
+} = require('../services/emailService');
 const { validatePhoneNumber } = require('../utils/phoneValidation');
 
 /**
@@ -40,9 +45,24 @@ exports.submitContactEnquiry = async (req, res) => {
       status: 'PENDING',
     });
 
-    // Send email notification to Admin asynchronously
-    sendContactEnquiryAdminNotification(enquiry).catch(err => {
-      console.error('Asynchronous contact enquiry email failed:', err.message);
+    const enquiryObj = enquiry.get ? enquiry.get({ plain: true }) : enquiry;
+
+    // Concurrently trigger admin notification and customer auto-reply in background
+    Promise.allSettled([
+      sendContactEnquiryAdminNotification(enquiryObj),
+      sendContactEnquiryCustomerAcknowledgment(enquiryObj)
+    ]).then(results => {
+      const [adminRes, custRes] = results;
+      if (adminRes.status === 'fulfilled') {
+        console.log(`✅ [ContactEnquiry #${enquiry.id}] Admin notification email sent successfully.`);
+      } else {
+        console.error(`❌ [ContactEnquiry #${enquiry.id}] Admin notification email failed:`, adminRes.reason?.message || adminRes.reason);
+      }
+      if (custRes.status === 'fulfilled') {
+        console.log(`✅ [ContactEnquiry #${enquiry.id}] Customer auto-reply sent successfully to ${enquiry.email}.`);
+      } else {
+        console.error(`❌ [ContactEnquiry #${enquiry.id}] Customer auto-reply failed:`, custRes.reason?.message || custRes.reason);
+      }
     });
 
     res.status(201).json({
@@ -53,6 +73,24 @@ exports.submitContactEnquiry = async (req, res) => {
   } catch (error) {
     console.error('Error in submitContactEnquiry:', error);
     res.status(500).json({ success: false, message: 'Failed to submit enquiry', error: error.message });
+  }
+};
+
+/**
+ * Trigger test notification email to verify SMTP and recipient delivery (Admin)
+ */
+exports.sendTestEmail = async (req, res) => {
+  try {
+    const { targetEmail } = req.body;
+    const info = await sendTestNotificationEmail(targetEmail);
+    res.json({
+      success: true,
+      message: `Test email sent successfully! Message ID: ${info?.messageId || 'OK'}`,
+      recipient: targetEmail || 'All configured admin recipients'
+    });
+  } catch (error) {
+    console.error('Error in sendTestEmail:', error);
+    res.status(500).json({ success: false, message: 'Failed to send test email', error: error.message });
   }
 };
 

@@ -1,5 +1,4 @@
-'use strict';
-const { Affiliate, Order, Customer } = require('../models');
+const { Affiliate, Order, Customer, OrderItem } = require('../models');
 const fs = require('fs');
 const path = require('path');
 
@@ -113,6 +112,14 @@ const update = async (req, res) => {
     if (!affiliate) return res.status(404).json({ success: false, message: 'Affiliate not found' });
     
     const data = { ...req.body };
+    // Prevent overriding system/immutable fields
+    delete data.id;
+    delete data.createdAt;
+    delete data.updatedAt;
+    delete data.totalEarnings;
+    delete data.totalOrders;
+    delete data.totalClicks;
+
     if (data.referralCode) {
       const code = data.referralCode.trim().toUpperCase();
       if (code.length < 3 || code.length > 20) {
@@ -186,6 +193,8 @@ const remove = async (req, res) => {
     if (!affiliate) return res.status(404).json({ success: false, message: 'Affiliate not found' });
     
     deleteLocalFile(affiliate.documentProof);
+    // Unlink any associated orders so foreign key constraint fails never happen
+    await Order.update({ affiliateId: null }, { where: { affiliateId: affiliate.id } });
     await affiliate.destroy();
     res.json({ success: true, message: 'Affiliate permanently deleted' });
   } catch (err) {
@@ -197,7 +206,10 @@ const getOrders = async (req, res) => {
   try {
     const orders = await Order.findAll({
       where: { affiliateId: req.params.id },
-      include: [{ model: Customer, as: 'customer', attributes: ['id', 'name', 'email'] }],
+      include: [
+        { model: Customer, as: 'customer', attributes: ['id', 'name', 'email', 'phone'] },
+        { model: OrderItem, as: 'items' }
+      ],
       order: [['createdAt', 'DESC']],
     });
     const totalRevenue = orders.reduce((sum, order) => sum + Number(order.totalAmount || 0), 0);

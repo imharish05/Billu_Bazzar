@@ -143,7 +143,7 @@ const AdminOrderDetailsModal = ({ order, onClose, onStatusUpdate }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-3 sm:p-5 overflow-y-auto" onClick={onClose}>
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}

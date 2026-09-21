@@ -578,10 +578,10 @@ const WarehousesAdminPage = () => {
                     <th className="px-4 py-3">Product Name</th>
                     <th className="px-4 py-3">Variant Details</th>
                     <th className="px-4 py-3">SKU Code</th>
-                    <th className="px-4 py-3 text-center">Qty in Hand</th>
-                    <th className="px-4 py-3 text-center">Alert Level</th>
-                    <th className="px-4 py-3 text-center">Inventory Status</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
+                    <th className="px-4 py-3 text-center whitespace-nowrap">Qty in Hand</th>
+                    <th className="px-4 py-3 text-center whitespace-nowrap">Alert Level</th>
+                    <th className="px-4 py-3 text-center whitespace-nowrap">Inventory Status</th>
+                    <th className="px-4 py-3 text-right whitespace-nowrap">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -613,14 +613,16 @@ const WarehousesAdminPage = () => {
                         <td className="px-4 py-3 font-mono font-medium text-neutral-800">{skuCode}</td>
                         <td className="px-4 py-3 text-center font-bold text-sm text-neutral-900">{item.quantity}</td>
                         <td className="px-4 py-3 text-center font-semibold text-brand-grey">{item.reorderLevel}</td>
-                        <td className="px-4 py-3 text-center">
+                        <td className="px-4 py-3 text-center whitespace-nowrap">
                           {isLow ? (
-                            <span className="inline-flex items-center gap-1 bg-red-50 text-red-700 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5">
-                              <ShieldAlert size={10} /> Low Stock Alert
+                            <span className="inline-flex items-center justify-center gap-1.5 bg-red-50 text-red-700 border border-red-200 text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded whitespace-nowrap leading-none">
+                              <ShieldAlert size={12} className="shrink-0" />
+                              <span>Low Stock Alert</span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-[10px] uppercase font-bold tracking-wider px-2 py-0.5">
-                              <CheckCircle2 size={10} /> In Stock
+                            <span className="inline-flex items-center justify-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded whitespace-nowrap leading-none">
+                              <CheckCircle2 size={12} className="shrink-0" />
+                              <span>In Stock</span>
                             </span>
                           )}
                         </td>

@@ -421,7 +421,7 @@ const ContactEnquiriesAdminPage = () => {
                         Inquiry Subject
                       </span>
                       <div className="flex flex-wrap items-center">
-                        <span className="inline-block px-2.5 py-1 bg-amber-100 text-amber-900 rounded-md font-semibold text-xs break-words max-w-full">
+                        <span className="inline-block py-1 rounded-md font-semibold text-xs break-words max-w-full">
                           {selectedEnquiry.subject || 'General Inquiry'}
                         </span>
                       </div>
