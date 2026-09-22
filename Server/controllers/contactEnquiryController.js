@@ -6,7 +6,6 @@ const {
   sendContactEnquiryAdminNotification,
   sendContactEnquiryCustomerAcknowledgment,
   sendTestNotificationEmail,
-  getAdminNotificationEmails,
 } = require('../services/emailService');
 const { validatePhoneNumber } = require('../utils/phoneValidation');
 

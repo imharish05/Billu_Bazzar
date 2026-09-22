@@ -1,7 +1,7 @@
 'use strict';
 const router = require('express').Router();
-const { getAll, getOne, create, update, remove, getOrders, trackClick } = require('../controllers/affiliateController');
-const { verifyAdmin, optionalAdmin } = require('../middleware/auth');
+const { getAll, getPublic, getOne, create, update, remove, getOrders, trackClick } = require('../controllers/affiliateController');
+const { verifyAdmin } = require('../middleware/auth');
 const { hasPermission } = require('../middleware/rbac');
 const upload = require('../middleware/upload');
 
@@ -20,8 +20,24 @@ const handleUpload = (req, res, next) => {
   }
 };
 
+router.get('/public', getPublic);
 router.get('/track', trackClick);
-router.get('/', optionalAdmin, getAll);
+
+// GET / - Public for storefront (when called with no params), strictly authenticated for admin panel
+router.get('/', (req, res, next) => {
+  const isExplicitAdminRequest = req.query.page !== undefined || 
+                                req.query.limit !== undefined || 
+                                req.query.search !== undefined || 
+                                Boolean(req.headers.authorization);
+
+  if (isExplicitAdminRequest) {
+    return verifyAdmin(req, res, (err) => {
+      if (err) return next(err);
+      return hasPermission('manage_affiliates')(req, res, next);
+    });
+  }
+  return getPublic(req, res);
+}, getAll);
 router.get('/:id', verifyAdmin, hasPermission('manage_affiliates'), getOne);
 router.post('/', verifyAdmin, hasPermission('manage_affiliates'), handleUpload, create);
 router.put('/:id', verifyAdmin, hasPermission('manage_affiliates'), handleUpload, update);

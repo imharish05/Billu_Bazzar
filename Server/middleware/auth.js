@@ -97,7 +97,7 @@ const optionalAdmin = async (req, res, next) => {
     const authHeader = req.headers.authorization || req.headers.Authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1]?.trim();
-      if (token) {
+      if (token && token !== 'null' && token !== 'undefined') {
         const decoded = verifyToken(token);
         if (!decoded.type || decoded.type === 'ADMIN') {
           const admin = await AdminUser.findByPk(decoded.id, {
@@ -112,6 +112,9 @@ const optionalAdmin = async (req, res, next) => {
     }
     next();
   } catch (err) {
+    if (err.name === 'TokenExpiredError' || err.name === 'JsonWebTokenError') {
+      return res.status(401).json({ success: false, message: 'Admin session expired', code: 'TOKEN_EXPIRED' });
+    }
     next();
   }
 };

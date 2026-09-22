@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import AdminLayout from '../components/AdminLayout';
 import AdminOrderDetailsModal from '../components/AdminOrderDetailsModal';
+import { PaginationTop, PaginationBottom } from '../components/Pagination';
 import Switch from '../components/Switch';
 import api from '../services/api';
 import toast from 'react-hot-toast';
@@ -59,6 +60,13 @@ const AffiliatesAdminPage = () => {
 
   const [affiliates, setAffiliates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalPaidOut, setTotalPaidOut] = useState(0);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   
@@ -100,8 +108,20 @@ const AffiliatesAdminPage = () => {
   const load = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/affiliates');
+      const params = new URLSearchParams({
+        page,
+        limit,
+      });
+      if (search && search.trim()) {
+        params.append('search', search.trim());
+      }
+      const res = await api.get(`/affiliates?${params.toString()}`);
       setAffiliates(res.data.affiliates || []);
+      setTotal(res.data.total !== undefined ? res.data.total : (res.data.affiliates?.length || 0));
+      setTotalPages(res.data.totalPages || 1);
+      if (res.data.totalEarnings !== undefined) {
+        setTotalPaidOut(Number(res.data.totalEarnings) || 0);
+      }
     } catch (err) {
       console.error(err);
       toast.error('Failed to load affiliates.');
@@ -112,7 +132,7 @@ const AffiliatesAdminPage = () => {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [page, limit, search]);
 
   const handleCopyLink = (code) => {
     const origin = import.meta.env.VITE_CLIENT_URL || window.location.origin.replace(':5174', ':5173');
@@ -363,38 +383,63 @@ const AffiliatesAdminPage = () => {
         <div>
           <h2 className="text-xl font-playfair font-bold text-brand-text">Affiliate Management</h2>
           <p className="text-sm text-brand-grey mt-0.5">
-            {affiliates.length} affiliates registered · ₹{affiliates.reduce((s, a) => s + Number(a.totalEarnings || 0), 0).toLocaleString('en-IN')} total paid out
+            {total} affiliates registered · ₹{(totalPaidOut || affiliates.reduce((s, a) => s + Number(a.totalEarnings || 0), 0)).toLocaleString('en-IN')} total paid out
           </p>
         </div>
-        {canManageAffiliates && (
-          <button onClick={() => openModal()} className="btn-primary flex items-center justify-center gap-2" id="add-affiliate-btn">
-            <Plus size={16} /> Add Affiliate
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={load}
+            className="btn-outline flex items-center justify-center gap-2 text-xs py-2 px-3.5"
+            title="Refresh List"
+          >
+            <RefreshCw size={14} className={loading ? 'animate-spin' : ''} /> Refresh
           </button>
-        )}
+          {canManageAffiliates && (
+            <button onClick={() => openModal()} className="btn-primary flex items-center justify-center gap-2" id="add-affiliate-btn">
+              <Plus size={16} /> Add Affiliate
+            </button>
+          )}
+        </div>
       </div>
 
-      {loading ? (
-        <div className="bg-white rounded-xl shadow-sm p-8 text-center text-brand-grey">Loading affiliates...</div>
-      ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-brand-light overflow-hidden">
-          <div className="overflow-x-auto w-full">
-            <table className="min-w-[1250px] w-full text-sm text-left border-collapse" aria-label="Affiliates table">
-              <thead>
-                <tr className="bg-brand-light/40 border-b border-brand-light">
-                  {affiliateHeaders.map(h => (
-                    <th key={h} className="px-4 py-3.5 text-xs font-semibold text-brand-grey uppercase tracking-wider whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-brand-light">
-                {affiliates.length === 0 ? (
-                  <tr>
-                    <td colSpan={affiliateHeaders.length} className="px-5 py-8 text-center text-brand-grey">
-                      No affiliates found. Click "Add Affiliate" to create one.
-                    </td>
+      <div className="bg-white rounded-xl shadow-sm border border-brand-light overflow-hidden">
+        <PaginationTop
+          search={search}
+          onSearchChange={(s) => { setSearch(s); setPage(1); }}
+          searchPlaceholder="Search affiliate name, email, code..."
+          currentPage={page}
+          totalItems={total}
+          limit={limit}
+          onLimitChange={(l) => { setLimit(l); setPage(1); }}
+        />
+        <div className="overflow-x-auto w-full">
+          <table className="min-w-[1250px] w-full text-sm text-left border-collapse" aria-label="Affiliates table">
+            <thead>
+              <tr className="bg-brand-light/40 border-b border-brand-light">
+                {affiliateHeaders.map(h => (
+                  <th key={h} className="px-4 py-3.5 text-xs font-semibold text-brand-grey uppercase tracking-wider whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-brand-light">
+              {loading ? (
+                [...Array(Math.min(limit, 8))].map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    {[...Array(affiliateHeaders.length)].map((_, j) => (
+                      <td key={j} className="px-4 py-4">
+                        <div className="h-4 bg-neutral-200/70 rounded w-24" />
+                      </td>
+                    ))}
                   </tr>
-                ) : (
-                  affiliates.map(a => {
+                ))
+              ) : affiliates.length === 0 ? (
+                <tr>
+                  <td colSpan={affiliateHeaders.length} className="px-5 py-8 text-center text-brand-grey">
+                    {search ? 'No affiliates match your search.' : 'No affiliates found. Click "Add Affiliate" to create one.'}
+                  </td>
+                </tr>
+              ) : (
+                affiliates.map(a => {
                     let parsedSocials = [];
                     if (a.socialMedia) {
                       parsedSocials = typeof a.socialMedia === 'string' ? JSON.parse(a.socialMedia) : a.socialMedia;
@@ -539,8 +584,13 @@ const AffiliatesAdminPage = () => {
               </tbody>
             </table>
           </div>
+          <PaginationBottom
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={total}
+            onPageChange={(p) => setPage(p)}
+          />
         </div>
-      )}
 
       {/* Add / Edit Affiliate Modal */}
       {modalOpen && (
@@ -881,7 +931,10 @@ const AffiliatesAdminPage = () => {
                   <>
                     <span className="text-neutral-300">•</span>
                     <span className="bg-emerald-50 text-emerald-800 font-bold px-1.5 sm:px-2 py-0.5 rounded border border-emerald-200">
-                      Total Commission: ₹{affiliateOrders.reduce((sum, o) => sum + (Number(o.totalAmount || 0) * parseFloat(selectedAffiliateForOrders?.commissionRate || 0)) / 100, 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      Total Commission: ₹{affiliateOrders
+                        .filter(o => o.status !== 'CANCELLED' && o.status !== 'RETURNED' && o.status !== 'REFUNDED')
+                        .reduce((sum, o) => sum + (Number(o.totalAmount || 0) * parseFloat(selectedAffiliateForOrders?.commissionRate || 0)) / 100, 0)
+                        .toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </>
                 )}
@@ -915,7 +968,8 @@ const AffiliatesAdminPage = () => {
                     <tbody className="divide-y divide-brand-light">
                       {affiliateOrders.map(ord => {
                         const commRate = parseFloat(selectedAffiliateForOrders?.commissionRate || 0);
-                        const earnedComm = (Number(ord.totalAmount || 0) * commRate) / 100;
+                        const isVoided = ord.status === 'CANCELLED' || ord.status === 'RETURNED' || ord.status === 'REFUNDED';
+                        const earnedComm = isVoided ? 0 : (Number(ord.totalAmount || 0) * commRate) / 100;
                         const statusColors = {
                           PENDING_PAYMENT: 'bg-yellow-50 text-yellow-800 border-yellow-200',
                           PAID: 'bg-emerald-50 text-emerald-800 border-emerald-200',
@@ -963,8 +1017,12 @@ const AffiliatesAdminPage = () => {
                             </td>
 
                             {/* Commission Earned */}
-                            <td className="px-4 py-3.5 font-bold text-emerald-600 whitespace-nowrap">
-                              ₹{earnedComm.toFixed(2)}
+                            <td className="px-4 py-3.5 font-bold whitespace-nowrap">
+                              {isVoided ? (
+                                <span className="text-neutral-400 font-normal italic text-[11px]">₹0.00 (Cancelled)</span>
+                              ) : (
+                                <span className="text-emerald-600">₹{earnedComm.toFixed(2)}</span>
+                              )}
                             </td>
 
                             {/* Status */}

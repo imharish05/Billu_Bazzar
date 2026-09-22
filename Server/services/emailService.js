@@ -973,72 +973,8 @@ const sendRestockAlertEmail = async (toEmail, productName, productSlug, image) =
 };
 
 /**
- * Resolves all recipient email addresses for admin alerts.
- * Combines:
- * 1. process.env.ADMIN_EMAIL (comma-separated support)
- * 2. SiteSettings key 'contact_notification' (adminNotificationEmails)
- * 3. Active AdminUser accounts in the database (isActive = true)
- * Deduplicates and lowercases all email addresses.
- */
-const getAdminNotificationEmails = async () => {
-  const emailSet = new Set();
-
-  // 1. From process.env.ADMIN_EMAIL
-  if (process.env.ADMIN_EMAIL) {
-    process.env.ADMIN_EMAIL.split(',')
-      .map(e => e.trim().toLowerCase())
-      .filter(e => e && e.includes('@'))
-      .forEach(e => emailSet.add(e));
-  }
-
-  // 2. From SiteSetting key 'contact_notification'
-  try {
-    const { SiteSetting } = require('../models');
-    if (SiteSetting) {
-      const setting = await SiteSetting.findOne({ where: { key: 'contact_notification' } });
-      if (setting && setting.value) {
-        const parsed = typeof setting.value === 'string' ? JSON.parse(setting.value) : setting.value;
-        const customEmails = parsed.adminNotificationEmails || parsed.email || parsed.contactEmail;
-        if (customEmails) {
-          String(customEmails).split(',')
-            .map(e => e.trim().toLowerCase())
-            .filter(e => e && e.includes('@'))
-            .forEach(e => emailSet.add(e));
-        }
-      }
-    }
-  } catch (e) {
-    // Non-critical, fallback continues
-  }
-
-  // 3. From Database active AdminUsers
-  try {
-    const { AdminUser } = require('../models');
-    if (AdminUser) {
-      const activeAdmins = await AdminUser.findAll({
-        where: { isActive: true },
-        attributes: ['email']
-      });
-      activeAdmins.forEach(admin => {
-        if (admin.email && admin.email.includes('@')) {
-          emailSet.add(admin.email.trim().toLowerCase());
-        }
-      });
-    }
-  } catch (e) {
-    // Non-critical, fallback continues
-  }
-
-  // Fallback default
-  if (emailSet.size === 0) {
-    emailSet.add('harish05082004@gmail.com');
-  }
-
-  return Array.from(emailSet);
-};
-
-/**
  * Sends HTML Email Notification to Admin when a customer submits a Contact Inquiry.
+ * Dispatches directly to ADMIN_EMAIL defined in environment configuration.
  */
 const sendContactEnquiryAdminNotification = async (enquiryData) => {
   try {
@@ -1047,7 +983,7 @@ const sendContactEnquiryAdminNotification = async (enquiryData) => {
       : (enquiryData || {});
 
     const { name, email, phone, subject, message, createdAt, id } = data;
-    const adminEmails = await getAdminNotificationEmails();
+    const adminEmail = (process.env.ADMIN_EMAIL || 'harish05082004@gmail.com').trim();
     const transporter = createTransporter();
 
     const dateFormatted = new Date(createdAt || Date.now()).toLocaleString('en-IN', {
@@ -1058,7 +994,7 @@ const sendContactEnquiryAdminNotification = async (enquiryData) => {
 
     const mailOptions = {
       from: `"Billu Bazaar Concierge" <${process.env.EMAIL_USER}>`,
-      to: adminEmails.join(', '),
+      to: adminEmail,
       replyTo: email || process.env.EMAIL_USER,
       subject: `📩 New Contact Enquiry #${id || ''}: ${subject || 'General Inquiry'} - ${name}`,
       text: `New Contact Enquiry Alert\n\n` +
@@ -1169,7 +1105,7 @@ const sendContactEnquiryAdminNotification = async (enquiryData) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Contact enquiry admin notification email sent to [${adminEmails.join(', ')}] — MsgID: ${info.messageId}`);
+    console.log(`✅ Contact enquiry admin notification email sent to [${adminEmail}] — MsgID: ${info.messageId}`);
     return info;
   } catch (err) {
     if (err.message && (err.message.includes('550-5.4.5') || err.message.includes('Daily user sending limit exceeded'))) {
@@ -1298,7 +1234,7 @@ const sendContactEnquiryCustomerAcknowledgment = async (enquiryData) => {
  */
 const sendTestNotificationEmail = async (targetEmail) => {
   const transporter = createTransporter();
-  const recipient = targetEmail || (await getAdminNotificationEmails()).join(', ');
+  const recipient = targetEmail || (process.env.ADMIN_EMAIL || 'harish05082004@gmail.com').trim();
 
   const mailOptions = {
     from: `"Billu Bazaar System" <${process.env.EMAIL_USER}>`,
@@ -2047,7 +1983,6 @@ module.exports = {
   sendContactEnquiryAdminNotification,
   sendContactEnquiryCustomerAcknowledgment,
   sendTestNotificationEmail,
-  getAdminNotificationEmails,
   sendMarketingAutomationReport,
 };
 
