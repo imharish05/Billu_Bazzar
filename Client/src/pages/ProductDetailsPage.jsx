@@ -1105,7 +1105,7 @@ const ProductDetailsPage = () => {
                 <button
                   type="button"
                   onClick={() => setNotifySuccess(false)}
-                  className="bg-neutral-950 hover:bg-neutral-800 text-white font-semibold text-sm tracking-wider uppercase py-4 w-full flex items-center justify-center gap-2 transition-all duration-200 shadow-sm"
+                  className="bg-neutral-950 hover:bg-neutral-800 text-white font-semibold text-sm tracking-wider uppercase py-4 w-full flex items-center justify-center gap-2 transition-all duration-200 shadow-sm rounded-lg cursor-pointer"
                   id="pdp-notify"
                 >
                   <Mail size={16} /> Out of Stock — Notify Me
@@ -1113,7 +1113,7 @@ const ProductDetailsPage = () => {
               )}
               <button
                 onClick={handleWishlistToggle}
-                className={`border font-semibold text-sm tracking-wider uppercase py-4 w-full flex items-center justify-center gap-2 transition-all duration-200 ${
+                className={`border font-semibold text-sm tracking-wider uppercase py-4 w-full flex items-center justify-center gap-2 transition-all duration-200 rounded-lg cursor-pointer ${
                   isWishlisted 
                     ? 'border-red-400 text-red-500 bg-red-50/50 hover:bg-red-50 hover:text-red-600 hover:border-red-500' 
                     : 'border-neutral-950 text-neutral-950 hover:bg-neutral-950 hover:text-white bg-transparent'

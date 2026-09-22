@@ -37,7 +37,7 @@ const ReturnsPage = () => {
           >
             <span className="text-xs font-semibold text-brand-gold tracking-widest uppercase block">Our Guarantee</span>
             <h2 className="font-playfair text-3xl font-bold text-brand-text">Returns & Refunds Policy</h2>
-            <p className="text-brand-grey text-sm md:text-base leading-relaxed text-left">
+            <p className="text-brand-grey text-sm md:text-base leading-relaxed text-justify">
               We are committed to delivering products of the highest standard. If any product in your order arrives damaged, defective, or mismatched, you can request an <strong>individual product return</strong> within a strict 24-hour window from delivery.
             </p>
           </motion.div>
@@ -53,7 +53,7 @@ const ReturnsPage = () => {
                   {/* <span className="bg-red-500 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">Mandatory</span> */}
                   <h3 className="font-playfair text-lg font-bold text-brand-text">Compulsory Unboxing Video Requirement</h3>
                 </div>
-                <p className="text-xs md:text-sm text-neutral-600 leading-relaxed">
+                <p className="text-xs md:text-sm text-neutral-600 leading-relaxed text-justify">
                   To prevent fraudulent claims and ensure swift replacement or refund processing, <strong>a continuous, uncut parcel opening (unboxing) video is strictly compulsory</strong> for all return and damaged item claims.
                 </p>
                 <ul className="text-xs text-neutral-600 space-y-1 list-disc list-inside mt-2">
@@ -70,50 +70,50 @@ const ReturnsPage = () => {
             <div className="space-y-2">
               <RefreshCcw className="text-brand-gold w-8 h-8 mx-auto md:mx-0" />
               <h4 className="font-playfair text-sm font-semibold text-brand-text">24-Hour Window</h4>
-              <p className="text-brand-grey text-xs">Initiate a return request within 24 hours of successful delivery.</p>
+              <p className="text-brand-grey text-xs text-justify">Initiate a return request within 24 hours of successful delivery.</p>
             </div>
             <div className="space-y-2">
               <CheckCircle2 className="text-brand-gold w-8 h-8 mx-auto md:mx-0" />
               <h4 className="font-playfair text-sm font-semibold text-brand-text">Individual Item Returns</h4>
-              <p className="text-brand-grey text-xs">Return specific products from multi-item orders without returning the whole order.</p>
+              <p className="text-brand-grey text-xs text-justify">Return specific products from multi-item orders without returning the whole order.</p>
             </div>
             <div className="space-y-2">
               <FileText className="text-brand-gold w-8 h-8 mx-auto md:mx-0" />
               <h4 className="font-playfair text-sm font-semibold text-brand-text">Compulsory Video</h4>
-              <p className="text-brand-grey text-xs">Upload uncut unboxing video proof during the return submission.</p>
+              <p className="text-brand-grey text-xs text-justify">Upload uncut unboxing video proof during the return submission.</p>
             </div>
             <div className="space-y-2">
               <HelpCircle className="text-brand-gold w-8 h-8 mx-auto md:mx-0" />
               <h4 className="font-playfair text-sm font-semibold text-brand-text">5-7 Day Refunds</h4>
-              <p className="text-brand-grey text-xs">Refunds are credited back to the source account or bank account after inspection.</p>
+              <p className="text-brand-grey text-xs text-justify">Refunds are credited back to the source account or bank account after inspection.</p>
             </div>
           </div>
 
           <div className="space-y-8">
             <section className="space-y-3">
               <h3 className="font-playfair text-xl font-semibold text-brand-text">1. Return Eligibility & Individual Product Returns</h3>
-              <p className="text-brand-grey text-xs md:text-sm leading-relaxed text-left">
+              <p className="text-brand-grey text-xs md:text-sm leading-relaxed text-justify">
                 We offer a strict 24-hour return window from the date and time of delivery. You may request returns for <strong>individual items</strong> in your order directly from your <strong>Delivered Orders</strong> page. Returns are accepted if an item is physically damaged upon arrival, defective, wrong product delivered, or mismatched with description. Each request requires an uncut opening video of the parcel.
               </p>
             </section>
 
             <section className="space-y-3">
               <h3 className="font-playfair text-xl font-semibold text-brand-text">2. Exclusions & Non-Returnable Items</h3>
-              <p className="text-brand-grey text-xs md:text-sm leading-relaxed font-light text-left">
+              <p className="text-brand-grey text-xs md:text-sm leading-relaxed font-light text-justify">
                 Products are ineligible for return under any of the following conditions: if the product has been used, altered, or if the original Billu Bazaar security seal is broken; if the original packaging, brand tags, instruction manuals, or accessories are missing; if no continuous unboxing video is provided; or if the item belongs to a non-returnable category for hygiene reasons (such as perfumes, innerwear, and personal care products).
               </p>
             </section>
 
             <section className="space-y-3">
               <h3 className="font-playfair text-xl font-semibold text-brand-text">3. Return Pickup & Logistics</h3>
-              <p className="text-brand-grey text-xs md:text-sm leading-relaxed text-left">
+              <p className="text-brand-grey text-xs md:text-sm leading-relaxed text-justify">
                 Once your return request is validated and approved, our logistics team will coordinate reverse collection directly from your delivery address. Please pack the item securely in its original packaging along with all documentation.
               </p>
             </section>
 
             <section className="space-y-3">
               <h3 className="font-playfair text-xl font-semibold text-brand-text">4. Refund Processing & Timelines</h3>
-              <p className="text-brand-grey text-xs md:text-sm leading-relaxed text-left">
+              <p className="text-brand-grey text-xs md:text-sm leading-relaxed text-justify">
                 After the returned product is received and inspected at our warehouse, refunds are initiated within 5 to 7 business days. Pre-paid orders are refunded back to the original payment source. For Cash on Delivery (COD) orders, refunds are transferred via NEFT/UPI to the bank account details provided during the return request.
               </p>
             </section>

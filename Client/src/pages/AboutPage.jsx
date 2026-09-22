@@ -205,24 +205,24 @@ const AboutPage = () => {
             </h2>
             <div className="h-[2px] w-20 bg-brand-gold" />
             
-            <p className="text-brand-grey text-sm md:text-base leading-relaxed text-left">
+            <p className="text-brand-grey text-sm md:text-base leading-relaxed text-justify">
               {renderFormattedText(data.story.description1)}
             </p>
             
-            <p className="text-brand-grey text-sm md:text-base leading-relaxed text-left">
+            <p className="text-brand-grey text-sm md:text-base leading-relaxed text-justify">
               {renderFormattedText(data.story.description2)}
             </p>
 
             <div className="pt-4 grid grid-cols-2 gap-6 border-t border-brand-light">
               <div>
                 <h4 className="font-playfair text-lg font-semibold text-brand-text mb-1">{data.story.feature1Title}</h4>
-                <p className="text-xs text-brand-grey leading-relaxed">
+                <p className="text-xs text-brand-grey leading-relaxed text-justify">
                   {data.story.feature1Desc}
                 </p>
               </div>
               <div>
                 <h4 className="font-playfair text-lg font-semibold text-brand-text mb-1">{data.story.feature2Title}</h4>
-                <p className="text-xs text-brand-grey leading-relaxed">
+                <p className="text-xs text-brand-grey leading-relaxed text-justify">
                   {data.story.feature2Desc}
                 </p>
               </div>
@@ -253,7 +253,7 @@ const AboutPage = () => {
               {/* Floating badge inside image */}
               <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm border border-brand-light p-4 shadow-xl max-w-[180px] z-10 rounded-lg">
                 <span className="text-[10px] text-brand-gold font-semibold uppercase block mb-1">{data.story.qualityOathTitle}</span>
-                <p className="text-[9px] text-brand-grey leading-normal">
+                <p className="text-[9px] text-brand-grey leading-normal text-justify">
                   {data.story.qualityOathDesc}
                 </p>
               </div>
@@ -386,7 +386,7 @@ const AboutPage = () => {
                   <h4 className="font-playfair text-xl font-bold text-brand-text mb-3">
                     {val.title}
                   </h4>
-                  <p className="text-brand-grey text-xs md:text-sm leading-relaxed text-left">
+                  <p className="text-brand-grey text-xs md:text-sm leading-relaxed text-justify">
                     {val.description}
                   </p>
                 </div>

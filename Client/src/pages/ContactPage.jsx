@@ -96,7 +96,7 @@ const ContactPage = () => {
             <div>
               <span className="text-xs font-semibold text-brand-gold tracking-widest uppercase block mb-2">Our Boutique</span>
               <h2 className="font-playfair text-2xl md:text-3xl font-bold text-brand-text mb-4">Visit Billu Bazaar</h2>
-              <p className="text-brand-grey text-sm leading-relaxed">
+              <p className="text-brand-grey text-sm leading-relaxed text-justify">
                 Step into a world where heritage meets luxury. Explore our curated collections of Indian bridal couture, fine jewelry, rare perfumes, and accessories in person at our flagship boutique.
               </p>
             </div>
@@ -169,7 +169,7 @@ const ContactPage = () => {
                 <Star size={14} className="fill-brand-gold" />
               </div>
               <h4 className="font-playfair text-sm font-semibold text-brand-text mb-1">Private Styling Consultations</h4>
-              <p className="text-brand-grey text-xs leading-relaxed">
+              <p className="text-brand-grey text-xs leading-relaxed text-justify">
                 Book a one-on-one session with our master stylists. Reach out via email or call us directly to schedule a private gallery viewing.
               </p>
             </div>
@@ -179,7 +179,7 @@ const ContactPage = () => {
           <div className="lg:col-span-7 bg-white border border-brand-light p-8 md:p-10 shadow-sm rounded-lg">
             <div>
               <h3 className="font-playfair text-xl md:text-2xl font-semibold text-brand-text mb-2">Send Us a Message</h3>
-              <p className="text-brand-grey text-sm mb-8">
+              <p className="text-brand-grey text-sm mb-8 text-justify">
                 Please complete the form below. Our customer experience team will respond to your inquiry within 24 business hours.
               </p>
             </div>

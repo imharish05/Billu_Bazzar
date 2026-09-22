@@ -77,7 +77,7 @@ const AccountPage = () => {
           <form className="space-y-4 text-left" onSubmit={e => e.preventDefault()}>
             <div>
               <label className="block text-xs font-medium mb-1.5" htmlFor="login-email">Email</label>
-              <input id="login-email" type="email" placeholder="your@email.com" className="w-full border border-brand-light px-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold" />
+              <input id="login-email" type="email" placeholder="exmapleemail.com" className="w-full border border-brand-light px-3 py-2.5 text-sm focus:outline-none focus:border-brand-gold" />
             </div>
             <div>
               <label className="block text-xs font-medium mb-1.5" htmlFor="login-password">Password</label>
@@ -207,7 +207,7 @@ const AccountPage = () => {
                         </div>
                       ))}
                     </div>
-                  )}
+                  )})()}
                 </div>
               )}
 
@@ -286,6 +286,7 @@ const AccountPage = () => {
       </div>
       <Footer />
     </main>
+
   );
 };
 

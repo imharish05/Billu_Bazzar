@@ -1140,7 +1140,7 @@ const CheckoutPage = () => {
                           type="email"
                           value={loginEmail}
                           onChange={e => setLoginEmail(e.target.value)}
-                          placeholder="your@email.com"
+                          placeholder="exmaple@email.com"
                           className={inputCls}
                         />
                       </div>
@@ -1303,7 +1303,7 @@ const CheckoutPage = () => {
                                   setBillingAddress(p => ({ ...p, email: val }));
                                   if (fieldErrors.email) setFieldErrors(p => ({ ...p, email: null }));
                                 }}
-                                placeholder="your@email.com"
+                                placeholder="exmaple@email.com"
                                 className={`${inputCls} ${fieldErrors.email ? 'border-red-500 bg-red-50/20 focus:border-red-500 focus:ring-red-200' : ''}`} required />
                               {fieldErrors.email && <p className="text-[11px] text-red-500 mt-1 font-medium">{fieldErrors.email}</p>}
                             </div>
@@ -1510,7 +1510,7 @@ const CheckoutPage = () => {
                                   </div>
                                   <div className="sm:col-span-2">
                                     <label className={labelCls} htmlFor="d-email">Email *</label>
-                                    <input id="d-email" type="email" value={address.email} onChange={e => setAddress(p => ({...p, email: e.target.value}))} placeholder="your@email.com" className={inputCls} />
+                                    <input id="d-email" type="email" value={address.email} onChange={e => setAddress(p => ({...p, email: e.target.value}))} placeholder="exmaple@email.com" className={inputCls} />
                                   </div>
                                   <div className="sm:col-span-2">
                                     <label className={labelCls} htmlFor="d-flat">Street / House No. *</label>

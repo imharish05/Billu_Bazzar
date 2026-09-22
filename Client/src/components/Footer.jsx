@@ -109,7 +109,7 @@ const Footer = () => {
 
       {/* Bottom Bar */}
       <div className="border-t border-white/10">
-        <div className="max-w-site mx-auto px-4 sm:px-6 md:px-8 pt-5 pb-28 sm:pb-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-white/40 text-xs text-center sm:text-left">
+        <div className="max-w-site mx-auto px-4 sm:px-6 md:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-white/40 text-xs text-center sm:text-left">
           <p>© {new Date().getFullYear()} Billu Bazaar. All rights reserved.</p>
           <p>
             Developed by{' '}
