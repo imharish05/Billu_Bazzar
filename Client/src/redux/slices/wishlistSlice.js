@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
+import { getAccessToken } from '../../utils/tokenStorage';
 
 const WISHLIST_STORAGE_KEY = 'billubazzar_wishlist';
 
@@ -44,7 +45,20 @@ const areVariantsEqual = (varA, varB) => {
 // Async Thunks for DB wishlist sync
 export const fetchWishlist = createAsyncThunk('wishlist/fetchWishlist', async (_, { rejectWithValue }) => {
   try {
-    const res = await api.get('/customers/wishlist');
+    const token = getAccessToken();
+    const localItems = loadWishlistFromStorage();
+    let res;
+
+    // If authenticated and local wishlist has items, sync & merge them into DB
+    if (token && localItems.length > 0) {
+      res = await api.post('/customers/wishlist/sync', { items: localItems });
+    } else if (token) {
+      res = await api.get('/customers/wishlist');
+    } else {
+      // Unauthenticated guest mode: preserve local wishlist without failing
+      return localItems;
+    }
+
     if (res.data.success && Array.isArray(res.data.wishlist)) {
       const dbItems = res.data.wishlist.map(w => {
         const prod = w.product || {};
@@ -84,12 +98,15 @@ export const fetchWishlist = createAsyncThunk('wishlist/fetchWishlist', async (_
 export const toggleWishlistApi = createAsyncThunk('wishlist/toggleWishlistApi', async (payload, { dispatch, getState }) => {
   try {
     dispatch(wishlistSlice.actions.toggleItem(payload));
-    const targetProductId = payload.productId || payload.id;
-    await api.post('/customers/wishlist', {
-      productId: targetProductId,
-      variantId: payload.variantId || null,
-      selectedVariant: payload.selectedVariant || {}
-    });
+    const token = getAccessToken();
+    if (token) {
+      const targetProductId = payload.productId || payload.id;
+      await api.post('/customers/wishlist', {
+        productId: targetProductId,
+        variantId: payload.variantId || null,
+        selectedVariant: payload.selectedVariant || {}
+      });
+    }
   } catch (err) {
     console.warn('DB Wishlist Sync note (stored locally):', err.message);
   }
@@ -165,6 +182,10 @@ const wishlistSlice = createSlice({
       })
       .addCase(fetchWishlist.rejected, (state) => {
         state.loading = false;
+      })
+      .addCase('auth/logout', (state) => {
+        state.items = [];
+        saveWishlistToStorage([]);
       });
   }
 });

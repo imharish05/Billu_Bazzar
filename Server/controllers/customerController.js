@@ -127,6 +127,60 @@ const toggleWishlist = async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 
+const syncWishlist = async (req, res) => {
+  try {
+    const { items } = req.body;
+    if (!Array.isArray(items) || items.length === 0) {
+      return getWishlist(req, res);
+    }
+
+    const existingRows = await Wishlist.findAll({
+      where: { customerId: req.customer.id }
+    });
+
+    for (const item of items) {
+      const productId = parseInt(item.productId || item.id, 10);
+      if (!productId || isNaN(productId)) continue;
+
+      const targetVariantId = item.variantId ? parseInt(item.variantId, 10) : null;
+      let safeVariant = item.selectedVariant || {};
+      if (typeof safeVariant === 'string') {
+        try { safeVariant = JSON.parse(safeVariant); } catch { safeVariant = {}; }
+      }
+      if (typeof safeVariant !== 'object' || safeVariant === null) {
+        safeVariant = {};
+      }
+
+      const alreadyExists = existingRows.some(w => {
+        if (Number(w.productId) !== productId) return false;
+        if (targetVariantId || w.variantId) {
+          return Number(w.variantId) === targetVariantId;
+        }
+        return areVariantsEqual(w.selectedVariant, safeVariant);
+      });
+
+      if (!alreadyExists) {
+        const prod = await Product.findByPk(productId);
+        if (prod && prod.isActive) {
+          if (targetVariantId) {
+            const variant = await ProductVariant.findOne({ where: { id: targetVariantId, productId } });
+            if (!variant) continue;
+          }
+          const created = await Wishlist.create({
+            customerId: req.customer.id,
+            productId,
+            variantId: targetVariantId,
+            selectedVariant: safeVariant
+          });
+          existingRows.push(created);
+        }
+      }
+    }
+
+    return getWishlist(req, res);
+  } catch (err) { res.status(500).json({ success: false, message: err.message }); }
+};
+
 const getLoyalty = async (req, res) => {
   try {
     const ledger = await LoyaltyLedger.findAll({
@@ -153,4 +207,5 @@ const createTicket = async (req, res) => {
   } catch (err) { res.status(500).json({ success: false, message: err.message }); }
 };
 
-module.exports = { getAll, getOne, getWishlist, toggleWishlist, getLoyalty, getTickets, createTicket };
+module.exports = { getAll, getOne, getWishlist, toggleWishlist, syncWishlist, getLoyalty, getTickets, createTicket };
+

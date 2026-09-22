@@ -475,6 +475,104 @@ const syncCart = async (req, res) => {
   }
 };
 
+const areVariantsEqual = (varA, varB) => {
+  const normalize = value => {
+    if (typeof value === 'string') {
+      try { value = JSON.parse(value); } catch { return {}; }
+    }
+    return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+  };
+  const a = normalize(varA);
+  const b = normalize(varB);
+  const keysA = Object.keys(a).sort();
+  const keysB = Object.keys(b).sort();
+  if (keysA.length !== keysB.length) return false;
+  return keysA.every(k => String(a[k]).toLowerCase() === String(b[k]).toLowerCase());
+};
+
+const mergeCart = async (req, res) => {
+  try {
+    const { items } = req.body;
+    if (!req.customer || !req.customer.id) {
+      return res.status(401).json({ success: false, message: 'Authentication required to merge cart' });
+    }
+    if (!Array.isArray(items) || items.length === 0) {
+      return getCart(req, res);
+    }
+
+    const cart = await getOrCreateCart(req);
+
+    // Get existing cart items with product info
+    const existingItems = await CartItem.findAll({
+      where: { cartId: cart.id },
+      include: [{ model: Product, as: 'product' }]
+    });
+
+    const existingCurrency = existingItems.length > 0 ? (existingItems[0].product?.currency || 'INR') : null;
+
+    for (const item of items) {
+      const productId = parseInt(item.productId || item.id, 10);
+      const variantId = item.variantId ? parseInt(item.variantId, 10) : null;
+      let addedQty = parseInt(item.quantity, 10);
+      if (isNaN(productId) || isNaN(addedQty) || addedQty <= 0) continue;
+
+      const product = await Product.findByPk(productId);
+      if (!product || !product.isActive) continue;
+
+      const itemCurrency = product.currency || 'INR';
+      if (existingCurrency && existingCurrency !== itemCurrency) {
+        continue; // Skip mismatched currency items to avoid mixing currencies
+      }
+
+      let physicalStock = 0;
+      let selectedVariantJson = item.selectedVariant || {};
+      let itemPrice = product.price;
+
+      if (variantId) {
+        const variant = await ProductVariant.findOne({ where: { id: variantId, productId } });
+        if (!variant) continue;
+        physicalStock = variant.stock;
+        selectedVariantJson = variant.attributes || selectedVariantJson;
+        if (variant.price) itemPrice = variant.price;
+      } else {
+        physicalStock = product.stock;
+      }
+
+      if (physicalStock <= 0) continue;
+
+      // Find existing item in this cart
+      const match = existingItems.find(ex => {
+        if (Number(ex.productId) !== productId) return false;
+        if (variantId || ex.variantId) {
+          return Number(ex.variantId) === variantId;
+        }
+        return areVariantsEqual(ex.selectedVariant, selectedVariantJson);
+      });
+
+      if (match) {
+        const newQty = Math.min(physicalStock, match.quantity + addedQty);
+        await match.update({ quantity: newQty });
+      } else {
+        const newQty = Math.min(physicalStock, addedQty);
+        const created = await CartItem.create({
+          cartId: cart.id,
+          productId,
+          variantId: variantId || null,
+          quantity: newQty,
+          priceAtAdd: itemPrice,
+          selectedVariant: selectedVariantJson
+        });
+        existingItems.push(created);
+      }
+    }
+
+    return getCart(req, res);
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+
 // GET All Abandoned Carts (with items) for Admin Dashboard
 const getAbandonedCarts = async (req, res) => {
   try {
@@ -584,4 +682,4 @@ const sendAbandonedCartEmail = async (req, res) => {
   }
 };
 
-module.exports = { getCart, addToCart, updateCartItem, removeFromCart, clearCart, syncCart, getAbandonedCarts, sendAbandonedCartEmail };
+module.exports = { getCart, addToCart, updateCartItem, removeFromCart, clearCart, syncCart, mergeCart, getAbandonedCarts, sendAbandonedCartEmail };

@@ -4,6 +4,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { User, MapPin, Package, Heart, Star, Gift, Headphones, LogOut, Lock, Mail, Eye, EyeOff, Phone, ArrowLeft, CheckCircle, RefreshCw, MessageSquare, RotateCcw } from 'lucide-react';
 import Footer from '../../components/Footer';
 import { loginCustomer, registerCustomer, logout, clearError, fetchProfile } from '../../redux/slices/authSlice';
+import { fetchWishlist } from '../../redux/slices/wishlistSlice';
+import { fetchCart } from '../../redux/slices/cartSlice';
 import toast from 'react-hot-toast';
 import { validatePhoneNumber, validateEmail, validatePassword } from '../../utils/validation';
 import PhoneInput from '../../components/PhoneInput';
@@ -161,6 +163,8 @@ const AccountLayout = () => {
       const result = await dispatch(registerCustomer({ name, email, password, phone }));
       if (registerCustomer.fulfilled.match(result)) {
         toast.success(`Welcome to Billu Bazaar, ${result.payload.customer.name}!`);
+        dispatch(fetchWishlist());
+        dispatch(fetchCart());
       } else {
         toast.error(result.payload || 'Registration failed.');
       }
@@ -168,6 +172,8 @@ const AccountLayout = () => {
       const result = await dispatch(loginCustomer({ email, password }));
       if (loginCustomer.fulfilled.match(result)) {
         toast.success(`Welcome back, ${result.payload.customer.name}!`);
+        dispatch(fetchWishlist());
+        dispatch(fetchCart());
       } else {
         toast.error(result.payload || 'Invalid email or password.');
       }

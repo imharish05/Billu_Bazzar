@@ -116,7 +116,8 @@ const sendOtpEmail = async (toEmail, name, otp) => {
   const mailOptions = {
     from: `"Billu Bazaar" <${process.env.EMAIL_USER}>`,
     to: toEmail,
-    subject: `${otp} is your Billu Bazaar password reset OTP`,
+    subject: `Billu Bazaar: Password Reset Code ${otp}`,
+    text: `Hi ${name || 'Valued Member'},\n\nWe received a request to reset your Billu Bazaar account password.\nYour reset code is: ${otp}\n\nThis code expires in 10 minutes.\nIf you did not make this request, please ignore this email.`,
     attachments,
     html: `
       <!DOCTYPE html>
@@ -205,9 +206,10 @@ const sendFraudOtpEmail = async (toEmail, name, otp) => {
   }
 
   const mailOptions = {
-    from: `"Billu Bazaar Security" <${process.env.EMAIL_USER}>`,
+    from: `"Billu Bazaar" <${process.env.EMAIL_USER}>`,
     to: toEmail,
-    subject: `${otp} is your Billu Bazaar Order Verification Code`,
+    subject: `Billu Bazaar: Order Verification Code ${otp}`,
+    text: `Hi ${name || 'Valued Customer'},\n\nYour Billu Bazaar order verification code is: ${otp}\n\nThis code expires in 10 minutes.\nIf you did not initiate this order, please contact support.`,
     attachments,
     html: `
       <!DOCTYPE html>
@@ -711,7 +713,7 @@ const sendOrderStatusNotification = async (order, statusTypeOverride = null) => 
                 <tr>
                   <td style="background-color:#FAF9F6;padding:20px 32px;border-top:1px solid #EAEAEA;text-align:center;">
                     <p style="margin:0 0 6px;font-size:12px;color:#6B7280;">
-                      Need help? Contact us at <a href="mailto:support@billubazaar.com" style="color:#C9A24B;text-decoration:underline;font-weight:600;">support@billubazaar.com</a>
+                      Need help? Contact us at <a href="mailto:${process.env.EMAIL_USER}" style="color:#C9A24B;text-decoration:underline;font-weight:600;">${process.env.EMAIL_USER}</a>
                     </p>
                     <p style="margin:0;font-size:11px;color:#9CA3AF;">
                       © ${new Date().getFullYear()} Billu Bazaar. All rights reserved.
@@ -728,7 +730,7 @@ const sendOrderStatusNotification = async (order, statusTypeOverride = null) => 
     `;
 
     const adminEmail = (process.env.ADMIN_EMAIL || 'harish05082004@gmail.com').trim();
-    const recipients = [toEmail, adminEmail].filter((val, idx, self) => val && self.indexOf(val) === idx);
+    const isDifferentAdmin = adminEmail && adminEmail.toLowerCase() !== toEmail.toLowerCase();
 
     const attachments = [];
     const logoAtt = getBrandLogoAttachment();
@@ -737,15 +739,25 @@ const sendOrderStatusNotification = async (order, statusTypeOverride = null) => 
     }
 
     const mailOptions = {
-      from: `"Billu Bazaar Orders" <${process.env.EMAIL_USER}>`,
-      to: recipients.join(', '),
-      subject: `${['CONFIRMED', 'PAID', 'PENDING'].includes(currentStatus) ? '[NEW ORDER] ' : ''}${config.subject}`,
+      from: `"Billu Bazaar" <${process.env.EMAIL_USER}>`,
+      to: toEmail,
+      ...(isDifferentAdmin ? { bcc: adminEmail } : {}),
+      subject: `Billu Bazaar: Order ${order.orderNumber} - ${config.badgeText || currentStatus}`,
+      text: `Dear ${customerName},\n\n` +
+        `${config.heading}\n\n` +
+        `Order Number: ${order.orderNumber}\n` +
+        `Status: ${config.badgeText}\n` +
+        `Total Amount: ${currencySymbol}${grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}\n` +
+        `Payment Method: ${displayPaymentMethod} (${paymentStatusBadgeText})\n\n` +
+        `Delivery Address:\n${addrName}\n${addrString}\n\n` +
+        `Need help? Contact support at ${process.env.EMAIL_USER}.\n\n` +
+        `Thank you for shopping with Billu Bazaar.`,
       html: htmlContent,
       attachments
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`Order status email [${currentStatus}] sent to [${recipients.join(', ')}] for Order ${order.orderNumber} - MsgID: ${info.messageId}`);
+    console.log(`Order status email [${currentStatus}] sent to [${toEmail}${isDifferentAdmin ? `, bcc: ${adminEmail}` : ''}] for Order ${order.orderNumber} - MsgID: ${info.messageId}`);
     return info;
   } catch (err) {
     console.error(`Failed to send order status email for Order ${order.orderNumber}:`, err.message);
@@ -845,7 +857,8 @@ const sendRestockAlertEmail = async (toEmail, productName, productSlug, image) =
     const mailOptions = {
       from: `"Billu Bazaar Concierge" <${process.env.EMAIL_USER}>`,
       to: toEmail,
-      subject: `Great News! ${productName || 'Your Item'} is Back in Stock at Billu Bazaar`,
+      subject: `Great News: ${productName || 'Your Item'} is Back in Stock at Billu Bazaar`,
+      text: `Hello,\n\nGreat news! The item you were waiting for, "${productName}", is now back in stock at Billu Bazaar.\n\nView and purchase it here:\n${productUrl}\n\nQuantities are limited, so secure yours before it sells out.\n\nWarm regards,\nBillu Bazaar Concierge`,
       attachments,
       html: `
         <!DOCTYPE html>
@@ -995,8 +1008,8 @@ const sendContactEnquiryAdminNotification = async (enquiryData) => {
     const mailOptions = {
       from: `"Billu Bazaar Concierge" <${process.env.EMAIL_USER}>`,
       to: adminEmail,
-      replyTo: email || process.env.EMAIL_USER,
-      subject: `📩 New Contact Enquiry #${id || ''}: ${subject || 'General Inquiry'} - ${name}`,
+      ...(email && email.trim().toLowerCase() !== adminEmail.toLowerCase() ? { replyTo: email.trim() } : {}),
+      subject: `New Contact Enquiry #${id || ''}: ${subject || 'General Inquiry'} - ${name}`,
       text: `New Contact Enquiry Alert\n\n` +
         `Customer: ${name}\n` +
         `Email: ${email}\n` +
@@ -1023,7 +1036,7 @@ const sendContactEnquiryAdminNotification = async (enquiryData) => {
                   <tr>
                     <td style="background-color:#111111;padding:30px 40px;text-align:center;">
                       <p style="margin:0;font-size:24px;font-weight:700;color:#ffffff;letter-spacing:0.12em;">
-                        BILLU <span style="color:#C9A24B;">BAZAAR</span>
+                         BILLU <span style="color:#C9A24B;">BAZAAR</span>
                       </p>
                       <p style="margin:6px 0 0;font-size:11px;color:#A1A1A1;letter-spacing:0.18em;text-transform:uppercase;">
                         Concierge & Contact Enquiry Alert
@@ -1035,7 +1048,7 @@ const sendContactEnquiryAdminNotification = async (enquiryData) => {
                   <tr>
                     <td style="background-color:#FFFBEB;border-bottom:1px solid #FCD34D;padding:14px 40px;text-align:center;">
                       <p style="margin:0;font-size:13px;font-weight:600;color:#92400E;">
-                        📩 You received a new inquiry from your website contact form.
+                        You received a new inquiry from your website contact form.
                       </p>
                     </td>
                   </tr>
@@ -1134,12 +1147,12 @@ const sendContactEnquiryCustomerAcknowledgment = async (enquiryData) => {
     const mailOptions = {
       from: `"Billu Bazaar Concierge" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: `✨ We've received your inquiry — Billu Bazaar Concierge`,
+      subject: `We've received your inquiry — Billu Bazaar Concierge`,
       text: `Dear ${name},\n\n` +
         `Thank you for reaching out to Billu Bazaar Concierge.\n\n` +
         `We have received your message regarding "${subject || 'General Inquiry'}". Our concierge desk is reviewing your details and will respond within 24 business hours.\n\n` +
         `Your message summary:\n"${message}"\n\n` +
-        `Warm regards,\nBillu Bazaar Luxury Concierge Desk\nhello@billubazaar.com`,
+        `Warm regards,\nBillu Bazaar Luxury Concierge Desk\n${process.env.EMAIL_USER}`,
       html: `
         <!DOCTYPE html>
         <html lang="en">
@@ -1190,10 +1203,7 @@ const sendContactEnquiryCustomerAcknowledgment = async (enquiryData) => {
 
                       <table width="100%" cellpadding="12" cellspacing="0" style="background-color:#FAF9F6;border-radius:8px;font-size:12px;color:#6B7280;margin-top:20px;">
                         <tr>
-                          <td><strong>Boutique Address:</strong> 14 Linking Road, Bandra West, Mumbai 400050</td>
-                        </tr>
-                        <tr>
-                          <td><strong>Concierge Direct:</strong> <a href="mailto:concierge@billubazaar.com" style="color:#C9A24B;text-decoration:none;">concierge@billubazaar.com</a> | +91 99999 99999</td>
+                          <td><strong>Concierge Direct:</strong> <a href="mailto:${process.env.EMAIL_USER}" style="color:#C9A24B;text-decoration:none;">${process.env.EMAIL_USER}</a></td>
                         </tr>
                       </table>
                     </td>
@@ -1239,16 +1249,16 @@ const sendTestNotificationEmail = async (targetEmail) => {
   const mailOptions = {
     from: `"Billu Bazaar System" <${process.env.EMAIL_USER}>`,
     to: recipient,
-    subject: `🧪 Test Email Alert — Billu Bazaar Notification System`,
-    text: `This is a test notification email from Billu Bazaar.\n\nYour SMTP email delivery system is functioning properly!\nTimestamp: ${new Date().toISOString()}`,
+    subject: `Test Email Alert — Billu Bazaar Notification System`,
+    text: `This is a test notification email from Billu Bazaar.\n\nYour SMTP email delivery system is functioning properly.\nTimestamp: ${new Date().toISOString()}`,
     html: `
       <div style="font-family:${SANS_SERIF_FONT};max-width:550px;margin:0 auto;padding:30px;background:#ffffff;border:1px solid #EAEAEA;border-radius:10px;">
-        <h2 style="color:#111111;margin-top:0;">🧪 SMTP Email Test Successful</h2>
+        <h2 style="color:#111111;margin-top:0;">SMTP Email Test Successful</h2>
         <p style="color:#4B5563;font-size:14px;line-height:1.6;">
           This is a confirmation test email dispatched from your Billu Bazaar server.
         </p>
         <div style="background:#F0FDF4;border:1px solid #BBF7D0;padding:14px;border-radius:6px;color:#166534;font-size:13px;font-weight:600;margin:20px 0;">
-          ✅ Email configuration and Gmail SMTP connectivity are working perfectly!
+          Email configuration and Gmail SMTP connectivity are working properly.
         </div>
         <p style="font-size:12px;color:#9CA3AF;">
           Dispatched to: ${recipient}<br/>
@@ -1259,7 +1269,7 @@ const sendTestNotificationEmail = async (targetEmail) => {
   };
 
   const info = await transporter.sendMail(mailOptions);
-  console.log(`✅ Test email successfully dispatched to [${recipient}] — MsgID: ${info.messageId}`);
+  console.log(`Test email successfully dispatched to [${recipient}] — MsgID: ${info.messageId}`);
   return info;
 };
 
@@ -1280,7 +1290,7 @@ const sendMarketingAutomationReport = async ({
     const transporter = createTransporter();
     const currencySymbol = currency === 'AED' ? 'AED ' : '₹';
     const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
-    const supportEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER || 'support@billubazaar.com';
+    const supportEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
     const cartCheckoutUrl = couponCode ? `${clientUrl}/cart?discount=${couponCode}` : `${clientUrl}/cart`;
     const exploreUrl = `${clientUrl}/products`;
 
@@ -1718,6 +1728,7 @@ const sendMarketingAutomationReport = async ({
       from: `"Billu Bazaar Customer Support" <${process.env.EMAIL_USER}>`,
       to,
       subject,
+      text: `Hello ${customerName},\n\nHere is your Billu Bazaar cart and store update summary.\n\nVisit your cart: ${cartCheckoutUrl}\nExplore the latest luxury collection: ${exploreUrl}\n\nWarm regards,\nBillu Bazaar Concierge Support`,
       html: htmlContent,
       attachments
     };
@@ -1938,7 +1949,7 @@ const sendReturnStatusNotification = async (returnRequest, customer, order) => {
 
               <!-- CTA Button -->
               <div style="text-align: center; margin: 30px 0 10px;">
-                <a href="${process.env.CLIENT_URL || 'https://billubazaar.com'}/account/returns/${returnRequest.id || returnRequest.returnNumber}" style="display: inline-block; background-color: #111827; color: #FFFFFF; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">
+                <a href="${(process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '')}/account/returns/${returnRequest.id || returnRequest.returnNumber}" style="display: inline-block; background-color: #111827; color: #FFFFFF; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">
                   Track Return Status
                 </a>
               </div>
@@ -1961,6 +1972,7 @@ const sendReturnStatusNotification = async (returnRequest, customer, order) => {
       from: `"Billu Bazaar Customer Support" <${process.env.EMAIL_USER}>`,
       to: recipientEmail,
       subject: config.subject,
+      text: `Dear ${customerName},\n\nUpdate on Return Request #${returnRequest.returnNumber}:\n${config.title}\n\n${config.message}\n\nItem: ${returnRequest.productName} (Qty: ${returnRequest.quantity})\nRefund Value: ${refundAmountFormatted}\n\nTrack your return status:\n${(process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '')}/account/returns/${returnRequest.id || returnRequest.returnNumber}\n\nWarm regards,\nBillu Bazaar Concierge Support`,
       html: htmlContent,
       attachments,
     };
@@ -1988,7 +2000,8 @@ const sendWelcomeEmail = async (toEmail, name, bonusPoints = 0) => {
     const mailOptions = {
       from: `"Billu Bazaar" <${process.env.EMAIL_USER}>`,
       to: toEmail,
-      subject: `✨ Welcome to Billu Bazaar, ${name || 'Valued Member'}!`,
+      subject: `Welcome to Billu Bazaar, ${name || 'Valued Member'}!`,
+      text: `Dear ${name || 'Valued Member'},\n\nWelcome to Billu Bazaar! We are delighted to welcome you to our exclusive luxury collection.\n\nExplore our latest collections:\n${clientUrl}/products\n\nWarm regards,\nBillu Bazaar Concierge`,
       attachments,
       html: `
         <!DOCTYPE html>
@@ -2054,10 +2067,10 @@ const sendWelcomeEmail = async (toEmail, name, bonusPoints = 0) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Welcome email sent to ${toEmail} - MsgID: ${info.messageId}`);
+    console.log(`Welcome email sent to ${toEmail} - MsgID: ${info.messageId}`);
     return info;
   } catch (err) {
-    console.error(`❌ Failed to send welcome email to ${toEmail}:`, err.message);
+    console.error(`Failed to send welcome email to ${toEmail}:`, err.message);
     return null;
   }
 };
@@ -2075,7 +2088,8 @@ const sendPasswordChangedEmail = async (toEmail, name) => {
     const mailOptions = {
       from: `"Billu Bazaar Security" <${process.env.EMAIL_USER}>`,
       to: toEmail,
-      subject: `🔒 Security Alert: Your Billu Bazaar Password Was Changed`,
+      subject: `Security Alert: Your Billu Bazaar Password Was Changed`,
+      text: `Dear ${name || 'Valued Customer'},\n\nThis is a confirmation that your Billu Bazaar account password was changed.\n\nIf you did not request this update, please reset your password immediately or contact our concierge support desk at ${process.env.EMAIL_USER}.\n\nBillu Bazaar Security`,
       attachments,
       html: `
         <!DOCTYPE html>
@@ -2105,7 +2119,7 @@ const sendPasswordChangedEmail = async (toEmail, name) => {
 
                       <div style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:16px;margin-bottom:20px;">
                         <p style="margin:0;font-size:13px;color:#991B1B;line-height:1.5;">
-                          <strong>Didn't make this change?</strong> If you did not request this update, please reset your password immediately or contact our concierge support desk at <a href="mailto:support@billubazaar.com" style="color:#B91C1C;font-weight:700;">support@billubazaar.com</a>.
+                          <strong>Didn't make this change?</strong> If you did not request this update, please reset your password immediately or contact our concierge support desk at <a href="mailto:${process.env.EMAIL_USER}" style="color:#B91C1C;font-weight:700;">${process.env.EMAIL_USER}</a>.
                         </p>
                       </div>
                     </td>
@@ -2156,8 +2170,9 @@ const sendPersonalShopperNotification = async (shopperData) => {
     const adminMailOptions = {
       from: `"Billu Bazaar Concierge" <${process.env.EMAIL_USER}>`,
       to: adminEmail,
-      replyTo: email || process.env.EMAIL_USER,
-      subject: `👗 New Personal Shopper Request #${id || ''} - ${name} (${occasion})`,
+      ...(email && email.trim().toLowerCase() !== adminEmail.toLowerCase() ? { replyTo: email.trim() } : {}),
+      subject: `New Personal Shopper Request #${id || ''} - ${name} (${occasion})`,
+      text: `New Personal Shopper Consultation Request\n\nClient Name: ${name}\nEmail: ${email}\nPhone: ${phone || 'Not provided'}\nOccasion: ${occasion}\nBudget: ₹${budget}\nStyle: ${style || 'Not specified'}\nNotes: ${notes || 'None'}\n\nBillu Bazaar Styling Desk`,
       attachments,
       html: `
         <!DOCTYPE html>
@@ -2239,7 +2254,8 @@ const sendPersonalShopperNotification = async (shopperData) => {
     const custMailOptions = {
       from: `"Billu Bazaar Stylist Concierge" <${process.env.EMAIL_USER}>`,
       to: email,
-      subject: `✨ We've Received Your Styling Request — Billu Bazaar`,
+      subject: `We've Received Your Styling Request — Billu Bazaar`,
+      text: `Dear ${name},\n\nThank you for requesting a Personal Shopper consultation at Billu Bazaar.\n\nOur stylists are reviewing your request for "${occasion}" (Budget: ₹${budget}) and will reach out to you within 24 business hours.\n\nWarm regards,\nBillu Bazaar Styling Desk`,
       attachments,
       html: `
         <!DOCTYPE html>
@@ -2288,10 +2304,10 @@ const sendPersonalShopperNotification = async (shopperData) => {
       transporter.sendMail(custMailOptions),
     ]);
 
-    console.log(`✅ Personal shopper emails dispatched for request #${id || 'N/A'}`);
+    console.log(`Personal shopper emails dispatched for request #${id || 'N/A'}`);
     return results;
   } catch (err) {
-    console.error(`❌ Failed to send personal shopper email:`, err.message);
+    console.error(`Failed to send personal shopper email:`, err.message);
     return null;
   }
 };
@@ -2322,7 +2338,10 @@ const sendLowStockAdminAlert = async (lowStockItems = []) => {
     const mailOptions = {
       from: `"Billu Bazaar Inventory Desk" <${process.env.EMAIL_USER}>`,
       to: adminEmail,
-      subject: `⚠️ Inventory Alert: ${lowStockItems.length} Products Low or Out of Stock`,
+      subject: `Inventory Alert: ${lowStockItems.length} Products Low or Out of Stock`,
+      text: `Billu Bazaar Inventory Alert\n\nThe following ${lowStockItems.length} product(s) have fallen below the stock threshold:\n\n` +
+        lowStockItems.map(item => `- ${item.name} (${item.variant || 'Default'}): ${item.stock === 0 ? 'OUT OF STOCK' : item.stock + ' remaining'}`).join('\n') +
+        `\n\nPlease log in to the admin panel to restock.\n\nBillu Bazaar Inventory Desk`,
       attachments,
       html: `
         <!DOCTYPE html>
@@ -2341,7 +2360,7 @@ const sendLowStockAdminAlert = async (lowStockItems = []) => {
                   <tr>
                     <td style="padding:36px 40px;">
                       <h2 style="margin:0 0 12px;font-size:18px;font-weight:700;color:#111111;">
-                        ⚠️ Low Stock Inventory Alert
+                        Low Stock Inventory Alert
                       </h2>
                       <p style="margin:0 0 20px;font-size:14px;color:#4B5563;line-height:1.6;">
                         The following products have reached critical inventory thresholds (≤ 10 units remaining) and require reordering:

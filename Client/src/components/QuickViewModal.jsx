@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 import { closeQuickView } from '../redux/slices/uiSlice';
 import { addLocal, openCart, setBuyNowItem } from '../redux/slices/cartSlice';
-import { toggleItem as toggleWishlistLocal } from '../redux/slices/wishlistSlice';
+import { toggleWishlistApi } from '../redux/slices/wishlistSlice';
 import { formatPrice } from '../utils/currency';
 
 // Color map resolver
@@ -395,7 +395,7 @@ const QuickViewModal = () => {
       rating: product.rating,
       reviewCount: product.reviewCount
     };
-    dispatch(toggleWishlistLocal(payload));
+    dispatch(toggleWishlistApi(payload));
     toast.success(isWishlisted ? 'Removed from Wishlist' : 'Added to Wishlist', {
       iconTheme: { primary: '#C58837', secondary: 'white' },
       style: {

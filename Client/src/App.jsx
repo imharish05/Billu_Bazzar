@@ -39,6 +39,7 @@ import ReturnsPage from './pages/ReturnsPage';
 import api from './services/api';
 import { fetchProfile } from './redux/slices/authSlice';
 import { fetchWishlist } from './redux/slices/wishlistSlice';
+import { fetchCart } from './redux/slices/cartSlice';
 import { setRate } from './redux/slices/currencySlice';
 import { getAccessToken } from './utils/tokenStorage';
 
@@ -79,11 +80,12 @@ const App = () => {
   // ── Bootstrap: fetch profile whenever a token exists ────────────────────────
   // Runs once on mount. If a token is in localStorage, call /getme to load
   // fresh customer data into Redux — covers page refresh, new tab, etc.
-  // ── Bootstrap: fetch profile & wishlist whenever a token exists ─────────────
+  // ── Bootstrap: fetch profile, wishlist & cart whenever a token exists ───────
   useEffect(() => {
     if (getAccessToken()) {
       dispatch(fetchProfile());
       dispatch(fetchWishlist());
+      dispatch(fetchCart());
     }
   }, [dispatch]);
 

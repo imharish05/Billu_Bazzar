@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import api from '../../services/api';
+import { getAccessToken } from '../../utils/tokenStorage';
 
 // ── Guest cart persistence (localStorage) ────────────────────────────────────
 // Without this, a full page reload/navigation on /checkout wipes the in-memory
@@ -29,8 +30,20 @@ const persistCart = (items) => {
 };
 
 export const fetchCart = createAsyncThunk('cart/fetch', async (_, { rejectWithValue }) => {
-  try { const res = await api.get('/cart'); return res.data.cart; }
-  catch (err) { return rejectWithValue(err.response?.data?.message); }
+  try {
+    const token = getAccessToken();
+    const localCart = loadPersistedCart();
+    let res;
+    // If authenticated and local guest items exist, merge with server cart
+    if (token && localCart.items && localCart.items.length > 0) {
+      res = await api.post('/cart/merge', { items: localCart.items });
+    } else {
+      res = await api.get('/cart');
+    }
+    return res.data.cart;
+  } catch (err) {
+    return rejectWithValue(err.response?.data?.message);
+  }
 });
 
 export const addToCart = createAsyncThunk('cart/add', async (item, { rejectWithValue, dispatch }) => {
@@ -203,7 +216,12 @@ const cartSlice = createSlice({
         state.subtotal = action.payload?.subtotal || 0;
         persistCart(state.items);
       })
-      .addCase(fetchCart.rejected, (state, action) => { state.loading = false; state.error = action.payload; });
+      .addCase(fetchCart.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+      .addCase('auth/logout', (state) => {
+        state.items = [];
+        state.subtotal = 0;
+        persistCart([]);
+      });
 
   },
 });
@@ -216,7 +234,10 @@ const debouncedSyncCart = (items) => {
   if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(async () => {
     try {
-      await api.post('/cart/sync', { items });
+      const token = getAccessToken();
+      if (token) {
+        await api.post('/cart/sync', { items });
+      }
     } catch (err) {
       console.log('[cart/sync] Background sync note:', err.message);
     }

@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Check, MapPin, CreditCard, Package, ChevronRight, Eye, EyeOff, Tag, Sparkles, ShieldAlert, ShieldCheck, AlertTriangle, Lightbulb, Truck, Award, Lock } from 'lucide-react';
 import { placeOrder } from '../redux/slices/ordersSlice';
 import { clearLocal, syncCart, clearBuyNowItem, fetchCart } from '../redux/slices/cartSlice';
+import { fetchWishlist } from '../redux/slices/wishlistSlice';
 import { loginCustomer, registerCustomer, fetchProfile } from '../redux/slices/authSlice';
 import { setCurrency } from '../redux/slices/currencySlice';
 import api from '../services/api';
@@ -694,6 +695,8 @@ const CheckoutPage = () => {
     setLoginLoading(true);
     try {
       await dispatch(loginCustomer({ email: loginEmail, password: loginPassword })).unwrap();
+      dispatch(fetchWishlist());
+      dispatch(fetchCart());
       toast.success('Logged in successfully!');
       setShowLoginPanel(false);
     } catch (err) {
@@ -738,6 +741,8 @@ const CheckoutPage = () => {
         password: newPassword,
         phone: billingAddress.phone.trim()
       })).unwrap();
+      dispatch(fetchWishlist());
+      dispatch(fetchCart());
       toast.success('Account created and logged in successfully!');
     } catch (err) {
       toast.error(err || 'Registration failed. Please check your details.');
