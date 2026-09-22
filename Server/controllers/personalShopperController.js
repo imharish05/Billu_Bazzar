@@ -3,6 +3,7 @@
 const { PersonalShopperRequest, Customer } = require('../models');
 const { Op } = require('sequelize');
 const { validatePhoneNumber } = require('../utils/phoneValidation');
+const { sendPersonalShopperNotification } = require('../services/emailService');
 
 /**
  * Submit Personal Shopper Request (Customer / Public)
@@ -49,6 +50,10 @@ exports.submitRequest = async (req, res) => {
       notes: notes ? notes.trim() : null,
       status: 'PENDING',
     });
+
+    sendPersonalShopperNotification(shopperRequest).catch(err =>
+      console.error('[personalShopperController] Failed to send styling request email:', err.message)
+    );
 
     res.status(201).json({
       success: true,

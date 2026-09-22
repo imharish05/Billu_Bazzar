@@ -326,7 +326,7 @@ const OrderConfirmationPage = () => {
                 <MapPin size={20} className="text-brand-gold shrink-0" /> 
                 Shipping Address
               </h3>
-              <div className="text-sm font-sans space-y-1">
+              <div className="text-sm space-y-1">
                 <p className="font-semibold text-brand-text text-sm">{addrName}</p>
                 {addrLine1 && <p className="text-neutral-600 text-sm mt-1">{addrLine1}</p>}
                 {addrLine2 && <p className="text-neutral-600 text-sm">{addrLine2}</p>}

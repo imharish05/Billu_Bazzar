@@ -1839,9 +1839,9 @@ const sendReturnStatusNotification = async (returnRequest, customer, order) => {
       message: `The status of your return request for ${returnRequest.productName} has been updated to ${status}.`,
     };
 
-    const logoAttachment = getLogoAttachment();
+    const logoAttachment = getBrandLogoAttachment();
     const attachments = logoAttachment ? [logoAttachment] : [];
-    const logoSrc = logoAttachment ? 'cid:brand-logo' : '';
+    const logoSrc = logoAttachment ? 'cid:billu-bazaar-logo' : '';
 
     const htmlContent = `
       <!DOCTYPE html>
@@ -1974,6 +1974,418 @@ const sendReturnStatusNotification = async (returnRequest, customer, order) => {
   }
 };
 
+/**
+ * Sends a Welcome Registration Email with signup loyalty points.
+ */
+const sendWelcomeEmail = async (toEmail, name, bonusPoints = 0) => {
+  try {
+    const transporter = createTransporter();
+    const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
+    const attachments = [];
+    const logoAtt = getBrandLogoAttachment();
+    if (logoAtt) attachments.push(logoAtt);
+
+    const mailOptions = {
+      from: `"Billu Bazaar" <${process.env.EMAIL_USER}>`,
+      to: toEmail,
+      subject: `✨ Welcome to Billu Bazaar, ${name || 'Valued Member'}!`,
+      attachments,
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8"/>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <title>Welcome to Billu Bazaar</title>
+        </head>
+        <body style="margin:0;padding:0;background-color:#F9F9F8;font-family:${SANS_SERIF_FONT};">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F9F9F8;padding:40px 15px;">
+            <tr>
+              <td align="center">
+                <table width="580" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);border:1px solid #E5E7EB;">
+                  ${getBrandHeaderHtml('Welcome to Exclusive Luxury')}
+                  <tr>
+                    <td style="padding:36px 40px 24px;text-align:center;">
+                      <span style="background-color:#FFF8E7;color:#8A6714;border:1px solid #E6C265;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;padding:5px 16px;display:inline-block;border-radius:20px;margin-bottom:16px;">
+                        Member Registration
+                      </span>
+                      <h1 style="margin:0 0 12px;font-size:24px;font-weight:700;color:#111111;">
+                        Welcome to Billu Bazaar, ${name || 'Valued Member'}!
+                      </h1>
+                      <p style="margin:0 auto 24px;font-size:14px;color:#4B5563;line-height:1.7;max-width:440px;">
+                        We are thrilled to welcome you to India's premier luxury fashion destination. Discover exclusive couture, fine jewelry, signature fragrances, and bespoke accessories.
+                      </p>
+
+                      ${bonusPoints > 0 ? `
+                      <div style="background:#FFFDF8;border:2px dashed #C9A24B;border-radius:10px;padding:18px 24px;margin-bottom:24px;display:inline-block;">
+                        <p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#8A6714;text-transform:uppercase;letter-spacing:0.08em;">
+                          Welcome Loyalty Gift
+                        </p>
+                        <p style="margin:0;font-size:26px;font-weight:900;color:#111827;">
+                          +${bonusPoints} Loyalty Points Credited
+                        </p>
+                        <p style="margin:4px 0 0;font-size:12px;color:#6B7280;">
+                          Redeemable toward your purchases at checkout!
+                        </p>
+                      </div>
+                      ` : ''}
+
+                      <div style="margin:8px 0 24px;">
+                        <a href="${clientUrl}/products" target="_blank" style="background-color:#161616;color:#C9A24B;padding:14px 36px;text-decoration:none;font-weight:800;font-size:13px;border-radius:6px;display:inline-block;letter-spacing:0.08em;text-transform:uppercase;box-shadow:0 4px 12px rgba(0,0,0,0.15);">
+                          Explore Collections
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td style="background-color:#FAF9F6;padding:20px 40px;text-align:center;color:#888888;font-size:11px;line-height:1.6;border-top:1px solid #EAEAEA;">
+                      <p style="margin:0 0 4px;color:#C9A24B;font-weight:700;letter-spacing:0.1em;font-size:12px;">BILLU BAZAAR</p>
+                      <p style="margin:0;color:#9CA3AF;">© ${new Date().getFullYear()} Billu Bazaar. All rights reserved.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Welcome email sent to ${toEmail} - MsgID: ${info.messageId}`);
+    return info;
+  } catch (err) {
+    console.error(`❌ Failed to send welcome email to ${toEmail}:`, err.message);
+    return null;
+  }
+};
+
+/**
+ * Sends a Password Changed Security Alert.
+ */
+const sendPasswordChangedEmail = async (toEmail, name) => {
+  try {
+    const transporter = createTransporter();
+    const attachments = [];
+    const logoAtt = getBrandLogoAttachment();
+    if (logoAtt) attachments.push(logoAtt);
+
+    const mailOptions = {
+      from: `"Billu Bazaar Security" <${process.env.EMAIL_USER}>`,
+      to: toEmail,
+      subject: `🔒 Security Alert: Your Billu Bazaar Password Was Changed`,
+      attachments,
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8"/>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <title>Password Changed Notification</title>
+        </head>
+        <body style="margin:0;padding:0;background-color:#F9F9F8;font-family:${SANS_SERIF_FONT};">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F9F9F8;padding:40px 15px;">
+            <tr>
+              <td align="center">
+                <table width="540" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border-radius:10px;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,0.06);border:1px solid #E5E7EB;">
+                  ${getBrandHeaderHtml('Security Alert')}
+                  <tr>
+                    <td style="padding:36px 40px;">
+                      <h1 style="margin:0 0 16px;font-size:20px;font-weight:bold;color:#1A1A1A;">
+                        Password Changed Successfully
+                      </h1>
+                      <p style="margin:0 0 12px;font-size:14px;color:#4B5563;line-height:1.6;">
+                        Hi <strong style="color:#1A1A1A;">${name || 'Valued Customer'}</strong>,
+                      </p>
+                      <p style="margin:0 0 20px;font-size:14px;color:#4B5563;line-height:1.6;">
+                        This is a confirmation that the password for your Billu Bazaar account was recently changed on <strong>${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</strong>.
+                      </p>
+
+                      <div style="background-color:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:16px;margin-bottom:20px;">
+                        <p style="margin:0;font-size:13px;color:#991B1B;line-height:1.5;">
+                          <strong>Didn't make this change?</strong> If you did not request this update, please reset your password immediately or contact our concierge support desk at <a href="mailto:support@billubazaar.com" style="color:#B91C1C;font-weight:700;">support@billubazaar.com</a>.
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background:#FAF9F6;padding:20px 40px;border-top:1px solid #EAEAEA;text-align:center;">
+                      <p style="margin:0 0 4px;color:#C9A24B;font-weight:700;letter-spacing:0.1em;font-size:12px;">BILLU BAZAAR SECURITY</p>
+                      <p style="margin:0;font-size:11px;color:#9CA3AF;">© ${new Date().getFullYear()} Billu Bazaar. All rights reserved.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Password changed alert sent to ${toEmail} - MsgID: ${info.messageId}`);
+    return info;
+  } catch (err) {
+    console.error(`❌ Failed to send password changed alert to ${toEmail}:`, err.message);
+    return null;
+  }
+};
+
+/**
+ * Sends notification for Personal Shopper / Styling Consultation Requests.
+ * Dispatches alert to Admin and acknowledgment receipt to Customer.
+ */
+const sendPersonalShopperNotification = async (shopperData) => {
+  try {
+    const data = shopperData && typeof shopperData.get === 'function'
+      ? shopperData.get({ plain: true })
+      : (shopperData || {});
+
+    const { name, email, phone, occasion, budget, style, notes, id } = data;
+    const adminEmail = (process.env.ADMIN_EMAIL || 'harish05082004@gmail.com').trim();
+    const transporter = createTransporter();
+
+    const attachments = [];
+    const logoAtt = getBrandLogoAttachment();
+    if (logoAtt) attachments.push(logoAtt);
+
+    // 1. Admin / Stylist Alert Email
+    const adminMailOptions = {
+      from: `"Billu Bazaar Concierge" <${process.env.EMAIL_USER}>`,
+      to: adminEmail,
+      replyTo: email || process.env.EMAIL_USER,
+      subject: `👗 New Personal Shopper Request #${id || ''} - ${name} (${occasion})`,
+      attachments,
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8"/>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <title>Stylist Consultation Request</title>
+        </head>
+        <body style="margin:0;padding:0;background-color:#FAF9F6;font-family:${SANS_SERIF_FONT};">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF9F6;padding:40px 0;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border:1px solid #EAEAEA;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.06);">
+                  ${getBrandHeaderHtml('Styling Concierge Alert')}
+                  <tr>
+                    <td style="padding:36px 40px;">
+                      <h2 style="margin:0 0 16px;font-size:18px;font-weight:700;color:#111111;">
+                        New Personal Shopper Consultation Request
+                      </h2>
+                      <table width="100%" cellpadding="8" cellspacing="0" style="border-collapse:collapse;font-size:14px;margin-bottom:20px;">
+                        <tr style="border-bottom:1px solid #F3F4F6;">
+                          <td width="35%" style="color:#6B7280;font-weight:600;">Client Name:</td>
+                          <td style="color:#111111;font-weight:700;">${name}</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #F3F4F6;">
+                          <td style="color:#6B7280;font-weight:600;">Email:</td>
+                          <td><a href="mailto:${email}" style="color:#C9A24B;text-decoration:none;font-weight:600;">${email}</a></td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #F3F4F6;">
+                          <td style="color:#6B7280;font-weight:600;">Phone:</td>
+                          <td style="color:#111111;">${phone || 'Not provided'}</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #F3F4F6;">
+                          <td style="color:#6B7280;font-weight:600;">Occasion:</td>
+                          <td style="color:#111111;font-weight:600;">${occasion}</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #F3F4F6;">
+                          <td style="color:#6B7280;font-weight:600;">Budget:</td>
+                          <td style="color:#8A6714;font-weight:700;">₹${budget}</td>
+                        </tr>
+                        ${style ? `
+                        <tr style="border-bottom:1px solid #F3F4F6;">
+                          <td style="color:#6B7280;font-weight:600;">Style Preference:</td>
+                          <td style="color:#111111;">${style}</td>
+                        </tr>` : ''}
+                      </table>
+
+                      ${notes ? `
+                      <p style="margin:16px 0 8px;font-size:13px;font-weight:700;color:#111111;">Client Notes & Preferences:</p>
+                      <div style="background-color:#F9FAFB;border-left:4px solid #C9A24B;padding:16px;border-radius:0 8px 8px 0;font-size:13px;color:#374151;line-height:1.6;">
+                        ${notes}
+                      </div>
+                      ` : ''}
+
+                      <div style="margin-top:28px;text-align:center;">
+                        <a href="mailto:${email}?subject=Personal Styling Consultation - Billu Bazaar" style="background-color:#161616;color:#C9A24B;padding:12px 30px;text-decoration:none;font-weight:700;font-size:13px;border-radius:6px;display:inline-block;letter-spacing:0.05em;text-transform:uppercase;">
+                          Contact Client
+                        </a>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background-color:#FAF9F6;padding:20px 40px;text-align:center;color:#888888;font-size:11px;border-top:1px solid #EAEAEA;">
+                      <p style="margin:0 0 4px;color:#C9A24B;font-weight:700;font-size:12px;">BILLU BAZAAR STYLING DESK</p>
+                      <p style="margin:0;color:#9CA3AF;">© ${new Date().getFullYear()} Billu Bazaar. All rights reserved.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `
+    };
+
+    // 2. Customer Acknowledgment Email
+    const custMailOptions = {
+      from: `"Billu Bazaar Stylist Concierge" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: `✨ We've Received Your Styling Request — Billu Bazaar`,
+      attachments,
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8"/>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <title>Styling Request Received</title>
+        </head>
+        <body style="margin:0;padding:0;background-color:#FAF9F6;font-family:${SANS_SERIF_FONT};">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF9F6;padding:40px 0;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border:1px solid #EAEAEA;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.06);">
+                  ${getBrandHeaderHtml('Personal Shopping Concierge')}
+                  <tr>
+                    <td style="padding:40px;">
+                      <h1 style="margin:0 0 16px;font-size:20px;font-weight:700;color:#111111;">
+                        Thank You, ${name}.
+                      </h1>
+                      <p style="margin:0 0 20px;font-size:14px;color:#4B5563;line-height:1.7;">
+                        We have received your personal shopping & styling request for <strong>${occasion}</strong>. Our lead personal stylist is reviewing your preferences and curated budget (₹${budget}) to hand-select luxury pieces suited for your celebration.
+                      </p>
+                      <p style="margin:0 0 24px;font-size:14px;color:#4B5563;line-height:1.7;">
+                        A personal stylist will reach out directly to you via email or phone within <strong>24 business hours</strong>.
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background-color:#FAF9F6;padding:20px 40px;text-align:center;color:#888888;font-size:11px;border-top:1px solid #EAEAEA;">
+                      <p style="margin:0 0 4px;color:#C9A24B;font-weight:700;letter-spacing:0.1em;font-size:12px;">BILLU BAZAAR</p>
+                      <p style="margin:0;color:#9CA3AF;">© ${new Date().getFullYear()} Billu Bazaar. All rights reserved.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `
+    };
+
+    const results = await Promise.allSettled([
+      transporter.sendMail(adminMailOptions),
+      transporter.sendMail(custMailOptions),
+    ]);
+
+    console.log(`✅ Personal shopper emails dispatched for request #${id || 'N/A'}`);
+    return results;
+  } catch (err) {
+    console.error(`❌ Failed to send personal shopper email:`, err.message);
+    return null;
+  }
+};
+
+/**
+ * Sends Daily Low Stock Summary to Admin
+ */
+const sendLowStockAdminAlert = async (lowStockItems = []) => {
+  try {
+    if (!Array.isArray(lowStockItems) || lowStockItems.length === 0) return null;
+    const transporter = createTransporter();
+    const adminEmail = (process.env.ADMIN_EMAIL || 'harish05082004@gmail.com').trim();
+    const attachments = [];
+    const logoAtt = getBrandLogoAttachment();
+    if (logoAtt) attachments.push(logoAtt);
+
+    const rows = lowStockItems.map(item => `
+      <tr>
+        <td style="padding:10px 14px;border-bottom:1px solid #F3F4F6;font-size:13px;font-weight:600;color:#111827;">${item.name}</td>
+        <td style="padding:10px 14px;border-bottom:1px solid #F3F4F6;font-size:12px;font-family:monospace;color:#4B5563;">${item.sku || 'N/A'}</td>
+        <td style="padding:10px 14px;border-bottom:1px solid #F3F4F6;font-size:12px;color:#6B7280;">${item.variant || 'Default'}</td>
+        <td style="padding:10px 14px;border-bottom:1px solid #F3F4F6;font-size:13px;font-weight:800;text-align:center;color:${item.stock === 0 ? '#DC2626' : '#D97706'};">
+          ${item.stock === 0 ? 'OUT OF STOCK' : `${item.stock} left`}
+        </td>
+      </tr>
+    `).join('');
+
+    const mailOptions = {
+      from: `"Billu Bazaar Inventory Desk" <${process.env.EMAIL_USER}>`,
+      to: adminEmail,
+      subject: `⚠️ Inventory Alert: ${lowStockItems.length} Products Low or Out of Stock`,
+      attachments,
+      html: `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8"/>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+          <title>Low Stock Alert</title>
+        </head>
+        <body style="margin:0;padding:0;background-color:#FAF9F6;font-family:${SANS_SERIF_FONT};">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#FAF9F6;padding:40px 0;">
+            <tr>
+              <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff;border:1px solid #EAEAEA;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.06);">
+                  ${getBrandHeaderHtml('Inventory Management')}
+                  <tr>
+                    <td style="padding:36px 40px;">
+                      <h2 style="margin:0 0 12px;font-size:18px;font-weight:700;color:#111111;">
+                        ⚠️ Low Stock Inventory Alert
+                      </h2>
+                      <p style="margin:0 0 20px;font-size:14px;color:#4B5563;line-height:1.6;">
+                        The following products have reached critical inventory thresholds (≤ 10 units remaining) and require reordering:
+                      </p>
+
+                      <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;margin-bottom:24px;">
+                        <thead>
+                          <tr style="background-color:#F9FAFB;border-bottom:1px solid #E5E7EB;">
+                            <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;">Product</th>
+                            <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;">SKU</th>
+                            <th style="padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;">Variant</th>
+                            <th style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:#6B7280;text-transform:uppercase;">Stock</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${rows}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="background-color:#FAF9F6;padding:20px 40px;text-align:center;color:#888888;font-size:11px;border-top:1px solid #EAEAEA;">
+                      <p style="margin:0 0 4px;color:#C9A24B;font-weight:700;font-size:12px;">BILLU BAZAAR INVENTORY</p>
+                      <p style="margin:0;color:#9CA3AF;">© ${new Date().getFullYear()} Billu Bazaar. All rights reserved.</p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </body>
+        </html>
+      `
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Low stock alert email sent to ${adminEmail} - MsgID: ${info.messageId}`);
+    return info;
+  } catch (err) {
+    console.error(`❌ Failed to send low stock alert to admin:`, err.message);
+    return null;
+  }
+};
+
 module.exports = {
   sendOtpEmail,
   sendFraudOtpEmail,
@@ -1984,6 +2396,10 @@ module.exports = {
   sendContactEnquiryCustomerAcknowledgment,
   sendTestNotificationEmail,
   sendMarketingAutomationReport,
+  sendWelcomeEmail,
+  sendPasswordChangedEmail,
+  sendPersonalShopperNotification,
+  sendLowStockAdminAlert,
 };
 
 

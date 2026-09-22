@@ -21,6 +21,7 @@ export default {
       fontFamily: {
         playfair: ['Cinzel', 'Georgia', 'serif'],
         inter:    ['Montserrat', 'sans-serif'],
+        sans:     ['Montserrat', 'sans-serif'],
       },
       fontSize: {
         'display': ['64px', { lineHeight: '1.1', fontWeight: '700' }],

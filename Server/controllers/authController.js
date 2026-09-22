@@ -3,8 +3,13 @@ const bcrypt = require('bcryptjs');
 const { signAccessToken, signRefreshToken, verifyAccessToken, verifyRefreshToken } = require('../config/jwt');
 const { Customer, AdminUser, Role, SiteSetting, LoyaltyLedger } = require('../models');
 const { v4: uuidv4 } = require('uuid');
-
 const { validatePhoneNumber } = require('../utils/phoneValidation');
+const {
+  sendOtpEmail,
+  sendFraudOtpEmail,
+  sendWelcomeEmail,
+  sendPasswordChangedEmail,
+} = require('../services/emailService');
 
 
 const validateEmail = (email) => {
@@ -83,6 +88,11 @@ const register = async (req, res) => {
 
     const token = signAccessToken({ id: customer.id, type: 'CUSTOMER' });
     const refreshToken = signRefreshToken({ id: customer.id, type: 'CUSTOMER' });
+
+    sendWelcomeEmail(customer.email, customer.name, initialPoints).catch(err =>
+      console.error('[authController] Failed to send welcome email:', err.message)
+    );
+
     res.status(201).json({ success: true, token, refreshToken, bonusPointsEarned: initialPoints });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -372,7 +382,6 @@ const adminRegister = async (req, res) => {
 
 // ── Forgot / Reset Password (OTP flow) ───────────────────────────────────────
 const crypto = require('crypto');
-const { sendOtpEmail, sendFraudOtpEmail } = require('../services/emailService');
 
 // ── Checkout Fraud Verification OTP ──────────────────────────────────────────
 const checkoutOtpStore = new Map(); // targetEmail -> { hashedOtp, expiry }
@@ -574,6 +583,10 @@ const resetPassword = async (req, res) => {
     const hashed = await bcrypt.hash(password, 12);
     await customer.update({ password: hashed });
 
+    sendPasswordChangedEmail(customer.email, customer.name).catch(err =>
+      console.error('[authController] Failed to send password reset confirmation email:', err.message)
+    );
+
     return res.json({ success: true, message: 'Password reset successfully. You can now sign in.' });
   } catch (err) {
     return res.status(500).json({ success: false, message: err.message });
@@ -608,6 +621,10 @@ const changePassword = async (req, res) => {
 
     const hashed = await bcrypt.hash(newPassword, 12);
     await customer.update({ password: hashed });
+
+    sendPasswordChangedEmail(customer.email, customer.name).catch(err =>
+      console.error('[authController] Failed to send password changed alert:', err.message)
+    );
 
     return res.json({ success: true, message: 'Password updated successfully' });
   } catch (err) {

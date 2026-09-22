@@ -15,7 +15,11 @@ const {
   SiteSetting, 
   LoyaltyLedger 
 } = require('../../models');
-const { sendOtpEmail } = require('../../services/emailService');
+const {
+  sendOtpEmail,
+  sendWelcomeEmail,
+  sendPasswordChangedEmail,
+} = require('../../services/emailService');
 const {
   validateEmail,
   validatePassword,
@@ -131,6 +135,10 @@ const register = async (req, res) => {
     };
 
     const token = signMobileToken(tokenPayload);
+
+    sendWelcomeEmail(customer.email, customer.name, initialPoints).catch(err =>
+      console.error('[MobAuth Register] Failed to send welcome email:', err.message)
+    );
 
     return res.status(201).json({
       success: true,
@@ -365,6 +373,10 @@ const resetPassword = async (req, res) => {
       passwordResetToken: null,
       passwordResetExpiry: null,
     });
+
+    sendPasswordChangedEmail(customer.email, customer.name).catch(err =>
+      console.error('[MobAuth ResetPassword] Failed to send password changed alert:', err.message)
+    );
 
     return res.status(200).json({
       success: true,
